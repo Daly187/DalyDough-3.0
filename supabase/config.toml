@@ -15,5 +15,3 @@ project_id = "rptysuvzufliibffzqgk"
   port = 54323
 
 # This section is critical for fixing the error.
-[functions]
-  import_map = "import_map.json"

@@ -7,6 +7,7 @@ import { createClient, User, Session } from '@supabase/supabase-js';
 // --- TYPESCRIPT TYPE DEFINITIONS ---
 
 type IconName = keyof typeof icons;
+type Trend = "Up" | "Down" | "Neutral";
 
 type Bot = {
     id: string;
@@ -34,17 +35,20 @@ type Bot = {
 type Account = { id: string; name: string; user_email: string };
 type MarketTrend = {
     pair: string;
-    trendH4: "Up" | "Down" | "Neutral";
-    trendD1: "Up" | "Down" | "Neutral";
+    trendH4: Trend;
+    trendD1: Trend;
+    trendW1: Trend;
     setupQuality: 'A' | 'B' | 'C';
     conditions: { cot: boolean; adx: boolean; spread: boolean; };
-    dsize: string; 
+    dsize: string;
     breakdown: Record<string, { score: number; value: string }>;
 };
 type AccountStat = { label: string; value: string | number };
 type Kpi = { label: string; value: string; positive: boolean | null };
 type AiRecommendation = { pair: string; reason: string; score: number; score_level: string };
-type CotData = { currency: string; longPercent: number; shortPercent: number; netPositions: number; };
+type CotHistoryItem = { date: string; longPosition: number; shortPosition: number; netPosition: number };
+type CotHistoryData = { currency: string; history: CotHistoryItem[] };
+
 
 // --- ICONS (as SVG strings) ---
 const icons = {
@@ -52,10 +56,12 @@ const icons = {
   dashboard: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"></path><polyline points="9 22 9 12 15 12 15 22"></polyline></svg>`,
   bots: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"></rect><path d="M7 11V7a5 5 0 0 1 10 0v4"></path><path d="M12 16a2 2 0 1 0 0-4 2 2 0 0 0 0 4z"></path></svg>`,
   trends: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M2.5 2v6h6m13 14v-6h-6"></path><path d="M21.5 2l-8.2 8.2a2 2 0 0 0 0 2.8L16 15.7a2 2 0 0 1 0 2.8l-2.8 2.8a2 2 0 0 1-2.8 0L2.5 12.5a2 2 0 0 0-2.8 0L2 14.2"></path></svg>`,
+  cot: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M16 4h2a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h2"></path><rect x="8" y="2" width="8" height="4" rx="1" ry="1"></rect></svg>`,
   statistics: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 20V10"></path><path d="M18 20V4"></path><path d="M6 20V16"></path></svg>`,
   settings: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"></circle><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82-.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06-.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"></path></svg>`,
-  trendUp: `<svg viewBox="0 0 24 24" fill="currentColor"><path d="M12 4l8 8h-6v8h-4v-8H4l8-8z"></path></svg>`,
-  trendDown: `<svg viewBox="0 0 24 24" fill="currentColor"><path d="M12 20l-8-8h6V4h4v8h6l-8 8z"></path></svg>`,
+  arrowUp: `<svg viewBox="0 0 24 24" fill="currentColor" class="trend-icon trend-up"><path d="M12 8l-6 6 1.41 1.41L12 10.83l4.59 4.58L18 14l-6-6z"></path></svg>`,
+  arrowDown: `<svg viewBox="0 0 24 24" fill="currentColor" class="trend-icon trend-down"><path d="M12 16l-6-6 1.41-1.41L12 13.17l4.59-4.58L18 10l-6 6z"></path></svg>`,
+  neutral: `<svg viewBox="0 0 24 24" fill="currentColor" class="trend-icon trend-neutral"><path d="M4 11h16v2H4z"></path></svg>`,
   search: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"></circle><line x1="21" y1="21" x2="16.65" y2="16.65"></line></svg>`,
   logout: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"></path><polyline points="16 17 21 12 16 7"></polyline><line x1="21" y1="12" x2="9" y2="12"></line></svg>`,
   user: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path><circle cx="12" cy="7" r="4"></circle></svg>`,
@@ -77,7 +83,7 @@ const tradingSymbols = [
   'GBPCAD', 'GBPCHF', 'GBPJPY', 'GBPUSD', 'NZDCAD', 'NZDCHF', 'NZDJPY', 'NZDUSD',
   'USDCAD', 'USDCHF', 'USDJPY', 'USDTRY', 'USDZAR', 'XAUUSD'
 ];
-let marketTrendsData: MarketTrend[] | null = null; 
+let marketTrendsData: MarketTrend[] | null = null;
 
 // --- DATA FETCHING FUNCTIONS ---
 
@@ -107,32 +113,25 @@ async function fetchMarketTrends(): Promise<MarketTrend[]> {
     if (marketTrendsData) return marketTrendsData;
     console.log("Fetching live market data...");
     try {
-        const { data, error } = await supabase.functions.invoke('get-market-data', {
-            headers: { 'Authorization': `Bearer ${supabaseAnonKey}` }
-        });
+        const { data, error } = await supabase.functions.invoke('get-market-data');
         if (error) throw error;
-        if (!data) { 
-            console.error("No data returned from get-market-data function.");
-            return [];
-        }
+        if (!data) throw new Error("No data returned from get-market-data function.");
         marketTrendsData = data;
         return data;
     } catch (err: any) {
         console.error("Failed to fetch market trends:", err.message);
-        return [];
+        throw err;
     }
 }
 
-async function fetchCotReport(): Promise<CotData[]> {
-    console.log("Fetching COT report data...");
+async function fetchCotHistory(): Promise<CotHistoryData[]> {
+    console.log("Fetching COT report history...");
      try {
-        const { data, error } = await supabase.functions.invoke('get-cot-report', {
-            headers: { 'Authorization': `Bearer ${supabaseAnonKey}` }
-        });
+        const { data, error } = await supabase.functions.invoke('get-cot-report-history');
         if (error) throw error;
         return data;
     } catch (err: any) {
-        console.error("Failed to fetch COT report:", err.message);
+        console.error("Failed to fetch COT report history:", err.message);
         return [];
     }
 }
@@ -140,14 +139,13 @@ async function fetchCotReport(): Promise<CotData[]> {
 async function fetchAiRecommendations(): Promise<AiRecommendation[]> {
     const trends = await fetchMarketTrends();
     if (trends.length === 0) return [];
-    
+
     console.log("Fetching AI recommendations...");
     const sortedTrends = [...trends].sort((a, b) => Number(b.dsize) - Number(a.dsize));
 
     try {
         const { data, error } = await supabase.functions.invoke('get-ai-recommendations', {
             body: { marketTrends: sortedTrends.slice(0, 10) },
-            headers: { 'Authorization': `Bearer ${supabaseAnonKey}` }
         });
         if (error) throw error;
         return data.recommendations;
@@ -156,7 +154,6 @@ async function fetchAiRecommendations(): Promise<AiRecommendation[]> {
         return [];
     }
 }
-
 
 async function fetchAccountStats(accountId: string): Promise<AccountStat[]> {
     const seed = accountId.charCodeAt(4);
@@ -185,13 +182,13 @@ const generateBots = (count: number, accountId: string): Bot[] => {
         let symbol = tradingSymbols[Math.floor(Math.random() * tradingSymbols.length)];
         let formattedPair = symbol.replace(/([A-Z]{3})([A-Z]{3,})/, '$1/$2');
         if (formattedPair === symbol) formattedPair = symbol;
-        
+
         if (!existingPairs.has(formattedPair)) {
             const pnl = (Math.random() - 0.4) * (150 * seed);
             const dAtStart = (Math.random() * 6 + 4);
             let dAtCurrent = (dAtStart + (Math.random() - 0.5) * 2);
             dAtCurrent = Math.max(0, Math.min(10, dAtCurrent));
-            
+
             const botData: Bot = {
                 id: `bot_${accountId}_${i}`,
                 pair: formattedPair,
@@ -215,7 +212,7 @@ const generateBots = (count: number, accountId: string): Bot[] => {
                 dAtCurrent: dAtCurrent.toFixed(1),
                 plannedReentries: []
             };
-            
+
             const reentries = [];
             let price = 1.25000;
             let step = 0.0050;
@@ -227,7 +224,7 @@ const generateBots = (count: number, accountId: string): Bot[] => {
                 reentries.push({ level: price.toFixed(5), size: size.toFixed(2), note: 'Scheduled' });
             }
             botData.plannedReentries = reentries;
-            
+
             bots.push(botData);
             existingPairs.add(formattedPair);
         }
@@ -244,6 +241,10 @@ let state = {
     activeAccountId: 'acc_1',
     accounts: [] as Account[],
     expandedTrendPair: null as string | null,
+    marketDataSort: {
+        column: 'dsize' as 'pair' | 'setupQuality' | 'dsize',
+        direction: 'desc' as 'asc' | 'desc',
+    },
 };
 
 // --- COMPONENT CREATORS ---
@@ -256,6 +257,7 @@ function createSidebar(): HTMLElement {
     { icon: 'dashboard', text: 'Dashboard' },
     { icon: 'bots', text: 'DCA Bots' },
     { icon: 'trends', text: 'Meat Market' },
+    { icon: 'cot', text: 'COT Report' },
     { icon: 'statistics', text: 'Statistics' },
     { icon: 'settings', text: 'Settings' },
   ];
@@ -332,37 +334,72 @@ function createHeader(kpiData: Kpi[]): HTMLElement {
 
 
 // --- PAGE & PANEL CREATORS ---
-function createCotReportCard(data: CotData[], isLoading = false): string {
+const getTrendIcon = (trend: Trend) => {
+    if (trend === 'Up') return icons.arrowUp;
+    if (trend === 'Down') return icons.arrowDown;
+    return icons.neutral;
+};
+
+function createDashboardMarketTrendsCard(data: MarketTrend[], isLoading = false): string {
+    const sortIcon = (column: 'pair' | 'setupQuality' | 'dsize') => {
+        if (state.marketDataSort.column !== column) return '';
+        return state.marketDataSort.direction === 'asc' ? '▲' : '▼';
+    };
+
+    const sortedData = [...data].sort((a, b) => {
+        const { column, direction } = state.marketDataSort;
+        const asc = direction === 'asc' ? 1 : -1;
+
+        switch (column) {
+            case 'pair':
+                return a.pair.localeCompare(b.pair) * asc;
+            case 'setupQuality':
+                const qualityOrder = { 'A': 3, 'B': 2, 'C': 1 };
+                return (qualityOrder[a.setupQuality] - qualityOrder[b.setupQuality]) * asc;
+            case 'dsize':
+                return (parseFloat(a.dsize) - parseFloat(b.dsize)) * asc;
+            default:
+                return 0;
+        }
+    });
+
     if (isLoading) {
-        return `<div class="card cot-report-card"><div class="placeholder-content"><p class="text-secondary">Loading COT Report...</p></div></div>`;
+        return `<div class="card"><div class="card-header"><h2 class="card-title">Meat Market</h2></div><div class="placeholder-content"><p class="text-secondary">Loading Market Data...</p></div></div>`;
     }
-    if (!data || data.length === 0) {
-        return `<div class="card cot-report-card"><div class="placeholder-content"><p class="text-secondary">Could not load COT data.</p></div></div>`;
+     if (!data || data.length === 0) {
+        return `<div class="card"><div class="card-header"><h2 class="card-title">Meat Market</h2></div><div class="placeholder-content"><p class="text-secondary">Could not load market data.</p></div></div>`;
     }
-    
-    const sortedData = [...data].sort((a, b) => b.longPercent - a.longPercent);
 
     return `
-        <div class="card cot-report-card">
-            <div class="card-header"><h2 class="card-title" title="Commitment of Traders report summary for major currencies.">COT Sentiment</h2></div>
+        <div class="card">
+            <div class="card-header"><h2 class="card-title" title="An overview of top currency pairs based on our D-sizing score.">Meat Market</h2></div>
             <div class="table-container">
                 <table>
                     <thead>
-                        <tr><th>Currency</th><th>Sentiment</th><th>Net Positions</th></tr>
+                        <tr>
+                            <th class="sortable-header" data-sort="pair">Pair ${sortIcon('pair')}</th>
+                            <th>Trend (W1/D1/H4)</th>
+                            <th class="sortable-header" data-sort="setupQuality">Quality ${sortIcon('setupQuality')}</th>
+                            <th>Conditions</th>
+                            <th class="sortable-header" data-sort="dsize">D size ${sortIcon('dsize')}</th>
+                        </tr>
                     </thead>
                     <tbody>
                         ${sortedData.map(d => `
-                            <tr>
-                                <td><strong>${d.currency}</strong></td>
-                                <td>
-                                    <span class="sentiment-value trend-up">${d.longPercent.toFixed(1)}%</span>
-                                    <div class="cot-sentiment-bar" title="Long: ${d.longPercent.toFixed(1)}% | Short: ${d.shortPercent.toFixed(1)}%">
-                                        <div class="cot-long-bar" style="width: ${d.longPercent}%"></div>
-                                        <div class="cot-short-bar" style="width: ${d.shortPercent}%"></div>
-                                    </div>
-                                    <span class="sentiment-value trend-down">${d.shortPercent.toFixed(1)}%</span>
+                            <tr class="is-expandable" data-pair='${JSON.stringify(d)}'>
+                                <td>${d.pair}</td>
+                                <td class="trend-cell">
+                                    ${getTrendIcon(d.trendW1)}
+                                    ${getTrendIcon(d.trendD1)}
+                                    ${getTrendIcon(d.trendH4)}
                                 </td>
-                                <td class="${d.netPositions >= 0 ? 'trend-up' : 'trend-down'}">${d.netPositions.toLocaleString()}</td>
+                                <td><span class="setup-quality-pill quality-${d.setupQuality}">${d.setupQuality}</span></td>
+                                <td class="conditions-cell">
+                                    <span class="condition-icon ${d.conditions.cot ? 'active' : ''}" title="COT Bias">${icons.brain}</span>
+                                    <span class="condition-icon ${d.conditions.adx ? 'active' : ''}" title="ADX Strength">${icons.bolt}</span>
+                                    <span class="condition-icon ${d.conditions.spread ? 'active' : ''}" title="Spread/Volatility">${icons.resizeHorizontal}</span>
+                                </td>
+                                <td><span class="recommendation-score score-${Number(d.dsize) >= 8 ? 'high' : Number(d.dsize) >= 6 ? 'medium' : 'low'}">${d.dsize}</span></td>
                             </tr>
                         `).join('')}
                     </tbody>
@@ -454,7 +491,11 @@ function createMarketTrendsTable(data: MarketTrend[], isLoading = false): string
             <table>
                 <thead>
                     <tr>
-                        <th>Pair</th><th>Trend (H4/D1)</th><th>Setup Quality</th><th>Conditions</th><th>D size</th>
+                        <th>Pair</th>
+                        <th>Trend (W1/D1/H4)</th>
+                        <th>Setup Quality</th>
+                        <th>Conditions</th>
+                        <th>D size</th>
                     </tr>
                 </thead>
                 <tbody>
@@ -463,7 +504,11 @@ function createMarketTrendsTable(data: MarketTrend[], isLoading = false): string
                         return `
                             <tr class="is-expandable ${isExpanded ? 'active' : ''}" data-pair='${JSON.stringify(d)}'>
                                 <td>${d.pair}</td>
-                                <td class="trend-cell"><span class="trend-text trend-${d.trendH4.toLowerCase()}">${d.trendH4}</span><span class="trend-text-secondary"> / ${d.trendD1}</span></td>
+                                <td class="trend-cell">
+                                    ${getTrendIcon(d.trendW1)}
+                                    ${getTrendIcon(d.trendD1)}
+                                    ${getTrendIcon(d.trendH4)}
+                                </td>
                                 <td><span class="setup-quality-pill quality-${d.setupQuality}">${d.setupQuality}</span></td>
                                 <td class="conditions-cell">
                                     <span class="condition-icon ${d.conditions.cot ? 'active' : ''}" title="COT Bias">${icons.brain}</span>
@@ -487,23 +532,18 @@ async function createDashboardMainContent(): Promise<HTMLElement> {
     mainContent.className = 'main-content';
     mainContent.innerHTML = `<div class="placeholder-content"><h2>Loading Dashboard...</h2></div>`;
 
-    const [trends, bots, cotReport] = await Promise.all([
+    const [trends, bots] = await Promise.all([
         fetchMarketTrends(),
         fetchBots(state.activeAccountId),
-        fetchCotReport(),
     ]);
-    
+
     const topTrends = trends ? [...trends]
         .sort((a, b) => Number(b.dsize) - Number(a.dsize))
-        .slice(0, 6) : [];
+        .slice(0, 8) : [];
     const activeBots = bots.filter(b => b.status === 'active');
 
     mainContent.innerHTML = `
-        ${createCotReportCard(cotReport)}
-        <div class="card">
-            <div class="card-header"><h2 class="card-title" title="An overview of top currency pairs based on our D-sizing score.">Meat Market</h2></div>
-            ${createMarketTrendsTable(topTrends)}
-        </div>
+        ${createDashboardMarketTrendsCard(topTrends)}
         <div class="card">
             <div class="card-header"><h2 class="card-title" title="A summary of your currently active trading bots and their performance.">D's Riding hard</h2></div>
             ${createGlobalRiskManagerHTML(activeBots, 'dashboard')}
@@ -554,7 +594,7 @@ async function createDashboardRightPanel(): Promise<HTMLElement> {
         fetchAccountStats(state.activeAccountId),
         fetchAiRecommendations()
     ]);
-    
+
     rightPanel.innerHTML = `
         ${createQuickBotLauncherPanel()}
         <div class="card">
@@ -588,7 +628,7 @@ async function createDcaBotsPage(): Promise<HTMLElement> {
     const page = document.createElement('div');
     page.className = 'main-content-full';
     page.innerHTML = `<div class="card"><div class="placeholder-content"><h2>Loading Bots...</h2></div></div>`;
-    
+
     const allBots = await fetchBots(state.activeAccountId);
 
     page.innerHTML = `
@@ -623,7 +663,7 @@ async function createMarketTrendsPage(): Promise<HTMLElement> {
     page.innerHTML = `<div class="card">${createMarketTrendsTable([], true)}</div>`;
 
     const trends = await fetchMarketTrends();
-    
+
     const sortedTrends = trends || [];
 
     page.innerHTML = `
@@ -631,8 +671,48 @@ async function createMarketTrendsPage(): Promise<HTMLElement> {
         <div class="card-header"><h2 class="card-title" title="A comprehensive list of all currency pairs, sorted by our proprietary D-sizing score.">Meat Market Analysis</h2></div>
         ${createMarketTrendsTable(sortedTrends)}
       </div>`;
-    
+
     attachPageListeners(page);
+    return page;
+}
+
+async function createCotPage(): Promise<HTMLElement> {
+    const page = document.createElement('div');
+    page.className = 'main-content-full';
+    page.innerHTML = `<div class="card"><div class="placeholder-content"><h2>Loading COT History...</h2></div></div>`;
+
+    const cotHistory = await fetchCotHistory();
+
+    const renderWeekColumns = (history: CotHistoryItem[]) => {
+        return history.map(item => `
+            <div class="cot-week-col">
+                <div class="cot-date">${new Date(item.date).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}</div>
+                <div class="cot-bar">
+                    <div class="cot-long" style="flex-basis: ${item.longPosition / (item.longPosition + item.shortPosition) * 100}%" title="Long: ${item.longPosition.toLocaleString()}"></div>
+                    <div class="cot-short" style="flex-basis: ${item.shortPosition / (item.longPosition + item.shortPosition) * 100}%" title="Short: ${item.shortPosition.toLocaleString()}"></div>
+                </div>
+                <div class="cot-net ${item.netPosition >= 0 ? 'positive' : 'negative'}">${item.netPosition.toLocaleString()}</div>
+            </div>
+        `).join('');
+    };
+
+    page.innerHTML = `
+        <div class="card">
+            <h2 class="card-title" title="6-Week Commitment of Traders (COT) History">COT Report History</h2>
+        </div>
+        <div class="cot-grid">
+            ${cotHistory.map(currencyData => `
+                <div class="card cot-currency-card">
+                    <div class="cot-currency-header">
+                        <h3>${currencyData.currency}</h3>
+                    </div>
+                    <div class="cot-history-row">
+                        ${renderWeekColumns(currencyData.history)}
+                    </div>
+                </div>
+            `).join('')}
+        </div>
+    `;
     return page;
 }
 
@@ -751,11 +831,12 @@ async function App() {
                         attachPageListeners(mainPanel);
                     }).catch((err: any) => {
                         console.error("Error rendering dashboard", err);
-                        mainPanel.innerHTML = `<div class="placeholder-content error"><h2>Could not load dashboard.</h2></div>`;
+                        mainPanel.innerHTML = `<div class="placeholder-content error"><h2>Could not load dashboard.</h2><p>${err.message}</p></div>`;
                     });
-                break; 
+                break;
             case 'DCA Bots': pageContentPromise = createDcaBotsPage(); break;
             case 'Meat Market': pageContentPromise = createMarketTrendsPage(); break;
+            case 'COT Report': pageContentPromise = createCotPage(); break;
             case 'Statistics': pageContentPromise = createStatisticsPage(); break;
             case 'Settings': pageContentPromise = createSettingsPage(); break;
             default:
@@ -764,7 +845,7 @@ async function App() {
                 content.innerHTML = `<h2>Page not found: ${state.activePage}</h2>`;
                 pageContentPromise = Promise.resolve(content);
         }
-        
+
         if (pageContentPromise) {
             pageContentPromise.then(content => {
                 mainPanel.innerHTML = '';
@@ -773,10 +854,10 @@ async function App() {
                 attachPageListeners(mainPanel);
             }).catch((err: any) => {
                 console.error("Error rendering page", err);
-                mainPanel.innerHTML = `<div class="placeholder-content error"><h2>Could not load page: ${state.activePage}</h2></div>`;
+                mainPanel.innerHTML = `<div class="placeholder-content error"><h2>Could not load page: ${state.activePage}</h2><p>${err.message}</p></div>`;
             });
         }
-        
+
         attachGlobalListeners(root, render);
     };
 
@@ -806,8 +887,8 @@ function attachGlobalListeners(root: HTMLElement, render: () => void) {
             const page = (e.currentTarget as HTMLElement).dataset.page;
             if (page && page !== state.activePage) {
                 state.activePage = page;
-                state.expandedTrendPair = null; 
-                render(); 
+                state.expandedTrendPair = null;
+                render();
             }
         });
     });
@@ -821,8 +902,8 @@ function attachGlobalListeners(root: HTMLElement, render: () => void) {
     const accountSelect = root.querySelector('#account-select') as HTMLSelectElement;
     accountSelect?.addEventListener('change', () => {
         state.activeAccountId = accountSelect.value;
-        state.expandedTrendPair = null; 
-        marketTrendsData = null; 
+        state.expandedTrendPair = null;
+        marketTrendsData = null;
         render();
     });
 }
@@ -833,22 +914,61 @@ function attachPageListeners(panel: HTMLElement) {
         row.addEventListener('click', (e) => {
             if ((e.target as HTMLElement).closest('button, input, a')) return;
 
-            const pair = (row as HTMLElement).dataset.pair!;
+            const pairData = (row as HTMLElement).dataset.pair;
+            if (!pairData) return;
+
+            const pair = JSON.parse(pairData).pair;
             state.expandedTrendPair = state.expandedTrendPair === pair ? null : pair;
-            
+
             const card = row.closest('.card');
-            // FIX: Assert 'card' as HTMLElement to match the function's expected type
             if (card && marketTrendsData) {
                 const isDashboardTable = card.parentElement?.classList.contains('main-content');
-                const trendsToRender = isDashboardTable 
-                    ? [...marketTrendsData].sort((a,b) => parseFloat(b.dsize) - parseFloat(a.dsize)).slice(0, 6)
+                const trendsToRender = isDashboardTable
+                    ? [...marketTrendsData].sort((a,b) => parseFloat(b.dsize) - parseFloat(a.dsize)).slice(0, 8)
                     : marketTrendsData;
 
                 const tableContainer = card.querySelector('.table-container');
                 if(tableContainer) {
-                    tableContainer.innerHTML = createMarketTrendsTable(trendsToRender);
-                    attachPageListeners(card as HTMLElement);
+                    if (isDashboardTable) {
+                       const newCardContainer = document.createElement('div');
+                       newCardContainer.innerHTML = createDashboardMarketTrendsCard(trendsToRender);
+                       const newCard = newCardContainer.firstElementChild;
+                       if (newCard) {
+                           card.replaceWith(newCard);
+                           attachPageListeners(panel);
+                       }
+                    } else {
+                       tableContainer.innerHTML = createMarketTrendsTable(trendsToRender);
+                       attachPageListeners(card);
+                    }
                 }
+            }
+        });
+    });
+
+    const sortableHeaders = panel.querySelectorAll('.sortable-header');
+    sortableHeaders.forEach(header => {
+        header.addEventListener('click', () => {
+            const column = header.getAttribute('data-sort') as 'pair' | 'setupQuality' | 'dsize';
+            if (!column) return;
+
+            if (state.marketDataSort.column === column) {
+                state.marketDataSort.direction = state.marketDataSort.direction === 'asc' ? 'desc' : 'asc';
+            } else {
+                state.marketDataSort.column = column;
+                state.marketDataSort.direction = 'desc';
+            }
+
+            const card = header.closest('.card');
+            if (card && marketTrendsData) {
+                 const trendsToRender = [...marketTrendsData].sort((a,b) => parseFloat(b.dsize) - parseFloat(a.dsize)).slice(0, 8);
+                 const newCardContainer = document.createElement('div');
+                 newCardContainer.innerHTML = createDashboardMarketTrendsCard(trendsToRender);
+                 const newCard = newCardContainer.firstElementChild;
+                 if (newCard) {
+                     card.replaceWith(newCard);
+                     attachPageListeners(panel);
+                 }
             }
         });
     });

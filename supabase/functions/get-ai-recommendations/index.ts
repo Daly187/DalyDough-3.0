@@ -1,14 +1,15 @@
-// File: supabase/functions/get-ai-recommendations/index.ts
+// supabase/functions/get-ai-recommendations/index.ts
 
-import { GoogleGenAI } from "https://esm.sh/@google/genai@^0.14.1";
-import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
-import { corsHeaders } from "shared/cors.ts";
+import { GoogleGenAI } from "https://esm.sh/@google/generative-ai@0.14.1";
+import { serve } from "https://deno.land/std@0.224.0/http/server.ts";
 
-declare const Deno: any; {
-  env: {
-    get(key: string): string | undefined;
-  };
+// Define CORS headers directly in the function
+const corsHeaders = {
+  "Access-Control-Allow-Origin": "*",
+  "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
 };
+
+declare const Deno: any;
 
 const GEMINI_API_KEY = Deno.env.get("GEMINI_API_KEY");
 
@@ -42,8 +43,12 @@ serve(async (req) => {
 
     let recommendations;
     try {
-        const jsonString = text.substring(text.indexOf('['), text.lastIndexOf(']') + 1);
-        recommendations = JSON.parse(jsonString);
+        // A more robust way to find and parse the JSON array
+        const jsonMatch = text.match(/\[\s*\{[\s\S]*?\}\s*\]/);
+        if (!jsonMatch) {
+            throw new Error("No valid JSON array found in the AI response.");
+        }
+        recommendations = JSON.parse(jsonMatch[0]);
     } catch (parseError) {
       console.error("Failed to parse Gemini response as JSON:", text);
       throw new Error("The AI returned a response that was not in the expected JSON format.");

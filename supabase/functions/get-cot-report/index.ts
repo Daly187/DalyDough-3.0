@@ -1,5 +1,12 @@
-import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
-import { corsHeaders } from "shared/cors.ts";
+// supabase/functions/get-cot-report/index.ts
+
+import { serve } from "https://deno.land/std@0.224.0/http/server.ts";
+
+// Define CORS headers directly in the function
+const corsHeaders = {
+  "Access-Control-Allow-Origin": "*",
+  "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
+};
 
 declare const Deno: any;
 

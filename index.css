@@ -1431,3 +1431,79 @@ input:checked + .toggle-slider:before {
         padding: 1rem;
     }
 }
+
+/* index.css */
+
+/* Add these new rules at the end of the file */
+
+.cot-grid {
+    display: flex;
+    flex-direction: column;
+    gap: 1.5rem;
+}
+
+.cot-currency-card {
+    padding: 1.5rem;
+}
+
+.cot-currency-header {
+    margin-bottom: 1rem;
+    padding-bottom: 1rem;
+    border-bottom: 1px solid var(--border-color);
+}
+
+.cot-currency-header h3 {
+    font-size: 1.25rem;
+    font-weight: 600;
+}
+
+.cot-history-row {
+    display: grid;
+    grid-template-columns: repeat(6, 1fr);
+    gap: 1.5rem;
+}
+
+.cot-week-col {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 0.5rem;
+}
+
+.cot-date {
+    font-size: 0.875rem;
+    color: var(--text-secondary);
+    font-weight: 500;
+}
+
+.cot-bar {
+    display: flex;
+    width: 100%;
+    height: 20px;
+    border-radius: var(--border-radius);
+    overflow: hidden;
+    background-color: var(--bg-surface-2);
+}
+
+.cot-long {
+    background-color: var(--positive-green);
+    transition: flex-basis 0.3s ease;
+}
+
+.cot-short {
+    background-color: var(--negative-red);
+    transition: flex-basis 0.3s ease;
+}
+
+.cot-net {
+    font-weight: 600;
+    font-size: 1rem;
+}
+
+.cot-net.positive {
+    color: var(--positive-green);
+}
+
+.cot-net.negative {
+    color: var(--negative-red);
+}
