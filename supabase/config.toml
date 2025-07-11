@@ -1,0 +1,19 @@
+# This is the full, correct configuration.
+project_id = "rptysuvzufliibffzqgk"
+
+[api]
+  port = 54321
+  schemas = ["public", "graphql_public"]
+  extra_search_path = ["public"]
+  max_rows = 1000
+
+[db]
+  port = 54322
+  major_version = 15
+
+[studio]
+  port = 54323
+
+# This section is critical for fixing the error.
+[functions]
+  import_map = "import_map.json"

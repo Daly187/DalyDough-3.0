@@ -1,14 +1,10 @@
-/**
- * @license
- * SPDX-License-Identifier: Apache-2.0
- */
+// File: supabase/functions/get-ai-recommendations/index.ts
 
-// FIX: Use a URL import that Deno can understand
 import { GoogleGenAI } from "https://esm.sh/@google/genai@^0.14.1";
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
-import { corsHeaders } from "../_shared/cors.ts";
+import { corsHeaders } from "shared/cors.ts";
 
-declare const Deno: {
+declare const Deno: any; {
   env: {
     get(key: string): string | undefined;
   };
@@ -44,10 +40,8 @@ serve(async (req) => {
     const response = result.response;
     const text = response.text();
 
-    // The Gemini model is good at returning JSON, but we parse it safely.
     let recommendations;
     try {
-        // Find the start and end of the JSON block
         const jsonString = text.substring(text.indexOf('['), text.lastIndexOf(']') + 1);
         recommendations = JSON.parse(jsonString);
     } catch (parseError) {
@@ -59,7 +53,7 @@ serve(async (req) => {
       headers: { ...corsHeaders, "Content-Type": "application/json" },
       status: 200,
     });
-  } catch (error) {
+  } catch (error: any) {
     console.error("❌ Error in get-ai-recommendations:", error.message || error);
     return new Response(JSON.stringify({ error: error.message || "Unknown error" }), {
       headers: { ...corsHeaders, "Content-Type": "application/json" },

@@ -1,9 +1,11 @@
 // File: supabase/functions/get-market-data/index.ts
 
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
-import { corsHeaders } from "../_shared/cors.ts";
+import { corsHeaders } from "shared/cors.ts";
 
-// Load secrets from environment
+declare const Deno: any;
+
+// Load secrets from environment. This key MUST be set in your Supabase project dashboard.
 const FMP_API_KEY = Deno.env.get("FMP_API_KEY");
 
 // Define a type for our results for better type safety
@@ -60,7 +62,7 @@ const getTrend = (data: { close: number }[] | null): "Up" | "Down" | "Neutral" =
 
 
 serve(async (req: Request) => {
-  // This block is the key to fixing the CORS error
+  // This block handles the CORS preflight request from the browser. It's essential.
   if (req.method === "OPTIONS") {
     return new Response("ok", { headers: corsHeaders });
   }

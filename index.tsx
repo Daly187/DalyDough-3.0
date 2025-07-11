@@ -32,14 +32,13 @@ type Bot = {
     plannedReentries: { level: string; size: string; note: string; }[];
 };
 type Account = { id: string; name: string; user_email: string };
-// UPDATED: This type now matches the output of our new Supabase function
 type MarketTrend = {
     pair: string;
     trendH4: "Up" | "Down" | "Neutral";
     trendD1: "Up" | "Down" | "Neutral";
     setupQuality: 'A' | 'B' | 'C';
     conditions: { cot: boolean; adx: boolean; spread: boolean; };
-    dsize: string; // The final score
+    dsize: string; 
     breakdown: Record<string, { score: number; value: string }>;
 };
 type AccountStat = { label: string; value: string | number };
@@ -54,7 +53,7 @@ const icons = {
   bots: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"></rect><path d="M7 11V7a5 5 0 0 1 10 0v4"></path><path d="M12 16a2 2 0 1 0 0-4 2 2 0 0 0 0 4z"></path></svg>`,
   trends: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M2.5 2v6h6m13 14v-6h-6"></path><path d="M21.5 2l-8.2 8.2a2 2 0 0 0 0 2.8L16 15.7a2 2 0 0 1 0 2.8l-2.8 2.8a2 2 0 0 1-2.8 0L2.5 12.5a2 2 0 0 0-2.8 0L2 14.2"></path></svg>`,
   statistics: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 20V10"></path><path d="M18 20V4"></path><path d="M6 20V16"></path></svg>`,
-  settings: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"></circle><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06-.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"></path></svg>`,
+  settings: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"></circle><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82-.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06-.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"></path></svg>`,
   trendUp: `<svg viewBox="0 0 24 24" fill="currentColor"><path d="M12 4l8 8h-6v8h-4v-8H4l8-8z"></path></svg>`,
   trendDown: `<svg viewBox="0 0 24 24" fill="currentColor"><path d="M12 20l-8-8h6V4h4v8h6l-8 8z"></path></svg>`,
   search: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"></circle><line x1="21" y1="21" x2="16.65" y2="16.65"></line></svg>`,
@@ -78,7 +77,7 @@ const tradingSymbols = [
   'GBPCAD', 'GBPCHF', 'GBPJPY', 'GBPUSD', 'NZDCAD', 'NZDCHF', 'NZDJPY', 'NZDUSD',
   'USDCAD', 'USDCHF', 'USDJPY', 'USDTRY', 'USDZAR', 'XAUUSD'
 ];
-let marketTrendsData: MarketTrend[] | null = null;
+let marketTrendsData: MarketTrend[] | null = null; 
 
 // --- DATA FETCHING FUNCTIONS ---
 
@@ -108,9 +107,11 @@ async function fetchMarketTrends(): Promise<MarketTrend[]> {
     if (marketTrendsData) return marketTrendsData;
     console.log("Fetching live market data...");
     try {
-        const { data, error } = await supabase.functions.invoke('get-market-data');
+        const { data, error } = await supabase.functions.invoke('get-market-data', {
+            headers: { 'Authorization': `Bearer ${supabaseAnonKey}` }
+        });
         if (error) throw error;
-        if (!data) { // Check if data is null or undefined
+        if (!data) { 
             console.error("No data returned from get-market-data function.");
             return [];
         }
@@ -125,7 +126,9 @@ async function fetchMarketTrends(): Promise<MarketTrend[]> {
 async function fetchCotReport(): Promise<CotData[]> {
     console.log("Fetching COT report data...");
      try {
-        const { data, error } = await supabase.functions.invoke('get-cot-report');
+        const { data, error } = await supabase.functions.invoke('get-cot-report', {
+            headers: { 'Authorization': `Bearer ${supabaseAnonKey}` }
+        });
         if (error) throw error;
         return data;
     } catch (err: any) {
@@ -143,7 +146,8 @@ async function fetchAiRecommendations(): Promise<AiRecommendation[]> {
 
     try {
         const { data, error } = await supabase.functions.invoke('get-ai-recommendations', {
-            body: { marketTrends: sortedTrends.slice(0, 10) }
+            body: { marketTrends: sortedTrends.slice(0, 10) },
+            headers: { 'Authorization': `Bearer ${supabaseAnonKey}` }
         });
         if (error) throw error;
         return data.recommendations;
@@ -167,6 +171,7 @@ async function fetchAccountStats(accountId: string): Promise<AccountStat[]> {
         { label: 'Longest Streak', value: `${Math.floor(8 * seed / 100)} wins` },
     ];
 }
+
 
 // --- MOCK DATA GENERATORS ---
 const generateBots = (count: number, accountId: string): Bot[] => {
@@ -230,6 +235,7 @@ const generateBots = (count: number, accountId: string): Bot[] => {
     return bots;
 };
 
+
 // --- APP STATE ---
 let state = {
     user: null as User | null,
@@ -237,7 +243,6 @@ let state = {
     activePage: 'Dashboard',
     activeAccountId: 'acc_1',
     accounts: [] as Account[],
-    // NEW: Add state to track expanded trend row
     expandedTrendPair: null as string | null,
 };
 
@@ -419,7 +424,6 @@ function createBotConfigControlsHTML(isQuickLauncher = false): string {
     `;
 }
 
-// NEW: Component to show the score breakdown
 function createDetailedScoringCard(trend: MarketTrend): string {
     return `
         <div class="detailed-scoring-card">
@@ -457,7 +461,7 @@ function createMarketTrendsTable(data: MarketTrend[], isLoading = false): string
                     ${data.map(d => {
                         const isExpanded = state.expandedTrendPair === d.pair;
                         return `
-                            <tr class="is-expandable ${isExpanded ? 'active' : ''}" data-pair='${d.pair}'>
+                            <tr class="is-expandable ${isExpanded ? 'active' : ''}" data-pair='${JSON.stringify(d)}'>
                                 <td>${d.pair}</td>
                                 <td class="trend-cell"><span class="trend-text trend-${d.trendH4.toLowerCase()}">${d.trendH4}</span><span class="trend-text-secondary"> / ${d.trendD1}</span></td>
                                 <td><span class="setup-quality-pill quality-${d.setupQuality}">${d.setupQuality}</span></td>
@@ -489,7 +493,6 @@ async function createDashboardMainContent(): Promise<HTMLElement> {
         fetchCotReport(),
     ]);
     
-    // Use a copy of the cached data for sorting/slicing
     const topTrends = trends ? [...trends]
         .sort((a, b) => Number(b.dsize) - Number(a.dsize))
         .slice(0, 6) : [];
@@ -621,7 +624,6 @@ async function createMarketTrendsPage(): Promise<HTMLElement> {
 
     const trends = await fetchMarketTrends();
     
-    // Use the cached data which is now sorted by the backend
     const sortedTrends = trends || [];
 
     page.innerHTML = `
@@ -630,7 +632,6 @@ async function createMarketTrendsPage(): Promise<HTMLElement> {
         ${createMarketTrendsTable(sortedTrends)}
       </div>`;
     
-    // Re-attach listeners after innerHTML is updated
     attachPageListeners(page);
     return page;
 }
@@ -736,7 +737,7 @@ async function App() {
         root.append(appContainer, botModal);
 
         // ASYNC PAGE LOADING
-        let pageContentPromise: Promise<HTMLElement>;
+        let pageContentPromise: Promise<HTMLElement> | undefined;
         switch (state.activePage) {
             case 'Dashboard':
                 const dashboardContainer = document.createElement('div');
@@ -752,7 +753,7 @@ async function App() {
                         console.error("Error rendering dashboard", err);
                         mainPanel.innerHTML = `<div class="placeholder-content error"><h2>Could not load dashboard.</h2></div>`;
                     });
-                return; 
+                break; 
             case 'DCA Bots': pageContentPromise = createDcaBotsPage(); break;
             case 'Meat Market': pageContentPromise = createMarketTrendsPage(); break;
             case 'Statistics': pageContentPromise = createStatisticsPage(); break;
@@ -763,16 +764,18 @@ async function App() {
                 content.innerHTML = `<h2>Page not found: ${state.activePage}</h2>`;
                 pageContentPromise = Promise.resolve(content);
         }
-
-        pageContentPromise.then(content => {
-            mainPanel.innerHTML = '';
-            mainPanel.style.gridTemplateColumns = '1fr';
-            mainPanel.appendChild(content);
-            attachPageListeners(mainPanel);
-        }).catch((err: any) => {
-            console.error("Error rendering page", err);
-            mainPanel.innerHTML = `<div class="placeholder-content error"><h2>Could not load page: ${state.activePage}</h2></div>`;
-        });
+        
+        if (pageContentPromise) {
+            pageContentPromise.then(content => {
+                mainPanel.innerHTML = '';
+                mainPanel.style.gridTemplateColumns = '1fr';
+                mainPanel.appendChild(content);
+                attachPageListeners(mainPanel);
+            }).catch((err: any) => {
+                console.error("Error rendering page", err);
+                mainPanel.innerHTML = `<div class="placeholder-content error"><h2>Could not load page: ${state.activePage}</h2></div>`;
+            });
+        }
         
         attachGlobalListeners(root, render);
     };
@@ -803,7 +806,7 @@ function attachGlobalListeners(root: HTMLElement, render: () => void) {
             const page = (e.currentTarget as HTMLElement).dataset.page;
             if (page && page !== state.activePage) {
                 state.activePage = page;
-                state.expandedTrendPair = null; // Reset expanded row on page change
+                state.expandedTrendPair = null; 
                 render(); 
             }
         });
@@ -818,27 +821,25 @@ function attachGlobalListeners(root: HTMLElement, render: () => void) {
     const accountSelect = root.querySelector('#account-select') as HTMLSelectElement;
     accountSelect?.addEventListener('change', () => {
         state.activeAccountId = accountSelect.value;
-        state.expandedTrendPair = null; // Reset expanded row on account change
-        marketTrendsData = null; // Clear cache on account change
+        state.expandedTrendPair = null; 
+        marketTrendsData = null; 
         render();
     });
 }
 
 function attachPageListeners(panel: HTMLElement) {
-    // Listener for expandable rows in the market trends table
     const trendRows = panel.querySelectorAll('.is-expandable[data-pair]');
     trendRows.forEach(row => {
         row.addEventListener('click', (e) => {
             if ((e.target as HTMLElement).closest('button, input, a')) return;
 
             const pair = (row as HTMLElement).dataset.pair!;
-            // Toggle expansion
             state.expandedTrendPair = state.expandedTrendPair === pair ? null : pair;
             
-            // Re-render the table's parent component to reflect the change
             const card = row.closest('.card');
+            // FIX: Assert 'card' as HTMLElement to match the function's expected type
             if (card && marketTrendsData) {
-                const isDashboardTable = card.querySelector('.active-bots-table') !== null;
+                const isDashboardTable = card.parentElement?.classList.contains('main-content');
                 const trendsToRender = isDashboardTable 
                     ? [...marketTrendsData].sort((a,b) => parseFloat(b.dsize) - parseFloat(a.dsize)).slice(0, 6)
                     : marketTrendsData;
@@ -846,8 +847,7 @@ function attachPageListeners(panel: HTMLElement) {
                 const tableContainer = card.querySelector('.table-container');
                 if(tableContainer) {
                     tableContainer.innerHTML = createMarketTrendsTable(trendsToRender);
-                    // We must re-attach listeners to the new table content
-                    attachPageListeners(card);
+                    attachPageListeners(card as HTMLElement);
                 }
             }
         });
