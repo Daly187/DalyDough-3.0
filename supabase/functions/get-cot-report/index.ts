@@ -6,20 +6,19 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { corsHeaders } from "../_shared/cors.ts";
 
-// Add this declaration to satisfy TypeScript for Deno-specific APIs
 declare const Deno: {
   env: {
     get(key: string): string | undefined;
   };
 };
 
-// The new key provided by the user (RUTyEslPzCs5tHMBZUUxCr2no36EV45Q) is assumed to be set as FMP_API_KEY
 const fmpKey = Deno.env.get("FMP_API_KEY");
 const API_BASE = "https://financialmodelingprep.com/api";
 const currencies = ['EUR', 'GBP', 'JPY', 'CHF', 'AUD', 'CAD', 'NZD'];
 
-serve(async (_req) => {
-  if (_req.method === "OPTIONS") {
+serve(async (req) => {
+  // This block is the key to fixing the CORS error
+  if (req.method === "OPTIONS") {
     return new Response("ok", { headers: corsHeaders });
   }
 

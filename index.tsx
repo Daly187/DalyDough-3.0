@@ -6,10 +6,8 @@ import { createClient, User, Session } from '@supabase/supabase-js';
 
 // --- TYPESCRIPT TYPE DEFINITIONS ---
 
-// Define a type for the icon names to ensure type safety when accessing the 'icons' object.
 type IconName = keyof typeof icons;
 
-// Define more specific types for your data structures instead of 'any'.
 type Bot = {
     id: string;
     pair: string;
@@ -34,7 +32,16 @@ type Bot = {
     plannedReentries: { level: string; size: string; note: string; }[];
 };
 type Account = { id: string; name: string; user_email: string };
-type MarketTrend = { pair: string; trendH4: string; trendD1: string; setupQuality: 'A' | 'B' | 'C'; conditions: { cot: boolean; adx: boolean; spread: boolean; }; dsize: string; breakdown: object; };
+// UPDATED: This type now matches the output of our new Supabase function
+type MarketTrend = {
+    pair: string;
+    trendH4: "Up" | "Down" | "Neutral";
+    trendD1: "Up" | "Down" | "Neutral";
+    setupQuality: 'A' | 'B' | 'C';
+    conditions: { cot: boolean; adx: boolean; spread: boolean; };
+    dsize: string; // The final score
+    breakdown: Record<string, { score: number; value: string }>;
+};
 type AccountStat = { label: string; value: string | number };
 type Kpi = { label: string; value: string; positive: boolean | null };
 type AiRecommendation = { pair: string; reason: string; score: number; score_level: string };
@@ -71,7 +78,7 @@ const tradingSymbols = [
   'GBPCAD', 'GBPCHF', 'GBPJPY', 'GBPUSD', 'NZDCAD', 'NZDCHF', 'NZDJPY', 'NZDUSD',
   'USDCAD', 'USDCHF', 'USDJPY', 'USDTRY', 'USDZAR', 'XAUUSD'
 ];
-let marketTrendsData: MarketTrend[] | null = null; // Cache for market data
+let marketTrendsData: MarketTrend[] | null = null;
 
 // --- DATA FETCHING FUNCTIONS ---
 
@@ -97,13 +104,16 @@ async function fetchBots(accountId: string): Promise<Bot[]> {
     return generateBots(30, accountId);
 }
 
-
 async function fetchMarketTrends(): Promise<MarketTrend[]> {
     if (marketTrendsData) return marketTrendsData;
     console.log("Fetching live market data...");
     try {
         const { data, error } = await supabase.functions.invoke('get-market-data');
         if (error) throw error;
+        if (!data) { // Check if data is null or undefined
+            console.error("No data returned from get-market-data function.");
+            return [];
+        }
         marketTrendsData = data;
         return data;
     } catch (err: any) {
@@ -158,8 +168,7 @@ async function fetchAccountStats(accountId: string): Promise<AccountStat[]> {
     ];
 }
 
-
-// --- MOCK DATA GENERATORS (to be phased out) ---
+// --- MOCK DATA GENERATORS ---
 const generateBots = (count: number, accountId: string): Bot[] => {
     const bots: Bot[] = [];
     const statuses: ('active' | 'paused' | 'error')[] = ['active', 'paused', 'error'];
@@ -221,7 +230,6 @@ const generateBots = (count: number, accountId: string): Bot[] => {
     return bots;
 };
 
-
 // --- APP STATE ---
 let state = {
     user: null as User | null,
@@ -229,6 +237,8 @@ let state = {
     activePage: 'Dashboard',
     activeAccountId: 'acc_1',
     accounts: [] as Account[],
+    // NEW: Add state to track expanded trend row
+    expandedTrendPair: null as string | null,
 };
 
 // --- COMPONENT CREATORS ---
@@ -409,12 +419,31 @@ function createBotConfigControlsHTML(isQuickLauncher = false): string {
     `;
 }
 
+// NEW: Component to show the score breakdown
+function createDetailedScoringCard(trend: MarketTrend): string {
+    return `
+        <div class="detailed-scoring-card">
+             <table>
+                <tbody>
+                    ${Object.entries(trend.breakdown).map(([key, { score, value }]) => `
+                        <tr>
+                            <td>${key}</td>
+                            <td>${value}</td>
+                            <td>+${score}</td>
+                        </tr>
+                    `).join('')}
+                </tbody>
+            </table>
+        </div>
+    `;
+}
+
 function createMarketTrendsTable(data: MarketTrend[], isLoading = false): string {
     if (isLoading) {
         return `<div class="placeholder-content"><p class="text-secondary">Loading Market Data...</p></div>`;
     }
     if (!data || data.length === 0) {
-        return `<div class="placeholder-content"><p class="text-secondary">Could not load market data.</p></div>`;
+        return `<div class="placeholder-content"><p class="text-secondary">Could not load market data. Check Supabase function logs.</p></div>`;
     }
     return `
         <div class="table-container">
@@ -425,24 +454,29 @@ function createMarketTrendsTable(data: MarketTrend[], isLoading = false): string
                     </tr>
                 </thead>
                 <tbody>
-                    ${data.map(d => `
-                        <tr class="is-expandable" data-pair='${JSON.stringify(d)}'>
-                            <td>${d.pair}</td>
-                            <td class="trend-cell"><span class="trend-text trend-${d.trendH4.toLowerCase()}">${d.trendH4}</span><span class="trend-text-secondary"> / ${d.trendD1}</span></td>
-                            <td><span class="setup-quality-pill quality-${d.setupQuality}">${d.setupQuality}</span></td>
-                            <td class="conditions-cell">
-                                <span class="condition-icon ${d.conditions.cot ? 'active' : ''}" title="COT Bias">${icons.brain}</span>
-                                <span class="condition-icon ${d.conditions.adx ? 'active' : ''}" title="ADX Strength">${icons.bolt}</span>
-                                <span class="condition-icon ${d.conditions.spread ? 'active' : ''}" title="Spread/Volatility">${icons.resizeHorizontal}</span>
-                            </td>
-                            <td><span class="recommendation-score score-${Number(d.dsize) > 8 ? 'high' : Number(d.dsize) > 6 ? 'medium' : 'low'}">${d.dsize}</span></td>
-                        </tr>
-                    `).join('')}
+                    ${data.map(d => {
+                        const isExpanded = state.expandedTrendPair === d.pair;
+                        return `
+                            <tr class="is-expandable ${isExpanded ? 'active' : ''}" data-pair='${d.pair}'>
+                                <td>${d.pair}</td>
+                                <td class="trend-cell"><span class="trend-text trend-${d.trendH4.toLowerCase()}">${d.trendH4}</span><span class="trend-text-secondary"> / ${d.trendD1}</span></td>
+                                <td><span class="setup-quality-pill quality-${d.setupQuality}">${d.setupQuality}</span></td>
+                                <td class="conditions-cell">
+                                    <span class="condition-icon ${d.conditions.cot ? 'active' : ''}" title="COT Bias">${icons.brain}</span>
+                                    <span class="condition-icon ${d.conditions.adx ? 'active' : ''}" title="ADX Strength">${icons.bolt}</span>
+                                    <span class="condition-icon ${d.conditions.spread ? 'active' : ''}" title="Spread/Volatility">${icons.resizeHorizontal}</span>
+                                </td>
+                                <td><span class="recommendation-score score-${Number(d.dsize) >= 8 ? 'high' : Number(d.dsize) >= 6 ? 'medium' : 'low'}">${d.dsize}</span></td>
+                            </tr>
+                            ${isExpanded ? `<tr class="expanded-row"><td colspan="5">${createDetailedScoringCard(d)}</td></tr>` : ''}
+                        `;
+                    }).join('')}
                 </tbody>
             </table>
         </div>
     `;
 }
+
 
 async function createDashboardMainContent(): Promise<HTMLElement> {
     const mainContent = document.createElement('div');
@@ -455,9 +489,10 @@ async function createDashboardMainContent(): Promise<HTMLElement> {
         fetchCotReport(),
     ]);
     
-    const topTrends = [...trends]
+    // Use a copy of the cached data for sorting/slicing
+    const topTrends = trends ? [...trends]
         .sort((a, b) => Number(b.dsize) - Number(a.dsize))
-        .slice(0, 6);
+        .slice(0, 6) : [];
     const activeBots = bots.filter(b => b.status === 'active');
 
     mainContent.innerHTML = `
@@ -585,15 +620,21 @@ async function createMarketTrendsPage(): Promise<HTMLElement> {
     page.innerHTML = `<div class="card">${createMarketTrendsTable([], true)}</div>`;
 
     const trends = await fetchMarketTrends();
-    const sortedTrends = [...trends].sort((a, b) => Number(b.dsize) - Number(a.dsize));
+    
+    // Use the cached data which is now sorted by the backend
+    const sortedTrends = trends || [];
 
     page.innerHTML = `
        <div class="card">
         <div class="card-header"><h2 class="card-title" title="A comprehensive list of all currency pairs, sorted by our proprietary D-sizing score.">Meat Market Analysis</h2></div>
         ${createMarketTrendsTable(sortedTrends)}
       </div>`;
+    
+    // Re-attach listeners after innerHTML is updated
+    attachPageListeners(page);
     return page;
 }
+
 
 async function createStatisticsPage(): Promise<HTMLElement> {
     const page = document.createElement('div');
@@ -654,7 +695,6 @@ async function App() {
     const root = document.getElementById('root');
     if (!root) { console.error('Root element not found'); return; }
 
-    // Create a mock session object since we are removing login.
     state.session = {
       access_token: "dev-token",
       token_type: "bearer",
@@ -671,13 +711,12 @@ async function App() {
       expires_at: Math.floor(Date.now() / 1000) + 3600,
       refresh_token: "dev-refresh-token",
     } as Session;
-
     state.user = state.session.user;
 
-    // Fetch accounts now that we have a mock user
     state.accounts = await fetchAccounts();
     state.activeAccountId = state.accounts[0]?.id || 'acc_1';
 
+    // The main render function
     const render = async () => {
         root.innerHTML = '<div class="placeholder-content"><h2>Loading App...</h2></div>';
 
@@ -700,7 +739,6 @@ async function App() {
         let pageContentPromise: Promise<HTMLElement>;
         switch (state.activePage) {
             case 'Dashboard':
-                // Dashboard has a special two-panel layout that we handle separately.
                 const dashboardContainer = document.createElement('div');
                 dashboardContainer.style.display = 'contents';
                 mainPanel.innerHTML = '';
@@ -714,7 +752,7 @@ async function App() {
                         console.error("Error rendering dashboard", err);
                         mainPanel.innerHTML = `<div class="placeholder-content error"><h2>Could not load dashboard.</h2></div>`;
                     });
-                return; // Early return for this special case
+                return; 
             case 'DCA Bots': pageContentPromise = createDcaBotsPage(); break;
             case 'Meat Market': pageContentPromise = createMarketTrendsPage(); break;
             case 'Statistics': pageContentPromise = createStatisticsPage(); break;
@@ -742,7 +780,6 @@ async function App() {
     render();
 }
 
-
 function attachGlobalListeners(root: HTMLElement, render: () => void) {
     const launchBotBtn = root.querySelector('#launch-new-bot-btn');
     const closeModalBtn = root.querySelector('#modal-close-btn');
@@ -766,6 +803,7 @@ function attachGlobalListeners(root: HTMLElement, render: () => void) {
             const page = (e.currentTarget as HTMLElement).dataset.page;
             if (page && page !== state.activePage) {
                 state.activePage = page;
+                state.expandedTrendPair = null; // Reset expanded row on page change
                 render(); 
             }
         });
@@ -780,70 +818,38 @@ function attachGlobalListeners(root: HTMLElement, render: () => void) {
     const accountSelect = root.querySelector('#account-select') as HTMLSelectElement;
     accountSelect?.addEventListener('change', () => {
         state.activeAccountId = accountSelect.value;
+        state.expandedTrendPair = null; // Reset expanded row on account change
+        marketTrendsData = null; // Clear cache on account change
         render();
     });
 }
 
-function attachPageListeners(mainPanel: HTMLElement) {
-    if (state.activePage === 'Dashboard') {
-        const pageDataStr = (mainPanel.querySelector('.main-content') as HTMLElement)?.dataset.pageData;
-        const pageData = pageDataStr ? JSON.parse(pageDataStr) : {};
-        const allBots: Bot[] = pageData.allBots || [];
-        
-        const pairSelect = mainPanel.querySelector('#quick-launcher-pair-select') as HTMLSelectElement;
-        const scoreSlider = mainPanel.querySelector('#score-threshold-slider') as HTMLInputElement;
-        const scoreValueSpan = mainPanel.querySelector('#score-threshold-value');
-        const launchBtn = mainPanel.querySelector('#quick-launch-btn') as HTMLButtonElement;
-       
-        const updateLauncherState = () => {
-            if (!pairSelect || !scoreSlider || !scoreValueSpan || !launchBtn || !marketTrendsData) return;
-            const selectedPair = pairSelect.value;
-            const threshold = parseFloat(scoreSlider.value);
-            const trendData = marketTrendsData.find(t => t.pair === selectedPair);
-            const currentScore = trendData ? parseFloat(trendData.dsize) : 0;
-            if(scoreValueSpan) scoreValueSpan.textContent = threshold.toFixed(1);
-            launchBtn.disabled = currentScore < threshold;
-        };
-
-        pairSelect?.addEventListener('change', updateLauncherState);
-        scoreSlider?.addEventListener('input', updateLauncherState);
-
-        // Fetch market data if not already cached, then update launcher state
-        if (marketTrendsData) {
-            updateLauncherState();
-        } else {
-            fetchMarketTrends().then(updateLauncherState);
-        }
-
-        const botTableBody = mainPanel.querySelector('.active-bots-table tbody');
-        if (botTableBody) {
-            botTableBody.addEventListener('click', (event) => {
-                const target = event.target as HTMLElement;
-                const row = target.closest('tr.is-expandable');
-
-                if (target.classList.contains('close-now-btn')) {
-                     const rowToClose = target.closest('tr');
-                     if (rowToClose) rowToClose.style.opacity = '0.5';
-                    return; // Prevent row expansion
-                }
-
-                if (row) {
-                    if (target.closest('button, input, a, .toggle-switch')) return; // Ignore clicks on interactive elements
-                    
-                    const botId = (row as HTMLElement).dataset.botId;
-                    const botData = allBots.find((b: Bot) => b.id === botId);
-                    console.log("Expanding row for bot:", botData); // Use the variable to silence the error
-                }
-            });
-        }
-    }
-
-    const trendRows = mainPanel.querySelectorAll('.is-expandable[data-pair]');
+function attachPageListeners(panel: HTMLElement) {
+    // Listener for expandable rows in the market trends table
+    const trendRows = panel.querySelectorAll('.is-expandable[data-pair]');
     trendRows.forEach(row => {
         row.addEventListener('click', (e) => {
-             if ((e.target as HTMLElement).closest('button, input, a')) return;
-            const trendData = JSON.parse((row as HTMLElement).dataset.pair!);
-            console.log("Expanding row for trend:", trendData); // Use the variable
+            if ((e.target as HTMLElement).closest('button, input, a')) return;
+
+            const pair = (row as HTMLElement).dataset.pair!;
+            // Toggle expansion
+            state.expandedTrendPair = state.expandedTrendPair === pair ? null : pair;
+            
+            // Re-render the table's parent component to reflect the change
+            const card = row.closest('.card');
+            if (card && marketTrendsData) {
+                const isDashboardTable = card.querySelector('.active-bots-table') !== null;
+                const trendsToRender = isDashboardTable 
+                    ? [...marketTrendsData].sort((a,b) => parseFloat(b.dsize) - parseFloat(a.dsize)).slice(0, 6)
+                    : marketTrendsData;
+
+                const tableContainer = card.querySelector('.table-container');
+                if(tableContainer) {
+                    tableContainer.innerHTML = createMarketTrendsTable(trendsToRender);
+                    // We must re-attach listeners to the new table content
+                    attachPageListeners(card);
+                }
+            }
         });
     });
 }
