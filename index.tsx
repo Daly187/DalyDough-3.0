@@ -826,7 +826,7 @@ async function App() {
                 mainPanel.appendChild(dashboardContainer);
                 Promise.all([createDashboardMainContent(), createDashboardRightPanel()])
                     .then(([mainContent, rightPanel]) => {
-                        mainPanel.style.gridTemplateColumns = '1fr 350px';
+                        mainPanel.style.gridTemplateColumns = 'minmax(0, 2fr) minmax(350px, 1fr)';
                         dashboardContainer.append(mainContent, rightPanel);
                         attachPageListeners(mainPanel);
                     }).catch((err: any) => {

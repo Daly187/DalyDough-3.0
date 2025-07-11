@@ -404,6 +404,10 @@ body {
   overflow-x: auto;
 }
 
+.table-container table {
+  min-width: 700px;
+}
+
 table {
   width: 100%;
   border-collapse: collapse;
@@ -1342,22 +1346,19 @@ input:checked + .toggle-slider:before {
 
 
 /* Responsive */
-@media (max-width: 1200px) {
+@media (max-width: 992px) {
   .main-panel {
     grid-template-columns: 1fr;
   }
-}
-
-@media (max-width: 992px) {
-    .features-section {
-        grid-template-columns: 1fr;
-    }
-    .hero-title {
-        font-size: 2.5rem;
-    }
-    .hero-subtitle {
-        font-size: 1.1rem;
-    }
+  .features-section {
+    grid-template-columns: 1fr;
+  }
+  .hero-title {
+    font-size: 2.5rem;
+  }
+  .hero-subtitle {
+    font-size: 1.1rem;
+  }
 }
 
 
