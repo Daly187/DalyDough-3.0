@@ -68,7 +68,7 @@ body {
   flex-direction: column;
   transition: width var(--transition-speed);
   overflow-y: auto;
-  overflow-x: hidden;
+  overflow-x: hidden; /* Ensure no horizontal overflow within sidebar itself */
 }
 
 .sidebar-header {
@@ -244,12 +244,15 @@ body {
   align-items: center;
   padding: 0 2rem;
   border-bottom: 1px solid var(--border-color);
+  flex-wrap: wrap; /* ADDED */
+  gap: 1rem; /* ADDED */
 }
 
 .header-left {
     display: flex;
     align-items: center;
     gap: 1.5rem;
+    flex-wrap: wrap; /* ADDED */
 }
 
 .current-account-display {
@@ -269,6 +272,8 @@ body {
 .kpi-widgets {
   display: flex;
   gap: 1.5rem;
+  flex-wrap: wrap; /* ADDED */
+  justify-content: flex-start; /* ADDED */
 }
 
 .kpi-widget {
@@ -378,6 +383,8 @@ body {
     display: flex;
     flex-direction: column;
     gap: 2rem;
+    width: 100%; /* ADDED */
+    overflow-x: hidden; /* ADDED */
 }
 
 .card {
@@ -385,6 +392,7 @@ body {
   border-radius: var(--border-radius);
   border: 1px solid var(--border-color);
   padding: 1.5rem;
+  min-width: 0; /* ADDED */
 }
 
 .card-header {
@@ -405,7 +413,9 @@ body {
 }
 
 .table-container table {
-  min-width: 700px;
+  /* min-width: 700px; REMOVED */
+  width: 100%;
+  border-collapse: collapse;
 }
 
 table {
@@ -417,7 +427,7 @@ th, td {
   padding: 1rem;
   text-align: left;
   border-bottom: 1px solid var(--border-color);
-  white-space: nowrap;
+  /* white-space: nowrap; REMOVED */
   vertical-align: middle;
 }
 
@@ -455,6 +465,8 @@ td .btn:last-child {
     width: 80px;
     text-align: right;
     transition: all var(--transition-speed);
+    min-width: 50px; /* ADDED */
+    max-width: 100%; /* ADDED */
 }
 .table-input:focus {
     outline: none;
@@ -529,6 +541,8 @@ td .btn:last-child {
 .recommendation-reason {
     font-size: 0.875rem;
     color: var(--text-secondary);
+    white-space: normal; /* ADDED */
+    word-break: break-word; /* ADDED */
 }
 .recommendation-score {
     margin-left: auto;
@@ -1262,6 +1276,7 @@ input:checked + .toggle-slider:before {
     display: flex;
     align-items: center;
     gap: 0.75rem;
+    flex-wrap: wrap; /* ADDED */
 }
 .mode-toggle span {
     font-size: 0.875rem;
@@ -1312,6 +1327,7 @@ input:checked + .toggle-slider:before {
 .cot-report-card .table-container {
     max-height: 250px; /* Adjust as needed */
     overflow-y: auto;
+    width: 100%; /* ADDED */
 }
 
 .cot-sentiment-bar {
@@ -1329,7 +1345,7 @@ input:checked + .toggle-slider:before {
 }
 .cot-short-bar {
     background-color: var(--negative-red);
-    transition: width var(--transition-speed);
+    transition: flex-basis 0.3s ease;
 }
 .cot-report-card td:nth-child(2) {
     display: flex;
@@ -1433,8 +1449,6 @@ input:checked + .toggle-slider:before {
     }
 }
 
-/* index.css */
-
 /* Add these new rules at the end of the file */
 
 .cot-grid {
@@ -1507,4 +1521,40 @@ input:checked + .toggle-slider:before {
 
 .cot-net.negative {
     color: var(--negative-red);
+}
+
+/* New media query for very small screens or when content is squeezed */
+@media (max-width: 480px) {
+    .main-panel {
+        padding: 0.5rem; /* Reduce padding on very small screens */
+    }
+    .card {
+        padding: 0.75rem; /* Smaller padding for cards */
+    }
+    .card-header {
+        flex-direction: column; /* Stack header elements within cards */
+        align-items: flex-start;
+        gap: 0.5rem;
+        margin-bottom: 0.75rem;
+    }
+    .card-title {
+        font-size: 1rem; /* Smaller font size for card titles */
+    }
+
+    /* Adjustments for the COT Report grid */
+    .cot-history-row {
+        grid-template-columns: repeat(auto-fit, minmax(100px, 1fr)); /* Allow columns to wrap more aggressively */
+        gap: 0.5rem;
+    }
+
+    /* For tables, ensure input fields are small enough */
+    .table-input {
+        width: 50px; /* Make table inputs even smaller */
+        min-width: 40px;
+    }
+
+    .btn {
+        padding: 0.4rem 0.8rem; /* Smaller buttons */
+        font-size: 0.75rem;
+    }
 }
