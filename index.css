@@ -1629,3 +1629,430 @@ input:checked + .toggle-slider:before {
         font-size: 0.75rem;
     }
 }
+/* Enhanced CSS for D-Size Scoring and Real Price Display */
+
+/* Add to your existing index.css file */
+
+/* Price Display Styling */
+.price-cell {
+  font-family: 'Monaco', 'Menlo', monospace;
+}
+
+.current-price {
+  font-weight: 600;
+  font-size: 0.95rem;
+  color: var(--text-primary);
+}
+
+.price-change {
+  font-size: 0.8rem;
+  font-weight: 500;
+  margin-top: 0.25rem;
+}
+
+.price-change.positive {
+  color: var(--positive-green);
+}
+
+.price-change.negative {
+  color: var(--negative-red);
+}
+
+/* D's Riding Hard Table Styling */
+.ds-riding-hard-table .pair-cell {
+  min-width: 120px;
+}
+
+.ds-riding-hard-table .trades-count {
+  font-size: 0.75rem;
+  color: var(--text-secondary);
+  margin-top: 0.25rem;
+}
+
+.ds-riding-hard-table .pnl-cell {
+  font-weight: 600;
+  font-family: 'Monaco', 'Menlo', monospace;
+}
+
+.ds-riding-hard-table .score-cell {
+  text-align: center;
+}
+
+.score-change {
+  font-size: 0.75rem;
+  margin-top: 0.25rem;
+  font-weight: 500;
+}
+
+.score-change.positive {
+  color: var(--positive-green);
+}
+
+.score-change.negative {
+  color: var(--negative-red);
+}
+
+/* Enhanced Detailed Scoring Card */
+.detailed-scoring-card {
+  background-color: var(--bg-main);
+  padding: 1.5rem;
+  border-radius: var(--border-radius);
+}
+
+.detailed-scoring-card h4 {
+  margin-bottom: 1rem;
+  color: var(--text-primary);
+  font-size: 1.25rem;
+  font-weight: 600;
+}
+
+.detailed-scoring-card table {
+  width: 100%;
+  margin-bottom: 1rem;
+}
+
+.detailed-scoring-card th {
+  background-color: var(--bg-surface-2);
+  padding: 0.75rem 0.5rem;
+  font-weight: 600;
+  font-size: 0.875rem;
+  color: var(--text-secondary);
+  text-align: left;
+  border-bottom: 1px solid var(--border-color);
+}
+
+.detailed-scoring-card td {
+  padding: 0.75rem 0.5rem;
+  border-bottom: 1px solid var(--border-color);
+  vertical-align: middle;
+}
+
+.detailed-scoring-card td:first-child {
+  font-weight: 500;
+  color: var(--text-primary);
+}
+
+.detailed-scoring-card td:nth-child(2) {
+  color: var(--text-secondary);
+  font-family: 'Monaco', 'Menlo', monospace;
+  font-size: 0.875rem;
+}
+
+.detailed-scoring-card td:nth-child(3) {
+  font-weight: 600;
+  text-align: center;
+}
+
+.detailed-scoring-card td:nth-child(4) {
+  text-align: center;
+  font-size: 0.875rem;
+}
+
+/* Entry Status Indicators */
+.entry-status-allow {
+  color: var(--positive-green);
+  font-weight: 600;
+  font-size: 0.875rem;
+}
+
+.entry-status-block {
+  color: var(--negative-red);
+  font-weight: 600;
+  font-size: 0.875rem;
+}
+
+/* Enhanced Global Risk Manager */
+.global-risk-manager.breached {
+  animation: pulse-warning 2s infinite;
+}
+
+@keyframes pulse-warning {
+  0%, 100% {
+    background-color: rgba(239, 68, 68, 0.05);
+  }
+  50% {
+    background-color: rgba(239, 68, 68, 0.15);
+  }
+}
+
+/* Bot Row Expansion */
+.bot-row.expanded {
+  background-color: var(--bg-surface-2);
+  box-shadow: inset 3px 0 0 0 var(--accent-blue);
+}
+
+.trades-detail-container {
+  padding: 1rem;
+  background-color: var(--bg-main);
+  border-radius: var(--border-radius);
+}
+
+.trades-list {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+  margin-top: 1rem;
+}
+
+.trade-item {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 0.75rem;
+  background-color: var(--bg-surface);
+  border-radius: var(--border-radius);
+  border: 1px solid var(--border-color);
+}
+
+.trade-info {
+  display: flex;
+  gap: 1rem;
+  align-items: center;
+}
+
+.trade-type {
+  font-weight: 600;
+  color: var(--text-primary);
+}
+
+.trade-direction {
+  padding: 0.25rem 0.5rem;
+  border-radius: 4px;
+  font-size: 0.75rem;
+  font-weight: 600;
+  text-transform: uppercase;
+}
+
+.trade-direction.buy {
+  background-color: var(--positive-green);
+  color: white;
+}
+
+.trade-direction.sell {
+  background-color: var(--negative-red);
+  color: white;
+}
+
+.trade-size {
+  color: var(--text-secondary);
+  font-family: 'Monaco', 'Menlo', monospace;
+}
+
+.trade-price {
+  color: var(--text-secondary);
+  font-family: 'Monaco', 'Menlo', monospace;
+}
+
+.trade-pnl {
+  font-weight: 600;
+  font-family: 'Monaco', 'Menlo', monospace;
+}
+
+.trade-pnl.positive {
+  color: var(--positive-green);
+}
+
+.trade-pnl.negative {
+  color: var(--negative-red);
+}
+
+.trade-score {
+  font-size: 0.875rem;
+  color: var(--text-tertiary);
+}
+
+/* Market Trends Header Enhancement */
+.card-header .last-update {
+  font-size: 0.75rem;
+  color: var(--text-tertiary);
+  font-weight: normal;
+}
+
+/* Enhanced Quality Pills */
+.setup-quality-pill {
+  font-weight: 700;
+  padding: 0.35rem 0.75rem;
+  border-radius: 12px;
+  font-size: 0.875rem;
+  color: var(--bg-surface);
+  min-width: 36px;
+  text-align: center;
+  box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+}
+
+.quality-A {
+  background: linear-gradient(135deg, var(--quality-a), #16a34a);
+}
+
+.quality-B {
+  background: linear-gradient(135deg, var(--quality-b), #2563eb);
+}
+
+.quality-C {
+  background: linear-gradient(135deg, var(--quality-c), #6b7280);
+  color: var(--text-primary);
+}
+
+/* Loading States */
+.loading-shimmer {
+  background: linear-gradient(90deg, var(--bg-surface-2) 25%, var(--border-color) 50%, var(--bg-surface-2) 75%);
+  background-size: 200% 100%;
+  animation: shimmer 1.5s infinite;
+}
+
+@keyframes shimmer {
+  0% {
+    background-position: -200% 0;
+  }
+  100% {
+    background-position: 200% 0;
+  }
+}
+
+/* Responsive Improvements */
+@media (max-width: 768px) {
+  .detailed-scoring-card {
+    padding: 1rem;
+  }
+  
+  .detailed-scoring-card h4 {
+    font-size: 1.1rem;
+  }
+  
+  .price-cell {
+    min-width: 100px;
+  }
+  
+  .current-price {
+    font-size: 0.85rem;
+  }
+  
+  .price-change {
+    font-size: 0.7rem;
+  }
+  
+  .ds-riding-hard-table th,
+  .ds-riding-hard-table td {
+    padding: 0.4rem;
+    font-size: 0.8rem;
+  }
+  
+  .trade-info {
+    flex-direction: column;
+    gap: 0.5rem;
+    align-items: flex-start;
+  }
+}d);
+  color: white;
+}
+
+.trade-size {
+  color: var(--text-secondary);
+  font-family: 'Monaco', 'Menlo', monospace;
+}
+
+.trade-price {
+  color: var(--text-secondary);
+  font-family: 'Monaco', 'Menlo', monospace;
+}
+
+.trade-pnl {
+  font-weight: 600;
+  font-family: 'Monaco', 'Menlo', monospace;
+}
+
+.trade-pnl.positive {
+  color: var(--positive-green);
+}
+
+.trade-pnl.negative {
+  color: var(--negative-red);
+}
+
+.trade-score {
+  font-size: 0.875rem;
+  color: var(--text-tertiary);
+}
+
+/* Market Trends Header Enhancement */
+.card-header .last-update {
+  font-size: 0.75rem;
+  color: var(--text-tertiary);
+  font-weight: normal;
+}
+
+/* Responsive Improvements */
+@media (max-width: 768px) {
+  .detailed-scoring-card {
+    padding: 1rem;
+  }
+  
+  .detailed-scoring-card h4 {
+    font-size: 1.1rem;
+  }
+  
+  .price-cell {
+    min-width: 100px;
+  }
+  
+  .current-price {
+    font-size: 0.85rem;
+  }
+  
+  .price-change {
+    font-size: 0.7rem;
+  }
+  
+  .ds-riding-hard-table th,
+  .ds-riding-hard-table td {
+    padding: 0.4rem;
+    font-size: 0.8rem;
+  }
+  
+  .trade-info {
+    flex-direction: column;
+    gap: 0.5rem;
+    align-items: flex-start;
+  }
+}
+
+/* Loading States */
+.loading-shimmer {
+  background: linear-gradient(90deg, var(--bg-surface-2) 25%, var(--border-color) 50%, var(--bg-surface-2) 75%);
+  background-size: 200% 100%;
+  animation: shimmer 1.5s infinite;
+}
+
+@keyframes shimmer {
+  0% {
+    background-position: -200% 0;
+  }
+  100% {
+    background-position: 200% 0;
+  }
+}
+
+/* Enhanced Quality Pills */
+.setup-quality-pill {
+  font-weight: 700;
+  padding: 0.35rem 0.75rem;
+  border-radius: 12px;
+  font-size: 0.875rem;
+  color: var(--bg-surface);
+  min-width: 36px;
+  text-align: center;
+  box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+}
+
+.quality-A {
+  background: linear-gradient(135deg, var(--quality-a), #16a34a);
+}
+
+.quality-B {
+  background: linear-gradient(135deg, var(--quality-b), #2563eb);
+}
+
+.quality-C {
+  background: linear-gradient(135deg, var(--quality-c), #6b7280);
+  color: var(--text-primary);
+}
