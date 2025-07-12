@@ -49,7 +49,6 @@ type AiRecommendation = { pair: string; reason: string; score: number; score_lev
 type CotHistoryItem = { date: string; longPosition: number; shortPosition: number; netPosition: number };
 type CotHistoryData = { currency: string; history: CotHistoryItem[] };
 
-
 // --- ICONS (as SVG strings) ---
 const icons = {
   logo: `<svg viewBox="0 0 24 24" fill="currentColor"><path d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5-10-5-10 5zM12 14.47l-8-4v3.06l8 4 8-4v-3.06l-8 4z"></path></svg>`,
@@ -98,9 +97,9 @@ async function fetchAccounts(): Promise<Account[]> {
 async function fetchKpiData(accountId: string): Promise<Kpi[]> {
     const seed = accountId.charCodeAt(3);
     return [
-      { label: 'P/L Summary', value: `+$${(1284.50 * seed / 2).toFixed(2)}`, positive: true },
-      { label: 'Equity', value: `$${(11432.12 * seed / 2).toFixed(2)}`, positive: null },
-      { label: 'Balance', value: `$${(10147.62 * seed / 2).toFixed(2)}`, positive: null },
+      { label: 'P/L Summary', value: `+${(1284.50 * seed / 2).toFixed(2)}`, positive: true },
+      { label: 'Equity', value: `${(11432.12 * seed / 2).toFixed(2)}`, positive: null },
+      { label: 'Balance', value: `${(10147.62 * seed / 2).toFixed(2)}`, positive: null },
       { label: 'Margin Use', value: `${(15.7 * seed / 2).toFixed(1)}%`, positive: false },
     ];
 }
@@ -162,13 +161,12 @@ async function fetchAccountStats(accountId: string): Promise<AccountStat[]> {
         { label: 'Profit Factor', value: (1.82 * seed / 100).toFixed(2) },
         { label: 'Max Drawdown', value: `${(8.1 * seed / 100).toFixed(1)}%` },
         { label: 'Total Trades', value: Math.floor(127 * seed / 100) },
-        { label: 'Average P/L', value: `$${(25.50 * seed / 100).toFixed(2)}` },
+        { label: 'Average P/L', value: `${(25.50 * seed / 100).toFixed(2)}` },
         { label: 'Total Volume', value: `${(45.2 * seed / 100).toFixed(2)} lots` },
         { label: 'Sharpe Ratio', value: (0.78 * seed / 100).toFixed(2) },
         { label: 'Longest Streak', value: `${Math.floor(8 * seed / 100)} wins` },
     ];
 }
-
 
 // --- MOCK DATA GENERATORS ---
 const generateBots = (count: number, accountId: string): Bot[] => {
@@ -231,7 +229,6 @@ const generateBots = (count: number, accountId: string): Bot[] => {
     }
     return bots;
 };
-
 
 // --- APP STATE ---
 let state = {
@@ -332,7 +329,6 @@ function createHeader(kpiData: Kpi[]): HTMLElement {
   return header;
 }
 
-
 // --- PAGE & PANEL CREATORS ---
 const getTrendIcon = (trend: Trend) => {
     if (trend === 'Up') return icons.arrowUp;
@@ -377,29 +373,29 @@ function createDashboardMarketTrendsCard(data: MarketTrend[], isLoading = false)
                 <table>
                     <thead>
                         <tr>
-                            <th class="sortable-header" data-sort="pair">Pair ${sortIcon('pair')}</th>
-                            <th>Trend (W1/D1/H4)</th>
-                            <th class="sortable-header" data-sort="setupQuality">Quality ${sortIcon('setupQuality')}</th>
-                            <th>Conditions</th>
-                            <th class="sortable-header" data-sort="dsize">D size ${sortIcon('dsize')}</th>
+                            <th class="sortable-header" data-sort="pair" style="width: 15%; min-width: 100px;">Pair ${sortIcon('pair')}</th>
+                            <th style="width: 20%; min-width: 120px; text-align: center;">Trend (W1/D1/H4)</th>
+                            <th class="sortable-header" data-sort="setupQuality" style="width: 15%; min-width: 100px; text-align: center;">Quality ${sortIcon('setupQuality')}</th>
+                            <th style="width: 25%; min-width: 150px; text-align: center;">Conditions</th>
+                            <th class="sortable-header" data-sort="dsize" style="width: 15%; min-width: 80px; text-align: center;">D size ${sortIcon('dsize')}</th>
                         </tr>
                     </thead>
                     <tbody>
                         ${sortedData.map(d => `
-                            <tr class="is-expandable" data-pair='${JSON.stringify(d)}'>
-                                <td>${d.pair}</td>
-                                <td class="trend-cell">
+                            <tr class="is-expandable" data-pair='${JSON.stringify(d).replace(/'/g, "&#39;")}'>
+                                <td style="font-weight: 600;">${d.pair}</td>
+                                <td class="trend-cell" style="text-align: center;">
                                     ${getTrendIcon(d.trendW1)}
                                     ${getTrendIcon(d.trendD1)}
                                     ${getTrendIcon(d.trendH4)}
                                 </td>
-                                <td><span class="setup-quality-pill quality-${d.setupQuality}">${d.setupQuality}</span></td>
-                                <td class="conditions-cell">
+                                <td style="text-align: center;"><span class="setup-quality-pill quality-${d.setupQuality}">${d.setupQuality}</span></td>
+                                <td class="conditions-cell" style="text-align: center;">
                                     <span class="condition-icon ${d.conditions.cot ? 'active' : ''}" title="COT Bias">${icons.brain}</span>
                                     <span class="condition-icon ${d.conditions.adx ? 'active' : ''}" title="ADX Strength">${icons.bolt}</span>
                                     <span class="condition-icon ${d.conditions.spread ? 'active' : ''}" title="Spread/Volatility">${icons.resizeHorizontal}</span>
                                 </td>
-                                <td><span class="recommendation-score score-${Number(d.dsize) >= 8 ? 'high' : Number(d.dsize) >= 6 ? 'medium' : 'low'}">${d.dsize}</span></td>
+                                <td style="text-align: center;"><span class="recommendation-score score-${Number(d.dsize) >= 8 ? 'high' : Number(d.dsize) >= 6 ? 'medium' : 'low'}">${d.dsize}</span></td>
                             </tr>
                         `).join('')}
                     </tbody>
@@ -486,36 +482,41 @@ function createMarketTrendsTable(data: MarketTrend[], isLoading = false): string
     if (!data || data.length === 0) {
         return `<div class="placeholder-content"><p class="text-secondary">Could not load market data. Check Supabase function logs.</p></div>`;
     }
+    
     return `
         <div class="table-container">
             <table>
                 <thead>
                     <tr>
-                        <th>Pair</th>
-                        <th>Trend (W1/D1/H4)</th>
-                        <th>Setup Quality</th>
-                        <th>Conditions</th>
-                        <th>D size</th>
+                        <th style="width: 15%; min-width: 100px;">Pair</th>
+                        <th style="width: 20%; min-width: 120px; text-align: center;">Trend (W1/D1/H4)</th>
+                        <th style="width: 15%; min-width: 100px; text-align: center;">Setup Quality</th>
+                        <th style="width: 25%; min-width: 150px; text-align: center;">Conditions</th>
+                        <th style="width: 15%; min-width: 80px; text-align: center;">D Size</th>
                     </tr>
                 </thead>
                 <tbody>
                     ${data.map(d => {
                         const isExpanded = state.expandedTrendPair === d.pair;
                         return `
-                            <tr class="is-expandable ${isExpanded ? 'active' : ''}" data-pair='${JSON.stringify(d)}'>
-                                <td>${d.pair}</td>
-                                <td class="trend-cell">
+                            <tr class="is-expandable ${isExpanded ? 'active' : ''}" data-pair='${JSON.stringify(d).replace(/'/g, "&#39;")}'>
+                                <td style="font-weight: 600;">${d.pair}</td>
+                                <td class="trend-cell" style="text-align: center;">
                                     ${getTrendIcon(d.trendW1)}
                                     ${getTrendIcon(d.trendD1)}
                                     ${getTrendIcon(d.trendH4)}
                                 </td>
-                                <td><span class="setup-quality-pill quality-${d.setupQuality}">${d.setupQuality}</span></td>
-                                <td class="conditions-cell">
+                                <td style="text-align: center;">
+                                    <span class="setup-quality-pill quality-${d.setupQuality}">${d.setupQuality}</span>
+                                </td>
+                                <td class="conditions-cell" style="text-align: center;">
                                     <span class="condition-icon ${d.conditions.cot ? 'active' : ''}" title="COT Bias">${icons.brain}</span>
                                     <span class="condition-icon ${d.conditions.adx ? 'active' : ''}" title="ADX Strength">${icons.bolt}</span>
                                     <span class="condition-icon ${d.conditions.spread ? 'active' : ''}" title="Spread/Volatility">${icons.resizeHorizontal}</span>
                                 </td>
-                                <td><span class="recommendation-score score-${Number(d.dsize) >= 8 ? 'high' : Number(d.dsize) >= 6 ? 'medium' : 'low'}">${d.dsize}</span></td>
+                                <td style="text-align: center;">
+                                    <span class="recommendation-score score-${Number(d.dsize) >= 8 ? 'high' : Number(d.dsize) >= 6 ? 'medium' : 'low'}">${d.dsize}</span>
+                                </td>
                             </tr>
                             ${isExpanded ? `<tr class="expanded-row"><td colspan="5">${createDetailedScoringCard(d)}</td></tr>` : ''}
                         `;
@@ -525,7 +526,6 @@ function createMarketTrendsTable(data: MarketTrend[], isLoading = false): string
         </div>
     `;
 }
-
 
 async function createDashboardMainContent(): Promise<HTMLElement> {
     const mainContent = document.createElement('div');
@@ -715,7 +715,6 @@ async function createCotPage(): Promise<HTMLElement> {
     `;
     return page;
 }
-
 
 async function createStatisticsPage(): Promise<HTMLElement> {
     const page = document.createElement('div');
