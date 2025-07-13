@@ -1,3 +1,5 @@
+// Enhanced Dashboard Page - Replace assets/js/pages/dashboard.js
+
 function createDashboardPage() {
     if (!appState.marketTrendsData) {
         appState.marketTrendsData = generateMarketDataWithScoring();
@@ -103,7 +105,7 @@ function createActiveBotsSection() {
                     </thead>
                     <tbody>
                         ${appState.activeBots.map(bot => `
-                            <tr>
+                            <tr class="is-expandable ${appState.expandedBotId === bot.id ? 'active' : ''}" onclick="toggleBotExpansion('${bot.id}')">
                                 <td>
                                     <div style="font-weight: 600;">${bot.pair}</div>
                                     <div style="font-size: 0.8rem; color: var(--text-secondary);">${bot.type}</div>
@@ -121,7 +123,8 @@ function createActiveBotsSection() {
                                                    value="${bot.manualSL || ''}" 
                                                    placeholder="Auto"
                                                    style="width: 60px; padding: 0.25rem; background: var(--bg-surface-2); border: 1px solid var(--border-color); border-radius: 4px; color: var(--text-primary); font-size: 0.75rem;"
-                                                   onchange="updateManualSL('${bot.id}', this.value)">
+                                                   onchange="updateManualSL('${bot.id}', this.value)"
+                                                   onclick="event.stopPropagation()">
                                         </div>
                                         <div style="display: flex; align-items: center; gap: 0.5rem;">
                                             <span style="font-size: 0.75rem; color: var(--text-secondary); width: 20px;">TP:</span>
@@ -129,7 +132,8 @@ function createActiveBotsSection() {
                                                    value="${bot.manualTP || ''}" 
                                                    placeholder="Auto"
                                                    style="width: 60px; padding: 0.25rem; background: var(--bg-surface-2); border: 1px solid var(--border-color); border-radius: 4px; color: var(--text-primary); font-size: 0.75rem;"
-                                                   onchange="updateManualTP('${bot.id}', this.value)">
+                                                   onchange="updateManualTP('${bot.id}', this.value)"
+                                                   onclick="event.stopPropagation()">
                                         </div>
                                     </div>
                                 </td>
@@ -152,24 +156,27 @@ function createActiveBotsSection() {
                                 <td style="text-align: center;">
                                     <label class="toggle-switch">
                                         <input type="checkbox" ${bot.trailingProfitEnabled ? 'checked' : ''} 
-                                               onchange="toggleTrailingProfit('${bot.id}')">
+                                               onchange="toggleTrailingProfit('${bot.id}')"
+                                               onclick="event.stopPropagation()">
                                         <span class="toggle-slider"></span>
                                     </label>
                                 </td>
                                 <td style="text-align: center;">
                                     <label class="toggle-switch">
                                         <input type="checkbox" ${bot.closeAtNextTP ? 'checked' : ''} 
-                                               onchange="toggleCloseAtNextTP('${bot.id}')">
+                                               onchange="toggleCloseAtNextTP('${bot.id}')"
+                                               onclick="event.stopPropagation()">
                                         <span class="toggle-slider"></span>
                                     </label>
                                 </td>
                                 <td>
                                     <div style="display: flex; gap: 0.5rem;">
-                                        <button class="btn btn-secondary btn-sm" onclick="switchPage('Active Bots'); setTimeout(() => toggleBotExpansion('${bot.id}'), 100)">Details</button>
-                                        <button class="btn btn-danger btn-sm" onclick="closeBot('${bot.id}')">Close</button>
+                                        <button class="btn btn-secondary btn-sm" onclick="event.stopPropagation(); switchPage('Active Bots'); setTimeout(() => toggleBotExpansion('${bot.id}'), 100)">Details</button>
+                                        <button class="btn btn-danger btn-sm" onclick="event.stopPropagation(); closeBot('${bot.id}')">Close</button>
                                     </div>
                                 </td>
                             </tr>
+                            ${appState.expandedBotId === bot.id ? `<tr class="expanded-row"><td colspan="7">${createBotDetails(bot)}</td></tr>` : ''}
                         `).join('')}
                     </tbody>
                 </table>
@@ -208,4 +215,4 @@ function refreshMarketData() {
 // Make refresh function globally available
 window.refreshMarketData = refreshMarketData;
 
-console.log('✅ Dashboard page loaded');
+console.log('✅ Enhanced Dashboard page loaded with dual table bot analysis');
