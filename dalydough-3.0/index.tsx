@@ -1,0 +1,3173 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>DalyDough 3.0 - AI Trading Dashboard</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --bg-main: #10111a;
+            --bg-surface: #1c1d2b;
+            --bg-surface-2: #282a3d;
+            --border-color: #31334a;
+            --text-primary: #f0f0f5;
+            --text-secondary: #a8a9b8;
+            --text-tertiary: #7b7d94;
+            --accent-blue: #367cff;
+            --accent-blue-hover: #5a95ff;
+            --positive-green: #22c55e;
+            --negative-red: #ef4444;
+            --warning-yellow: #f59e0b;
+            --quality-a: #22c55e;
+            --quality-b: #367cff;
+            --quality-c: #a8a9b8;
+            --sidebar-width-collapsed: 72px;
+            --sidebar-width-expanded: 240px;
+            --header-height: 80px;
+            --font-family: 'Inter', sans-serif;
+            --border-radius: 8px;
+            --shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -2px rgba(0, 0, 0, 0.1);
+            --transition-speed: 0.2s ease-in-out;
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        body {
+            font-family: var(--font-family);
+            background-color: var(--bg-main);
+            color: var(--text-primary);
+            -webkit-font-smoothing: antialiased;
+            -moz-osx-font-smoothing: grayscale;
+            overflow-x: hidden;
+        }
+
+        .app-container {
+            display: grid;
+            grid-template-columns: var(--sidebar-width-collapsed) 1fr;
+            grid-template-rows: var(--header-height) 1fr;
+            grid-template-areas:
+                "sidebar header"
+                "sidebar main";
+            height: 100vh;
+            transition: grid-template-columns var(--transition-speed);
+        }
+
+        .app-container.sidebar-expanded {
+            grid-template-columns: var(--sidebar-width-expanded) 1fr;
+        }
+
+        /* Sidebar */
+        .sidebar {
+            grid-area: sidebar;
+            background-color: var(--bg-surface);
+            border-right: 1px solid var(--border-color);
+            display: flex;
+            flex-direction: column;
+            transition: width var(--transition-speed);
+            overflow-y: auto;
+            overflow-x: hidden;
+        }
+
+        .sidebar-header {
+            padding: 1.5rem 0;
+        }
+
+        .sidebar-logo {
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+            color: var(--accent-blue);
+            flex-shrink: 0;
+            padding: 0 1.25rem;
+            margin-bottom: 2rem;
+            cursor: pointer;
+        }
+
+        .sidebar-logo svg {
+            width: 32px;
+            height: 32px;
+            flex-shrink: 0;
+        }
+
+        .sidebar-logo-text {
+            font-size: 1.25rem;
+            font-weight: 700;
+            color: var(--text-primary);
+            white-space: nowrap;
+            opacity: 0;
+            transition: opacity 0.2s var(--transition-speed);
+        }
+
+        .app-container.sidebar-expanded .sidebar-logo-text {
+            opacity: 1;
+        }
+
+        .sidebar-nav {
+            width: 100%;
+            flex-grow: 1;
+        }
+
+        .sidebar-nav-list {
+            list-style: none;
+        }
+
+        .sidebar-nav-item a {
+            display: flex;
+            align-items: center;
+            padding: 1rem;
+            margin: 0.5rem 1.25rem;
+            border-radius: var(--border-radius);
+            color: var(--text-secondary);
+            text-decoration: none;
+            gap: 1rem;
+            white-space: nowrap;
+            transition: background-color var(--transition-speed), color var(--transition-speed);
+            cursor: pointer;
+        }
+
+        .sidebar-nav-item a:hover {
+            background-color: var(--bg-surface-2);
+            color: var(--text-primary);
+        }
+
+        .sidebar-nav-item a.active {
+            background-color: var(--accent-blue);
+            color: var(--text-primary);
+        }
+
+        .sidebar-nav-item a svg {
+            width: 24px;
+            height: 24px;
+            flex-shrink: 0;
+        }
+
+        .sidebar-nav-text {
+            opacity: 0;
+            transition: opacity 0.2s var(--transition-speed);
+        }
+
+        .app-container.sidebar-expanded .sidebar-nav-text {
+            opacity: 1;
+        }
+
+        .sidebar-footer {
+            margin-top: auto;
+            padding: 1rem 1.25rem;
+            border-top: 1px solid var(--border-color);
+        }
+
+        .account-info {
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+            padding: 0.5rem;
+            border-radius: var(--border-radius);
+        }
+
+        .account-info svg {
+            width: 36px;
+            height: 36px;
+            color: var(--text-secondary);
+            flex-shrink: 0;
+        }
+
+        .account-details {
+            display: flex;
+            flex-direction: column;
+            white-space: nowrap;
+            overflow: hidden;
+            opacity: 0;
+            transition: opacity 0.2s var(--transition-speed);
+        }
+
+        .app-container.sidebar-expanded .account-details {
+            opacity: 1;
+        }
+
+        .account-name {
+            font-weight: 600;
+            color: var(--text-primary);
+            font-size: 0.875rem;
+        }
+
+        .account-user {
+            color: var(--text-secondary);
+            font-size: 0.75rem;
+        }
+
+        /* Header */
+        .header {
+            grid-area: header;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 0 2rem;
+            border-bottom: 1px solid var(--border-color);
+            flex-wrap: wrap;
+            gap: 1rem;
+        }
+
+        .header-left {
+            display: flex;
+            align-items: center;
+            gap: 1.5rem;
+            flex-wrap: wrap;
+        }
+
+        .current-account-display {
+            display: flex;
+            flex-direction: column;
+            gap: 0.25rem;
+            padding-right: 1.5rem;
+            border-right: 1px solid var(--border-color);
+        }
+
+        .account-name-header {
+            font-size: 1.25rem;
+            font-weight: 600;
+            color: var(--text-primary);
+        }
+
+        .kpi-widgets {
+            display: flex;
+            gap: 1.5rem;
+            flex-wrap: wrap;
+            justify-content: flex-start;
+        }
+
+        .kpi-widget {
+            display: flex;
+            flex-direction: column;
+            gap: 0.25rem;
+        }
+
+        .kpi-label {
+            font-size: 0.875rem;
+            color: var(--text-secondary);
+            text-transform: uppercase;
+            font-weight: 500;
+        }
+
+        .kpi-value {
+            font-size: 1.25rem;
+            font-weight: 600;
+        }
+
+        .kpi-value.positive { color: var(--positive-green); }
+        .kpi-value.negative { color: var(--negative-red); }
+
+        .header-actions {
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+        }
+
+        .btn {
+            padding: 0.6rem 1.2rem;
+            border: 1px solid transparent;
+            border-radius: var(--border-radius);
+            font-weight: 600;
+            cursor: pointer;
+            transition: all var(--transition-speed);
+            font-size: 0.875rem;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            background: none;
+            font-family: inherit;
+        }
+
+        .btn:active {
+            transform: scale(0.98);
+        }
+
+        .btn-primary {
+            background-color: var(--accent-blue);
+            color: var(--text-primary);
+        }
+
+        .btn-primary:hover {
+            background-color: var(--accent-blue-hover);
+        }
+
+        .btn-danger {
+            background-color: var(--negative-red);
+            color: var(--text-primary);
+        }
+
+        .btn-danger:hover {
+            background-color: #f87171;
+        }
+
+        .btn-sm {
+            padding: 0.3rem 0.8rem;
+            font-size: 0.75rem;
+        }
+
+        .btn-secondary {
+            background-color: var(--bg-surface-2);
+            color: var(--text-secondary);
+            border-color: var(--border-color);
+        }
+
+        .btn-secondary:hover:not(:disabled) {
+            background-color: var(--border-color);
+            color: var(--text-primary);
+        }
+
+        /* Main Content */
+        .main-panel {
+            grid-area: main;
+            overflow-y: auto;
+            overflow-x: hidden;
+            padding: 2rem;
+            display: flex;
+            flex-direction: column;
+            gap: 2rem;
+            height: calc(100vh - var(--header-height));
+            max-height: calc(100vh - var(--header-height));
+        }
+
+        .card {
+            background-color: var(--bg-surface);
+            border-radius: var(--border-radius);
+            border: 1px solid var(--border-color);
+            padding: 1.5rem;
+            min-width: 0;
+            overflow: hidden;
+            flex-shrink: 0;
+        }
+
+        .card-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 1.5rem;
+            gap: 1rem;
+        }
+
+        .card-title {
+            font-size: 1.25rem;
+            font-weight: 600;
+        }
+
+        .last-update {
+            font-size: 0.75rem;
+            color: var(--text-tertiary);
+            font-weight: normal;
+        }
+
+        /* Table Styles */
+        .table-container {
+            overflow-x: auto;
+            overflow-y: visible;
+            width: 100%;
+            margin: 0;
+            padding: 0;
+            -webkit-overflow-scrolling: touch;
+            border-radius: var(--border-radius);
+            border: 1px solid var(--border-color);
+            max-height: 70vh;
+        }
+
+        .table-container table {
+            width: 100%;
+            min-width: 900px;
+            border-collapse: collapse;
+            table-layout: fixed;
+            background-color: var(--bg-surface);
+        }
+
+        th, td {
+            padding: 1rem;
+            text-align: left;
+            border-bottom: 1px solid var(--border-color);
+            vertical-align: middle;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+
+        thead th {
+            color: var(--text-secondary);
+            font-weight: 600;
+            font-size: 0.8rem;
+            text-transform: uppercase;
+            background-color: var(--bg-surface-2);
+            border-bottom: 2px solid var(--border-color);
+            letter-spacing: 0.5px;
+        }
+
+        tbody tr {
+            transition: background-color var(--transition-speed);
+            cursor: pointer;
+            border-bottom: 1px solid rgba(49, 51, 74, 0.3);
+        }
+
+        tbody tr:not(.expanded-row):hover {
+            background-color: var(--bg-surface-2);
+        }
+
+        tbody tr:last-child td {
+            border-bottom: none;
+        }
+
+        .sortable-header {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .sortable-header:hover {
+            background-color: var(--border-color);
+        }
+
+        /* Enhanced Price Display */
+        .price-cell {
+            font-family: 'SF Mono', 'Monaco', 'Menlo', monospace;
+            background-color: rgba(40, 42, 61, 0.3);
+            border-radius: 6px;
+            padding: 0.75rem;
+            margin: 0.25rem 0;
+        }
+
+        .current-price {
+            font-weight: 700;
+            font-size: 1rem;
+            color: var(--text-primary);
+            display: block;
+            margin-bottom: 0.25rem;
+        }
+
+        .price-change {
+            font-size: 0.75rem;
+            font-weight: 600;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 0.25rem;
+        }
+
+        .price-change.positive {
+            color: var(--positive-green);
+        }
+
+        .price-change.negative {
+            color: var(--negative-red);
+        }
+
+        /* Enhanced Trend Display */
+        .trend-cell {
+            display: flex;
+            gap: 0.75rem;
+            align-items: center;
+            justify-content: center;
+            padding: 0.5rem;
+        }
+
+        .trend-indicator {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 0.25rem;
+        }
+
+        .trend-timeframe {
+            font-size: 0.65rem;
+            color: var(--text-tertiary);
+            font-weight: 500;
+            text-transform: uppercase;
+        }
+
+        .trend-cell svg {
+            width: 18px;
+            height: 18px;
+            flex-shrink: 0;
+        }
+
+        .trend-up { color: var(--positive-green); }
+        .trend-down { color: var(--negative-red); }
+        .trend-neutral { color: var(--text-tertiary); }
+
+        /* Enhanced Quality Pills */
+        .setup-quality-pill {
+            font-weight: 700;
+            padding: 0.5rem 1rem;
+            border-radius: 20px;
+            font-size: 0.9rem;
+            color: white;
+            min-width: 50px;
+            text-align: center;
+            box-shadow: 0 3px 8px rgba(0,0,0,0.15);
+            border: 2px solid transparent;
+        }
+
+        .quality-A {
+            background: linear-gradient(135deg, #22c55e, #16a34a);
+            border-color: rgba(34, 197, 94, 0.3);
+        }
+
+        .quality-B {
+            background: linear-gradient(135deg, #367cff, #2563eb);
+            border-color: rgba(54, 124, 255, 0.3);
+        }
+
+        .quality-C {
+            background: linear-gradient(135deg, #6b7280, #4b5563);
+            border-color: rgba(107, 114, 128, 0.3);
+        }
+
+        /* Enhanced Conditions Display */
+        .conditions-cell {
+            display: flex;
+            gap: 1.25rem;
+            align-items: center;
+            justify-content: center;
+            padding: 0.5rem;
+        }
+
+        .condition-icon {
+            position: relative;
+            color: var(--text-tertiary);
+            transition: all var(--transition-speed);
+            padding: 0.5rem;
+            border-radius: 6px;
+            background-color: rgba(40, 42, 61, 0.3);
+        }
+
+        .condition-icon.active {
+            color: var(--accent-blue);
+            background-color: rgba(54, 124, 255, 0.15);
+            box-shadow: 0 0 0 1px rgba(54, 124, 255, 0.2);
+        }
+
+        .condition-icon svg {
+            width: 18px;
+            height: 18px;
+        }
+
+        /* Enhanced D-Size Score */
+        .recommendation-score {
+            font-weight: 700;
+            padding: 0.5rem 0.75rem;
+            border-radius: 12px;
+            flex-shrink: 0;
+            display: inline-block;
+            min-width: 50px;
+            text-align: center;
+            font-size: 0.95rem;
+            box-shadow: 0 3px 8px rgba(0,0,0,0.15);
+        }
+
+        .score-high { 
+            background: linear-gradient(135deg, var(--positive-green), #16a34a); 
+            color: white;
+        }
+        .score-medium { 
+            background: linear-gradient(135deg, var(--warning-yellow), #d97706); 
+            color: white;
+        }
+        .score-low { 
+            background: linear-gradient(135deg, var(--negative-red), #dc2626); 
+            color: white;
+        }
+
+        /* Enhanced Entry Status Styling */
+        .entry-status {
+            font-weight: 700;
+            font-size: 0.85rem;
+            padding: 0.5rem 1rem;
+            border-radius: 12px;
+            text-align: center;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 0.5rem;
+            min-width: 120px;
+        }
+
+        .entry-allow {
+            background: linear-gradient(135deg, var(--positive-green), #16a34a);
+            color: white;
+            box-shadow: 0 3px 8px rgba(34, 197, 94, 0.3);
+        }
+
+        .entry-block {
+            background: linear-gradient(135deg, var(--negative-red), #dc2626);
+            color: white;
+            box-shadow: 0 3px 8px rgba(239, 68, 68, 0.3);
+        }
+
+        .entry-neutral {
+            background: linear-gradient(135deg, var(--text-tertiary), #6b7280);
+            color: white;
+            box-shadow: 0 3px 8px rgba(107, 114, 128, 0.3);
+        }
+
+        /* Expandable Rows */
+        tr.is-expandable.active {
+            background-color: #2e3047;
+            box-shadow: inset 3px 0 0 0 var(--accent-blue);
+        }
+
+        .expanded-row td {
+            padding: 0 !important;
+            border-bottom: 1px solid var(--border-color) !important;
+            border-top: 1px solid var(--bg-main) !important;
+        }
+
+        .detailed-scoring-card {
+            background-color: var(--bg-main);
+            padding: 1.5rem;
+            border-radius: var(--border-radius);
+        }
+
+        .detailed-scoring-card h4 {
+            margin-bottom: 1rem;
+            color: var(--text-primary);
+            font-size: 1.25rem;
+            font-weight: 600;
+        }
+
+        .detailed-scoring-card table {
+            width: 100%;
+            margin-bottom: 1rem;
+        }
+
+        .detailed-scoring-card th {
+            background-color: var(--bg-surface-2);
+            padding: 0.75rem 0.5rem;
+            font-weight: 600;
+            font-size: 0.875rem;
+            color: var(--text-secondary);
+            text-align: left;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .detailed-scoring-card td {
+            padding: 0.75rem 0.5rem;
+            border-bottom: 1px solid var(--border-color);
+            vertical-align: middle;
+        }
+
+        .detailed-scoring-card td:first-child {
+            font-weight: 500;
+            color: var(--text-primary);
+        }
+
+        .detailed-scoring-card td:nth-child(2) {
+            color: var(--text-secondary);
+            font-family: 'Monaco', 'Menlo', monospace;
+            font-size: 0.875rem;
+        }
+
+        .detailed-scoring-card td:nth-child(3) {
+            font-weight: 600;
+            text-align: center;
+        }
+
+        .detailed-scoring-card td:nth-child(4) {
+            text-align: center;
+            font-size: 0.875rem;
+        }
+
+        .detailed-reentry-card {
+            background-color: var(--bg-main);
+            padding: 1.5rem;
+            border-radius: var(--border-radius);
+        }
+
+        .detailed-reentry-card h4, .detailed-reentry-card h5 {
+            margin-bottom: 1rem;
+            color: var(--text-primary);
+            font-weight: 600;
+        }
+
+        .detailed-reentry-card h4 {
+            font-size: 1.25rem;
+        }
+
+        .detailed-reentry-card h5 {
+            font-size: 1rem;
+        }
+
+        .detailed-reentry-card table {
+            width: 100%;
+            margin-bottom: 1rem;
+        }
+
+        .detailed-reentry-card td {
+            padding: 0.5rem;
+            border-bottom: 1px solid var(--border-color);
+            vertical-align: middle;
+        }
+
+        .detailed-reentry-card td:first-child {
+            font-weight: 500;
+            color: var(--text-secondary);
+            width: 40%;
+        }
+
+        .detailed-reentry-card td:nth-child(2) {
+            color: var(--text-primary);
+            font-weight: 600;
+        }
+
+        .detailed-reentry-card .success {
+            color: var(--positive-green);
+        }
+
+        .detailed-reentry-card .error {
+            color: var(--negative-red);
+        }
+
+        .detailed-reentry-card .warning {
+            color: var(--warning-yellow);
+        }
+
+        .trades-list {
+            display: flex;
+            flex-direction: column;
+            gap: 0.75rem;
+        }
+
+        .trade-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 1rem;
+            background: var(--bg-surface-2);
+            border-radius: 8px;
+            border-left: 4px solid var(--accent-blue);
+        }
+
+        .trade-info {
+            display: flex;
+            gap: 1rem;
+            align-items: center;
+            flex-wrap: wrap;
+        }
+
+        .trade-type {
+            font-weight: 600;
+            color: var(--text-primary);
+        }
+
+        .trade-direction {
+            font-weight: 600;
+            text-transform: uppercase;
+            padding: 0.25rem 0.5rem;
+            border-radius: 4px;
+            font-size: 0.75rem;
+        }
+
+        .trade-direction.buy {
+            background: rgba(34, 197, 94, 0.2);
+            color: var(--positive-green);
+        }
+
+        .trade-direction.sell {
+            background: rgba(239, 68, 68, 0.2);
+            color: var(--negative-red);
+        }
+
+        .trade-size, .trade-price {
+            font-size: 0.875rem;
+            color: var(--text-secondary);
+        }
+
+        .trade-pnl {
+            font-weight: 700;
+            font-family: 'Monaco', 'Menlo', monospace;
+        }
+
+        .trade-score {
+            font-size: 0.875rem;
+            color: var(--text-secondary);
+        }
+
+        .form-toggle-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 1rem;
+            background: var(--bg-surface-2);
+            border-radius: 8px;
+            border: 1px solid var(--border-color);
+        }
+
+        .setting-label {
+            display: flex;
+            flex-direction: column;
+            gap: 0.25rem;
+        }
+
+        .setting-label span {
+            font-weight: 600;
+            color: var(--text-primary);
+        }
+
+        .setting-description {
+            font-size: 0.875rem;
+            color: var(--text-secondary);
+        }
+
+        .setting-control-group {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .refresh-button {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .refresh-button svg {
+            width: 16px;
+            height: 16px;
+            transition: transform 0.3s ease;
+        }
+
+        .refresh-button.refreshing svg {
+            animation: spin 1s linear infinite;
+        }
+
+        @keyframes spin {
+            from { transform: rotate(0deg); }
+            to { transform: rotate(360deg); }
+        }
+
+        /* COT Report Styles */
+        .cot-grid {
+            display: flex;
+            flex-direction: column;
+            gap: 1.5rem;
+        }
+
+        .cot-currency-card {
+            padding: 1.5rem;
+        }
+
+        .cot-currency-header {
+            margin-bottom: 1rem;
+            padding-bottom: 1rem;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .cot-currency-header h3 {
+            font-size: 1.25rem;
+            font-weight: 600;
+        }
+
+        .cot-history-row {
+            display: grid;
+            grid-template-columns: repeat(6, 1fr);
+            gap: 1.5rem;
+        }
+
+        .cot-week-col {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .cot-date {
+            font-size: 0.875rem;
+            color: var(--text-secondary);
+            font-weight: 500;
+        }
+
+        .cot-bar {
+            display: flex;
+            width: 100%;
+            height: 20px;
+            border-radius: var(--border-radius);
+            overflow: hidden;
+            background-color: var(--bg-surface-2);
+        }
+
+        .cot-long {
+            background-color: var(--positive-green);
+            transition: flex-basis 0.3s ease;
+        }
+
+        .cot-short {
+            background-color: var(--negative-red);
+            transition: flex-basis 0.3s ease;
+        }
+
+        .cot-net {
+            font-weight: 600;
+            font-size: 1rem;
+        }
+
+        .cot-net.positive {
+            color: var(--positive-green);
+        }
+
+        .cot-net.negative {
+            color: var(--negative-red);
+        }
+
+        /* News Calendar Styles */
+        .news-filter-bar {
+            display: flex;
+            gap: 1rem;
+            margin-bottom: 1.5rem;
+            flex-wrap: wrap;
+            align-items: center;
+        }
+
+        .impact-filter {
+            display: flex;
+            gap: 0.5rem;
+        }
+
+        .impact-badge {
+            padding: 0.25rem 0.75rem;
+            border-radius: 20px;
+            font-size: 0.75rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all var(--transition-speed);
+            border: 2px solid transparent;
+        }
+
+        .impact-high {
+            background-color: var(--negative-red);
+            color: white;
+        }
+
+        .impact-medium {
+            background-color: var(--warning-yellow);
+            color: white;
+        }
+
+        .impact-low {
+            background-color: var(--positive-green);
+            color: white;
+        }
+
+        .impact-badge.active {
+            border-color: var(--accent-blue);
+            box-shadow: 0 0 0 2px rgba(54, 124, 255, 0.2);
+        }
+
+        .news-item {
+            display: grid;
+            grid-template-columns: 80px 60px 1fr 100px 100px 100px;
+            gap: 1rem;
+            padding: 1rem;
+            border-bottom: 1px solid var(--border-color);
+            align-items: center;
+        }
+
+        .news-time {
+            font-family: 'Monaco', 'Menlo', monospace;
+            font-weight: 600;
+            color: var(--text-primary);
+        }
+
+        .news-currency {
+            font-weight: 600;
+            padding: 0.25rem 0.5rem;
+            border-radius: 4px;
+            background-color: var(--bg-surface-2);
+            text-align: center;
+        }
+
+        .news-event {
+            font-weight: 500;
+            color: var(--text-primary);
+        }
+
+        .news-value {
+            font-family: 'Monaco', 'Menlo', monospace;
+            text-align: center;
+            font-size: 0.875rem;
+        }
+
+        /* Auto Bot Styles */
+        .auto-bot-config {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 2rem;
+            margin-bottom: 2rem;
+        }
+
+        .config-section {
+            padding: 1.5rem;
+            background-color: var(--bg-main);
+            border-radius: var(--border-radius);
+            border: 1px solid var(--border-color);
+        }
+
+        .config-section h3 {
+            margin-bottom: 1rem;
+            color: var(--text-primary);
+            font-size: 1.1rem;
+        }
+
+        .form-group {
+            display: flex;
+            flex-direction: column;
+            gap: 0.5rem;
+            margin-bottom: 1rem;
+        }
+
+        .form-group label {
+            font-weight: 500;
+            color: var(--text-secondary);
+            font-size: 0.875rem;
+        }
+
+        .form-group input,
+        .form-group select {
+            width: 100%;
+            padding: 0.75rem;
+            background-color: var(--bg-surface-2);
+            border: 1px solid var(--border-color);
+            border-radius: var(--border-radius);
+            color: var(--text-primary);
+            font-size: 1rem;
+            transition: border-color var(--transition-speed);
+        }
+
+        .form-group input:focus,
+        .form-group select:focus {
+            outline: none;
+            border-color: var(--accent-blue);
+        }
+
+        .checkbox-group {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
+            gap: 0.5rem;
+            margin-top: 0.5rem;
+        }
+
+        .checkbox-item {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .checkbox-item input[type="checkbox"] {
+            width: auto;
+        }
+
+        .status-indicator {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.5rem;
+            padding: 0.5rem 1rem;
+            border-radius: 20px;
+            font-size: 0.875rem;
+            font-weight: 600;
+        }
+
+        .status-scanning {
+            background-color: rgba(54, 124, 255, 0.1);
+            color: var(--accent-blue);
+        }
+
+        .status-waiting {
+            background-color: rgba(247, 144, 9, 0.1);
+            color: var(--warning-yellow);
+        }
+
+        .status-active {
+            background-color: rgba(34, 197, 94, 0.1);
+            color: var(--positive-green);
+        }
+
+        .countdown-timer {
+            font-family: 'Monaco', 'Menlo', monospace;
+            font-size: 1.25rem;
+            font-weight: 700;
+            color: var(--accent-blue);
+        }
+
+        .opportunities-table {
+            margin-top: 1.5rem;
+        }
+
+        .opportunities-table th {
+            font-size: 0.8rem;
+            text-transform: uppercase;
+            color: var(--text-secondary);
+        }
+
+        /* Toggle Switch */
+        .toggle-switch {
+            position: relative;
+            display: inline-block;
+            width: 50px;
+            height: 28px;
+            flex-shrink: 0;
+        }
+
+        .toggle-switch input {
+            opacity: 0;
+            width: 0;
+            height: 0;
+        }
+
+        .toggle-slider {
+            position: absolute;
+            cursor: pointer;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background-color: var(--bg-surface-2);
+            border: 1px solid var(--border-color);
+            transition: .4s;
+            border-radius: 28px;
+        }
+
+        .toggle-slider:before {
+            position: absolute;
+            content: "";
+            height: 20px;
+            width: 20px;
+            left: 3px;
+            bottom: 3px;
+            background-color: var(--text-secondary);
+            transition: .4s;
+            border-radius: 50%;
+        }
+
+        input:checked + .toggle-slider {
+            background-color: var(--accent-blue);
+            border-color: var(--accent-blue);
+        }
+
+        input:checked + .toggle-slider:before {
+            transform: translateX(22px);
+            background-color: white;
+        }
+
+        /* Placeholder Content */
+        .placeholder-content {
+            min-height: 200px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            text-align: center;
+            padding: 2rem;
+            flex-direction: column;
+            gap: 1rem;
+        }
+
+        .text-secondary {
+            color: var(--text-secondary);
+        }
+
+        /* Animations */
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        .card {
+            animation: fadeIn 0.6s ease-out;
+        }
+
+        /* Responsive */
+        @media (max-width: 768px) {
+            .app-container {
+                grid-template-columns: 1fr;
+                grid-template-rows: auto 1fr;
+                grid-template-areas:
+                    "header"
+                    "main";
+            }
+            
+            .sidebar {
+                display: none;
+            }
+            
+            .header {
+                padding: 1rem;
+                flex-direction: column;
+                gap: 1rem;
+                height: auto;
+            }
+            
+            .header-left {
+                flex-direction: column;
+                align-items: stretch;
+                width: 100%;
+            }
+            
+            .current-account-display {
+                border-right: none;
+                border-bottom: 1px solid var(--border-color);
+                padding-bottom: 1rem;
+                padding-right: 0;
+            }
+            
+            .main-panel {
+                padding: 1rem;
+                gap: 1rem;
+                height: calc(100vh - 120px);
+                max-height: calc(100vh - 120px);
+            }
+            
+            .card {
+                padding: 1rem;
+            }
+            
+            .table-container {
+                max-height: 60vh;
+            }
+            
+            .table-container table {
+                min-width: 600px;
+            }
+            
+            .table-container table th,
+            .table-container table td {
+                padding: 0.5rem;
+                font-size: 0.875rem;
+            }
+
+            .auto-bot-config {
+                grid-template-columns: 1fr;
+            }
+
+            .cot-history-row {
+                grid-template-columns: repeat(3, 1fr);
+            }
+
+            .news-item {
+                grid-template-columns: 1fr;
+                gap: 0.5rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div id="root">
+        <div class="app-container" id="app-container">
+            <!-- Sidebar -->
+            <aside class="sidebar">
+                <div class="sidebar-header">
+                    <div class="sidebar-logo" onclick="toggleSidebar()">
+                        <svg viewBox="0 0 24 24" fill="currentColor">
+                            <path d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5-10-5-10 5zM12 14.47l-8-4v3.06l8 4 8-4v-3.06l-8 4z"></path>
+                        </svg>
+                        <span class="sidebar-logo-text">DalyDough</span>
+                    </div>
+                </div>
+                <nav class="sidebar-nav">
+                    <ul class="sidebar-nav-list">
+                        <li class="sidebar-nav-item">
+                            <a href="#" data-page="Dashboard" class="active">
+                                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                    <path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"></path>
+                                    <polyline points="9 22 9 12 15 12 15 22"></polyline>
+                                </svg>
+                                <span class="sidebar-nav-text">Dashboard</span>
+                            </a>
+                        </li>
+                        <li class="sidebar-nav-item">
+                            <a href="#" data-page="Meat Market">
+                                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                    <path d="M2.5 2v6h6m13 14v-6h-6"></path>
+                                    <path d="M21.5 2l-8.2 8.2a2 2 0 0 0 0 2.8L16 15.7a2 2 0 0 1 0 2.8l-2.8 2.8a2 2 0 0 1-2.8 0L2.5 12.5a2 2 0 0 0-2.8 0L2 14.2"></path>
+                                </svg>
+                                <span class="sidebar-nav-text">Meat Market</span>
+                            </a>
+                        </li>
+                        <li class="sidebar-nav-item">
+                            <a href="#" data-page="Auto Bot">
+                                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                    <circle cx="12" cy="12" r="3"></circle>
+                                    <path d="M12 1v6m0 6v6m11-7h-6m-6 0H1"></path>
+                                </svg>
+                                <span class="sidebar-nav-text">Auto Bot</span>
+                            </a>
+                        </li>
+                        <li class="sidebar-nav-item">
+                            <a href="#" data-page="Active Bots">
+                                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                    <rect x="3" y="11" width="18" height="11" rx="2" ry="2"></rect>
+                                    <path d="M7 11V7a5 5 0 0 1 10 0v4"></path>
+                                    <path d="M12 16a2 2 0 1 0 0-4 2 2 0 0 0 0 4z"></path>
+                                </svg>
+                                <span class="sidebar-nav-text">Active Bots</span>
+                            </a>
+                        </li>
+                        <li class="sidebar-nav-item">
+                            <a href="#" data-page="COT Report">
+                                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                    <path d="M16 4h2a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h2"></path>
+                                    <rect x="8" y="2" width="8" height="4" rx="1" ry="1"></rect>
+                                </svg>
+                                <span class="sidebar-nav-text">COT Report</span>
+                            </a>
+                        </li>
+                        <li class="sidebar-nav-item">
+                            <a href="#" data-page="Forex News">
+                                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                    <path d="M4 22h16a2 2 0 0 0 2-2V4a2 2 0 0 0-2-2H8a2 2 0 0 0-2 2v16a2 2 0 0 1-2 2Zm0 0a2 2 0 0 1-2-2v-9c0-1.1.9-2 2-2h2"></path>
+                                    <path d="M18 14h-8"></path>
+                                    <path d="M15 18h-5"></path>
+                                    <path d="M10 6h8v4h-8V6Z"></path>
+                                </svg>
+                                <span class="sidebar-nav-text">Forex News</span>
+                            </a>
+                        </li>
+                        <li class="sidebar-nav-item">
+                            <a href="#" data-page="Statistics">
+                                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                    <path d="M12 20V10"></path>
+                                    <path d="M18 20V4"></path>
+                                    <path d="M6 20V16"></path>
+                                </svg>
+                                <span class="sidebar-nav-text">Statistics</span>
+                            </a>
+                        </li>
+                        <li class="sidebar-nav-item">
+                            <a href="#" data-page="Settings">
+                                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                    <circle cx="12" cy="12" r="3"></circle>
+                                    <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82-.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06-.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"></path>
+                                </svg>
+                                <span class="sidebar-nav-text">Settings</span>
+                            </a>
+                        </li>
+                    </ul>
+                </nav>
+                <div class="sidebar-footer">
+                    <div class="account-info">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path>
+                            <circle cx="12" cy="7" r="4"></circle>
+                        </svg>
+                        <div class="account-details">
+                            <span class="account-name">Primary Alpha</span>
+                            <span class="account-user">trader@dalydough.ai</span>
+                        </div>
+                    </div>
+                </div>
+            </aside>
+
+            <!-- Header -->
+            <header class="header">
+                <div class="header-left">
+                    <div class="current-account-display">
+                        <span class="kpi-label">Account</span>
+                        <span class="account-name-header">Primary Alpha</span>
+                    </div>
+                    <div class="kpi-widgets" id="kpi-widgets">
+                        <!-- KPI widgets will be populated by JavaScript -->
+                    </div>
+                </div>
+                <div class="header-actions">
+                    <button class="btn btn-danger" onclick="closeAllBots()">Close All Positions</button>
+                    <button class="btn btn-primary" id="launch-new-bot-btn">Launch New Bot</button>
+                </div>
+            </header>
+
+            <!-- Main Content -->
+            <main class="main-panel" id="main-panel">
+                <!-- Content will be dynamically loaded here -->
+            </main>
+        </div>
+    </div>
+
+    <script>
+        // Application State
+        let appState = {
+            activePage: 'Dashboard',
+            expandedBotId: null,
+            marketDataSort: {
+                column: 'dsize',
+                direction: 'desc'
+            },
+            marketTrendsData: null,
+            activeBots: [],
+            sidebarExpanded: false,
+            autoBot: {
+                enabled: false,
+                scanning: false,
+                nextScan: null,
+                config: {
+                    minScore: 7.5,
+                    maxScore: 10.0,
+                    stopScore: 6.0,
+                    allowedPairs: ['EUR/USD', 'GBP/USD', 'USD/JPY'],
+                    scanInterval: 10,
+                    maxBots: 1
+                },
+                opportunities: []
+            },
+            cotData: [],
+            forexNews: []
+        };
+
+        // SVG Icons
+        const icons = {
+            arrowUp: `<svg viewBox="0 0 24 24" fill="currentColor" class="trend-up"><path d="M12 8l-6 6 1.41 1.41L12 10.83l4.59 4.58L18 14l-6-6z"></path></svg>`,
+            arrowDown: `<svg viewBox="0 0 24 24" fill="currentColor" class="trend-down"><path d="M12 16l-6-6 1.41-1.41L12 13.17l4.59-4.58L18 10l-6 6z"></path></svg>`,
+            neutral: `<svg viewBox="0 0 24 24" fill="currentColor" class="trend-neutral"><path d="M4 11h16v2H4z"></path></svg>`,
+            brain: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9.5 2A2.5 2.5 0 0 1 12 4.5v15a2.5 2.5 0 0 1-4.94.44c-.22-.67-.22-1.42 0-2.08.33-1 .67-2 .67-3 0-1-.33-2-.67-3-.22-.67-.22-1.42 0-2.08A2.5 2.5 0 0 1 9.5 2z"></path><path d="M14.5 2A2.5 2.5 0 0 0 12 4.5v15a2.5 2.5 0 0 0 4.94.44c.22-.67.22-1.42 0-2.08-.33-1-.67-2-.67-3 0-1 .33-2 .67-3 .22-.67-.22-1.42 0-2.08A2.5 2.5 0 0 0 14.5 2z"></path></svg>`,
+            bolt: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M13 2L3 14h9l-1 8 10-12h-9l1-8z"></path></svg>`,
+            resizeHorizontal: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="17 8 21 12 17 16"></polyline><polyline points="7 8 3 12 7 16"></polyline><line x1="3" y1="12" x2="21" y2="12"></line></svg>`
+        };
+
+        // Enhanced trend analysis function with CORRECTED scoring
+        function analyzeTrend(trendH4, trendD1, trendW1) {
+            const trends = [trendH4, trendD1, trendW1];
+            const upCount = trends.filter(t => t === 'Up').length;
+            const downCount = trends.filter(t => t === 'Down').length;
+            const neutralCount = trends.filter(t => t === 'Neutral').length;
+            
+            // CORRECTED: Count only aligned timeframes in same direction
+            let trendConfirmationScore = 0;
+            
+            if (upCount >= 2 && downCount === 0) {
+                // Pure bullish alignment (2-3 Ups, rest Neutral)
+                trendConfirmationScore = upCount;
+            } else if (downCount >= 2 && upCount === 0) {
+                // Pure bearish alignment (2-3 Downs, rest Neutral)
+                trendConfirmationScore = downCount;
+            } else if (upCount === 3) {
+                // All bullish
+                trendConfirmationScore = 3;
+            } else if (downCount === 3) {
+                // All bearish  
+                trendConfirmationScore = 3;
+            } else {
+                // Mixed signals (conflicting directions) = 0 points
+                trendConfirmationScore = 0;
+            }
+            
+            // Calculate alignment (highest count of same direction)
+            const alignment = Math.max(upCount, downCount, neutralCount);
+            
+            // Determine overall direction
+            let direction;
+            if (upCount > downCount && upCount > neutralCount) {
+                direction = 'bullish';
+            } else if (downCount > upCount && downCount > neutralCount) {
+                direction = 'bearish';
+            } else {
+                direction = 'neutral';
+            }
+            
+            return { 
+                direction, 
+                alignment, 
+                trendConfirmationScore  // Now correctly calculated!
+            };
+        }
+
+        // D-Size Scoring Functions with corrected trend scoring
+        function generateScoringBreakdown(pair, trendAnalysis) {
+            const cotScore = Math.random() > 0.6 ? 2 : Math.random() > 0.3 ? 1 : 0;
+            // Use the corrected trend confirmation score from trend analysis
+            const trendScore = trendAnalysis.trendConfirmationScore;
+            const adxValue = Math.random() * 50 + 10;
+            const adxScore = adxValue >= 20 ? 1 : 0;
+            const supportScore = Math.random() > 0.5 ? 2 : Math.random() > 0.3 ? 1 : 0;
+            const structureScore = Math.random() > 0.4 ? 1 : 0;
+            const spreadValue = Math.random() * 2 + 0.5;
+            const spreadScore = spreadValue < 1.5 ? 1 : 0;
+
+            return {
+                cotBias: {
+                    score: cotScore,
+                    value: cotScore === 2 ? 'Strong Bias' : cotScore === 1 ? 'Weak Bias' : 'No Bias',
+                    description: 'Weekly directional bias from COT data'
+                },
+                trendConfirmation: {
+                    score: trendScore,
+                    value: `${trendScore}/3 timeframes aligned`,
+                    description: 'Points only for aligned timeframes (no conflicts)'
+                },
+                adxStrength: {
+                    score: adxScore,
+                    value: adxValue.toFixed(1),
+                    description: 'ADX ≥ 20 confirms healthy trend'
+                },
+                supportRetest: {
+                    score: supportScore,
+                    value: supportScore === 2 ? 'Valid Retest' : supportScore === 1 ? 'Near Support' : 'No Support',
+                    description: 'Price near confirmed support level'
+                },
+                priceStructure: {
+                    score: structureScore,
+                    value: structureScore ? 'Clean Structure' : 'Choppy Structure',
+                    description: 'HH/HL or LH/LL pattern confirmed'
+                },
+                spreadCheck: {
+                    score: spreadScore,
+                    value: `${spreadValue.toFixed(1)} pips`,
+                    description: 'Spread < 1.5 pips ensures low-cost execution'
+                }
+            };
+        }
+
+        function calculateDSize(breakdown) {
+            return breakdown.cotBias.score + 
+                   breakdown.trendConfirmation.score + 
+                   breakdown.adxStrength.score + 
+                   breakdown.supportRetest.score + 
+                   breakdown.priceStructure.score + 
+                   breakdown.spreadCheck.score;
+        }
+
+        function generateMarketDataWithScoring() {
+            // Expanded pairs list with all requested pairs
+            const pairs = [
+                'AUD/CAD', 'AUD/CHF', 'AUD/JPY', 'AUD/NZD', 'AUD/USD',
+                'CAD/JPY', 'CHF/JPY', 'EUR/CAD', 'EUR/CHF', 'EUR/GBP', 
+                'EUR/JPY', 'EUR/NZD', 'EUR/TRY', 'EUR/USD', 'GBP/AUD',
+                'GBP/CAD', 'GBP/CHF', 'GBP/JPY', 'GBP/USD', 'NZD/CAD',
+                'NZD/CHF', 'NZD/JPY', 'NZD/USD', 'USD/CAD', 'USD/CHF',
+                'USD/JPY', 'USD/TRY', 'USD/ZAR', 'XAU/USD'
+            ];
+            
+            const trends = ['Up', 'Down', 'Neutral'];
+            
+            return pairs.map(pair => {
+                // Generate trend data
+                const trendH4 = trends[Math.floor(Math.random() * trends.length)];
+                const trendD1 = trends[Math.floor(Math.random() * trends.length)];
+                const trendW1 = trends[Math.floor(Math.random() * trends.length)];
+                
+                // Analyze trend for scoring and directional signal
+                const trendAnalysis = analyzeTrend(trendH4, trendD1, trendW1);
+                
+                // Generate scoring breakdown using corrected trend score
+                const breakdown = generateScoringBreakdown(pair, trendAnalysis);
+                const dsize = calculateDSize(breakdown);
+                
+                // Generate price data
+                const currentPrice = Math.random() * 2 + 1;
+                const dailyChange = (Math.random() - 0.5) * 0.02;
+                const dailyChangePercent = (dailyChange / currentPrice) * 100;
+                
+                // Determine entry status with direction
+                const canEnter = dsize >= 7;
+                let entryStatus;
+                
+                if (!canEnter) {
+                    entryStatus = 'Block';
+                } else {
+                    // If can enter, show direction based on trend analysis
+                    switch (trendAnalysis.direction) {
+                        case 'bullish':
+                            entryStatus = 'Allow Buy';
+                            break;
+                        case 'bearish':
+                            entryStatus = 'Allow Sell';
+                            break;
+                        case 'neutral':
+                            // For neutral trends, look at recent price action
+                            if (dailyChange > 0) {
+                                entryStatus = 'Allow Buy';
+                            } else if (dailyChange < 0) {
+                                entryStatus = 'Allow Sell';
+                            } else {
+                                entryStatus = 'Allow Trade';
+                            }
+                            break;
+                        default:
+                            entryStatus = 'Block';
+                    }
+                }
+                
+                return {
+                    pair,
+                    trendH4,
+                    trendD1,
+                    trendW1,
+                    trendAnalysis,
+                    setupQuality: dsize >= 8 ? 'A' : dsize >= 6 ? 'B' : 'C',
+                    conditions: {
+                        cot: breakdown.cotBias.score > 0,
+                        adx: breakdown.adxStrength.score > 0,
+                        spread: breakdown.spreadCheck.score > 0
+                    },
+                    dsize: dsize.toFixed(1),
+                    currentPrice,
+                    dailyChange,
+                    dailyChangePercent,
+                    entryStatus,
+                    breakdown,
+                    lastUpdated: new Date().toISOString()
+                };
+            }).sort((a, b) => parseFloat(b.dsize) - parseFloat(a.dsize));
+        }
+
+        // Generate mock active bots
+        function generateActiveBots() {
+            const pairs = ['EUR/USD', 'GBP/USD', 'USD/JPY', 'AUD/USD', 'XAU/USD'];
+            const types = ['Dynamic DCA', 'Static Grid', 'AI Trend'];
+            
+            return pairs.map((pair, i) => {
+                const totalPL = (Math.random() - 0.4) * 500;
+                const entryDScore = Math.random() * 3 + 7;
+                const currentDScore = entryDScore + (Math.random() - 0.5) * 2;
+                
+                return {
+                    id: `bot_${i}`,
+                    pair,
+                    type: types[Math.floor(Math.random() * types.length)],
+                    totalPL,
+                    status: 'active',
+                    entryDScore,
+                    currentDScore: Math.max(0, Math.min(10, currentDScore)),
+                    globalSL: Math.floor(Math.random() * 500) + 100,
+                    globalTP: Math.floor(Math.random() * 1000) + 200,
+                    trailingProfitEnabled: Math.random() > 0.5,
+                    closeAtNextTP: Math.random() > 0.7,
+                    activeTrades: [{
+                        id: `${i}_trade_1`,
+                        botId: `bot_${i}`,
+                        pair,
+                        direction: 'buy',
+                        entryPrice: 1.25000,
+                        lotSize: 0.01,
+                        sl: 500,
+                        tp: 1000,
+                        currentPL: totalPL,
+                        isReentry: false,
+                        reentryLevel: 0,
+                        entryTime: new Date().toISOString(),
+                        score: entryDScore,
+                        reason: 'Initial entry based on D-size criteria'
+                    }],
+                    lastUpdate: new Date().toISOString()
+                };
+            });
+        }
+
+        // Generate COT data
+        function generateCOTData() {
+            const currencies = ['USD', 'EUR', 'GBP', 'JPY', 'AUD', 'CAD'];
+            
+            return currencies.map(currency => {
+                const history = [];
+                const now = new Date();
+                
+                for (let i = 5; i >= 0; i--) {
+                    const date = new Date(now);
+                    date.setDate(date.getDate() - (i * 7));
+                    
+                    const longPos = Math.floor(Math.random() * 100000) + 50000;
+                    const shortPos = Math.floor(Math.random() * 80000) + 40000;
+                    const netPos = longPos - shortPos;
+                    
+                    history.push({
+                        date: date.toLocaleDateString('en-US', { month: 'short', day: 'numeric' }),
+                        longPosition: longPos,
+                        shortPosition: shortPos,
+                        netPosition: netPos
+                    });
+                }
+                
+                return { currency, history };
+            });
+        }
+
+        // Generate forex news
+        function generateForexNews() {
+            const events = [
+                { event: 'Non-Farm Payrolls', currency: 'USD', impact: 'High' },
+                { event: 'CPI Flash Estimate', currency: 'EUR', impact: 'High' },
+                { event: 'BOE Interest Rate Decision', currency: 'GBP', impact: 'High' },
+                { event: 'Unemployment Rate', currency: 'AUD', impact: 'Medium' },
+                { event: 'Trade Balance', currency: 'CAD', impact: 'Medium' },
+                { event: 'Manufacturing PMI', currency: 'JPY', impact: 'Low' },
+                { event: 'Retail Sales', currency: 'USD', impact: 'Medium' },
+                { event: 'GDP Growth Rate', currency: 'EUR', impact: 'High' }
+            ];
+            
+            return events.map((item, i) => {
+                const time = new Date();
+                time.setHours(8 + i, Math.floor(Math.random() * 60));
+                
+                const forecast = Math.random() * 2 + 0.5;
+                const actual = forecast + (Math.random() - 0.5) * 0.4;
+                
+                return {
+                    ...item,
+                    time: time.toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' }),
+                    forecast: forecast.toFixed(1) + '%',
+                    actual: actual.toFixed(1) + '%',
+                    previous: (forecast - 0.1).toFixed(1) + '%'
+                };
+            });
+        }
+
+        // Utility Functions
+        function getTrendIcon(trend) {
+            if (trend === 'Up') return icons.arrowUp;
+            if (trend === 'Down') return icons.arrowDown;
+            return icons.neutral;
+        }
+
+        function formatCurrency(value) {
+            return new Intl.NumberFormat('en-US', {
+                style: 'currency',
+                currency: 'USD',
+                minimumFractionDigits: 2
+            }).format(value);
+        }
+
+        // Helper function to get entry status styling class
+        function getEntryStatusClass(entryStatus) {
+            if (entryStatus === 'Block') {
+                return 'entry-block';
+            } else if (entryStatus.includes('Allow')) {
+                return 'entry-allow';
+            }
+            return 'entry-neutral';
+        }
+
+        // Helper function to get entry status icon
+        function getEntryStatusIcon(entryStatus) {
+            if (entryStatus === 'Block') {
+                return '✗';
+            } else if (entryStatus === 'Allow Buy') {
+                return '↗';
+            } else if (entryStatus === 'Allow Sell') {
+                return '↘';
+            } else if (entryStatus.includes('Allow')) {
+                return '✓';
+            }
+            return '—';
+        }
+
+        // Bot Management Functions
+        function toggleBotExpansion(botId) {
+            if (appState.expandedBotId === botId) {
+                appState.expandedBotId = null;
+            } else {
+                appState.expandedBotId = botId;
+            }
+            
+            // Refresh current page to show/hide expansion
+            if (appState.activePage === 'Dashboard') {
+                document.getElementById('main-panel').innerHTML = createDashboardPage();
+                attachEventListeners();
+            } else if (appState.activePage === 'Active Bots') {
+                switchPage('Active Bots');
+            }
+        }
+
+        // NEW: Toggle Functions for Bot Settings
+        function toggleTrailingProfit(botId) {
+            const bot = appState.activeBots.find(b => b.id === botId);
+            if (!bot) return;
+            
+            bot.trailingProfitEnabled = !bot.trailingProfitEnabled;
+            bot.lastUpdate = new Date().toISOString();
+            
+            console.log(`🔄 Toggled trailing profit for ${bot.pair}: ${bot.trailingProfitEnabled ? 'ON' : 'OFF'}`);
+            
+            // Refresh display
+            refreshCurrentPage();
+        }
+
+        function toggleCloseAtNextTP(botId) {
+            const bot = appState.activeBots.find(b => b.id === botId);
+            if (!bot) return;
+            
+            bot.closeAtNextTP = !bot.closeAtNextTP;
+            bot.lastUpdate = new Date().toISOString();
+            
+            console.log(`🔄 Toggled close at next TP for ${bot.pair}: ${bot.closeAtNextTP ? 'ON' : 'OFF'}`);
+            
+            // Refresh display
+            refreshCurrentPage();
+        }
+
+        // Helper function to refresh current page
+        function refreshCurrentPage() {
+            if (appState.activePage === 'Dashboard') {
+                document.getElementById('main-panel').innerHTML = createDashboardPage();
+                attachEventListeners();
+            } else if (appState.activePage === 'Active Bots') {
+                switchPage('Active Bots');
+            }
+        }
+
+        // Make functions globally available
+        window.toggleTrailingProfit = toggleTrailingProfit;
+        window.toggleCloseAtNextTP = toggleCloseAtNextTP;
+
+        function editBot(botId) {
+            const bot = appState.activeBots.find(b => b.id === botId);
+            if (!bot) return;
+            
+            // Create a simple edit dialog
+            const newSL = prompt(`Edit Global Stop Loss for ${bot.pair}:`, bot.globalSL);
+            const newTP = prompt(`Edit Global Take Profit for ${bot.pair}:`, bot.globalTP);
+            
+            if (newSL !== null && newTP !== null) {
+                bot.globalSL = parseInt(newSL);
+                bot.globalTP = parseInt(newTP);
+                bot.lastUpdate = new Date().toISOString();
+                
+                // Refresh display
+                if (appState.activePage === 'Dashboard') {
+                    document.getElementById('main-panel').innerHTML = createDashboardPage();
+                    attachEventListeners();
+                } else if (appState.activePage === 'Active Bots') {
+                    switchPage('Active Bots');
+                }
+                
+                console.log(`✅ Updated bot ${botId} - SL: ${newSL}, TP: ${newTP}`);
+            }
+        }
+
+        function closeBot(botId) {
+            const bot = appState.activeBots.find(b => b.id === botId);
+            if (!bot) return;
+            
+            if (confirm(`Are you sure you want to close bot for ${bot.pair}?\n\nCurrent P&L: ${formatCurrency(bot.totalPL)}`)) {
+                // Remove bot from active bots
+                appState.activeBots = appState.activeBots.filter(b => b.id !== botId);
+                
+                // Clear expansion state
+                if (appState.expandedBotId === botId) {
+                    appState.expandedBotId = null;
+                }
+                
+                // Refresh display
+                if (appState.activePage === 'Dashboard') {
+                    document.getElementById('main-panel').innerHTML = createDashboardPage();
+                    attachEventListeners();
+                } else if (appState.activePage === 'Active Bots') {
+                    switchPage('Active Bots');
+                }
+                
+                console.log(`🛑 Closed bot ${botId} for ${bot.pair}`);
+                alert(`✅ Bot closed for ${bot.pair}\nFinal P&L: ${formatCurrency(bot.totalPL)}`);
+            }
+        }
+
+        function closeAllBots() {
+            if (appState.activeBots.length === 0) {
+                alert('No active bots to close');
+                return;
+            }
+            
+            const totalPnL = appState.activeBots.reduce((sum, bot) => sum + bot.totalPL, 0);
+            
+            if (confirm(`⚠️ Emergency Stop All Bots?\n\nThis will close ${appState.activeBots.length} active bots.\nCurrent Total P&L: ${formatCurrency(totalPnL)}\n\nThis action cannot be undone.`)) {
+                const closedBots = [...appState.activeBots];
+                appState.activeBots = [];
+                appState.expandedBotId = null;
+                
+                // Refresh display
+                if (appState.activePage === 'Dashboard') {
+                    document.getElementById('main-panel').innerHTML = createDashboardPage();
+                    attachEventListeners();
+                } else if (appState.activePage === 'Active Bots') {
+                    switchPage('Active Bots');
+                }
+                
+                console.log(`🚨 Emergency stop: Closed ${closedBots.length} bots`);
+                alert(`🛑 All bots closed!\n\nClosed ${closedBots.length} bots\nFinal P&L: ${formatCurrency(totalPnL)}`);
+            }
+        }
+
+        // Make functions globally available
+        window.toggleBotExpansion = toggleBotExpansion;
+        window.editBot = editBot;
+        window.closeBot = closeBot;
+        window.closeAllBots = closeAllBots;
+
+        // Create Active Bots Functions
+        function createActiveBotsSection() {
+            if (!appState.activeBots || appState.activeBots.length === 0) {
+                return `
+                    <div style="text-align: center; padding: 2rem; color: var(--text-secondary);">
+                        <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1" style="margin-bottom: 1rem; opacity: 0.5;">
+                            <circle cx="12" cy="12" r="10"></circle>
+                            <path d="M8 14s1.5 2 4 2 4-2 4-2"></path>
+                            <path d="M9 9h.01"></path>
+                            <path d="M15 9h.01"></path>
+                        </svg>
+                        <p>No active bots running</p>
+                        <button class="btn btn-primary" style="margin-top: 1rem;" onclick="switchPage('Auto Bot')">Launch Your First Bot</button>
+                    </div>
+                `;
+            }
+
+            const totalPnL = appState.activeBots.reduce((sum, bot) => sum + bot.totalPL, 0);
+            
+            return `
+                <!-- NEW: Quick Bot Controls for Dashboard -->
+                <div style="margin-bottom: 1rem;">
+                    <h4 style="margin-bottom: 0.75rem;">🎛️ Quick Bot Controls</h4>
+                    <div class="table-container">
+                        <table style="min-width: 600px;">
+                            <thead>
+                                <tr>
+                                    <th>Bot</th>
+                                    <th>P&L</th>
+                                    <th>Trailing Profit</th>
+                                    <th>Close at Next TP</th>
+                                    <th>Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                ${appState.activeBots.map(bot => `
+                                    <tr>
+                                        <td>
+                                            <div style="font-weight: 600;">${bot.pair}</div>
+                                            <div style="font-size: 0.8rem; color: var(--text-secondary);">${bot.type}</div>
+                                        </td>
+                                        <td>
+                                            <span class="trade-pnl ${bot.totalPL >= 0 ? 'positive' : 'negative'}">
+                                                ${formatCurrency(bot.totalPL)}
+                                            </span>
+                                        </td>
+                                        <td style="text-align: center;">
+                                            <label class="toggle-switch">
+                                                <input type="checkbox" ${bot.trailingProfitEnabled ? 'checked' : ''} 
+                                                       onchange="toggleTrailingProfit('${bot.id}')">
+                                                <span class="toggle-slider"></span>
+                                            </label>
+                                        </td>
+                                        <td style="text-align: center;">
+                                            <label class="toggle-switch">
+                                                <input type="checkbox" ${bot.closeAtNextTP ? 'checked' : ''} 
+                                                       onchange="toggleCloseAtNextTP('${bot.id}')">
+                                                <span class="toggle-slider"></span>
+                                            </label>
+                                        </td>
+                                        <td>
+                                            <button class="btn btn-secondary btn-sm" onclick="toggleBotExpansion('${bot.id}')">Details</button>
+                                            <button class="btn btn-danger btn-sm" onclick="closeBot('${bot.id}')">Close</button>
+                                        </td>
+                                    </tr>
+                                `).join('')}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            `;
+        }
+
+        function createActiveBotsTable() {
+            const bots = appState.activeBots;
+            
+            return `
+                <div class="table-container">
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>Bot / Pair</th>
+                                <th>Type</th>
+                                <th>P&L</th>
+                                <th>D-Size Score</th>
+                                <th>Global Limits</th>
+                                <th>Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            ${bots.map(bot => createBotRow(bot)).join('')}
+                        </tbody>
+                    </table>
+                </div>
+            `;
+        }
+
+        function createBotRow(bot) {
+            const isExpanded = appState.expandedBotId === bot.id;
+            const pnlClass = bot.totalPL >= 0 ? 'positive' : 'negative';
+            const scoreClass = bot.currentDScore >= 7 ? 'score-high' : bot.currentDScore >= 5 ? 'score-medium' : 'score-low';
+            
+            return `
+                <tr class="is-expandable ${isExpanded ? 'active' : ''}" onclick="toggleBotExpansion('${bot.id}')">
+                    <td>
+                        <div style="font-weight: 600; font-size: 1.1rem;">${bot.pair}</div>
+                        <div style="font-size: 0.875rem; color: var(--text-secondary);">
+                            Bot ID: ${bot.id}
+                        </div>
+                    </td>
+                    <td>${bot.type}</td>
+                    <td>
+                        <div style="font-weight: 600; font-family: 'Monaco', 'Menlo', monospace;" class="${pnlClass}">
+                            ${formatCurrency(bot.totalPL)}
+                        </div>
+                    </td>
+                    <td>
+                        <div class="recommendation-score ${scoreClass}">
+                            ${bot.currentDScore.toFixed(1)}
+                        </div>
+                        <div style="font-size: 0.75rem; color: var(--text-secondary); margin-top: 0.25rem;">
+                            Entry: ${bot.entryDScore.toFixed(1)}
+                        </div>
+                    </td>
+                    <td>
+                        <div style="font-size: 0.875rem;">
+                            <div>SL: ${bot.globalSL}</div>
+                            <div>TP: ${bot.globalTP}</div>
+                            ${bot.trailingProfitEnabled ? '<div style="color: var(--positive-green);">✓ Trailing</div>' : ''}
+                        </div>
+                    </td>
+                    <td>
+                        <div style="display: flex; gap: 0.5rem; align-items: center;">
+                            <button class="btn btn-secondary btn-sm" onclick="event.stopPropagation(); editBot('${bot.id}')">Edit</button>
+                            <button class="btn btn-danger btn-sm" onclick="event.stopPropagation(); closeBot('${bot.id}')">Close</button>
+                            <span style="color: var(--text-tertiary);">${isExpanded ? '▼' : '▶'}</span>
+                        </div>
+                    </td>
+                </tr>
+                ${isExpanded ? `<tr class="expanded-row"><td colspan="6">${createBotDetails(bot)}</td></tr>` : ''}
+            `;
+        }
+
+        function createBotDetails(bot) {
+            return `
+                <div class="detailed-reentry-card">
+                    <h4>📋 Bot Configuration & Active Trades</h4>
+                    
+                    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 2rem; margin-bottom: 1.5rem;">
+                        <div>
+                            <h5 style="margin-bottom: 0.75rem;">⚙️ Configuration</h5>
+                            <table>
+                                <tr><td>Bot Type:</td><td>${bot.type}</td></tr>
+                                <tr><td>Entry D-Size:</td><td>${bot.entryDScore.toFixed(1)}/10</td></tr>
+                                <tr><td>Current D-Size:</td><td class="${bot.currentDScore >= 7 ? 'success' : bot.currentDScore >= 5 ? 'warning' : 'error'}">${bot.currentDScore.toFixed(1)}/10</td></tr>
+                                <tr><td>Global Stop Loss:</td><td>${bot.globalSL}</td></tr>
+                                <tr><td>Global Take Profit:</td><td>${bot.globalTP}</td></tr>
+                            </table>
+                        </div>
+                        
+                        <div>
+                            <h5 style="margin-bottom: 0.75rem;">📊 Performance</h5>
+                            <table>
+                                <tr><td>Total P&L:</td><td class="${bot.totalPL >= 0 ? 'success' : 'error'}">${formatCurrency(bot.totalPL)}</td></tr>
+                                <tr><td>Active Trades:</td><td>${bot.activeTrades.length}</td></tr>
+                                <tr><td>Status:</td><td class="success">✅ Active</td></tr>
+                                <tr><td>Last Update:</td><td>${new Date(bot.lastUpdate).toLocaleString()}</td></tr>
+                            </table>
+                        </div>
+                    </div>
+
+                    <!-- NEW: Bot Control Toggles -->
+                    <div style="margin-bottom: 1.5rem;">
+                        <h5 style="margin-bottom: 0.75rem;">🎛️ Bot Controls</h5>
+                        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem;">
+                            <div class="form-toggle-item">
+                                <div class="setting-label">
+                                    <span>Trailing Profit</span>
+                                    <div class="setting-description">Automatically adjust TP as price moves favorably</div>
+                                </div>
+                                <div class="setting-control-group">
+                                    <label class="toggle-switch">
+                                        <input type="checkbox" ${bot.trailingProfitEnabled ? 'checked' : ''} 
+                                               onchange="toggleTrailingProfit('${bot.id}')">
+                                        <span class="toggle-slider"></span>
+                                    </label>
+                                </div>
+                            </div>
+                            
+                            <div class="form-toggle-item">
+                                <div class="setting-label">
+                                    <span>Close at Next TP</span>
+                                    <div class="setting-description">Close entire bot when next TP is hit</div>
+                                </div>
+                                <div class="setting-control-group">
+                                    <label class="toggle-switch">
+                                        <input type="checkbox" ${bot.closeAtNextTP ? 'checked' : ''} 
+                                               onchange="toggleCloseAtNextTP('${bot.id}')">
+                                        <span class="toggle-slider"></span>
+                                    </label>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <h5 style="margin-bottom: 0.75rem;">🔄 Active Trades</h5>
+                    <div class="trades-list">
+                        ${bot.activeTrades.map(trade => `
+                            <div class="trade-item">
+                                <div class="trade-info">
+                                    <span class="trade-type">${trade.pair}</span>
+                                    <span class="trade-direction ${trade.direction}">${trade.direction.toUpperCase()}</span>
+                                    <span class="trade-size">${trade.lotSize} lots</span>
+                                    <span class="trade-price">Entry: ${trade.entryPrice.toFixed(5)}</span>
+                                </div>
+                                <div style="display: flex; align-items: center; gap: 1rem;">
+                                    <span class="trade-pnl ${trade.currentPL >= 0 ? 'positive' : 'negative'}">
+                                        ${formatCurrency(trade.currentPL)}
+                                    </span>
+                                    <span class="trade-score">D-Size: ${trade.score.toFixed(1)}</span>
+                                </div>
+                            </div>
+                        `).join('')}
+                    </div>
+
+                    <div style="margin-top: 1rem; padding: 1rem; background: var(--bg-surface-2); border-radius: 8px;">
+                        <strong>💡 Strategy Notes:</strong><br>
+                        <span style="color: var(--text-secondary); font-size: 0.875rem;">
+                            ${bot.activeTrades[0]?.reason || 'Dynamic DCA strategy with D-Size exit criteria'}
+                            ${bot.trailingProfitEnabled ? '<br>🎯 Trailing profit is active' : ''}
+                            ${bot.closeAtNextTP ? '<br>⚡ Bot will close at next TP hit' : ''}
+                        </span>
+                    </div>
+                </div>
+            `;
+        }
+
+        // UI Creation Functions
+        function createDetailedScoringCard(trend) {
+            const totalScore = parseFloat(trend.dsize);
+            const canEnter = totalScore >= 7;
+            
+            return `
+                <div class="detailed-scoring-card">
+                    <h4>D-Size Breakdown for ${trend.pair}</h4>
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>Component</th>
+                                <th>Value</th>
+                                <th>Score</th>
+                                <th>Max</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            ${Object.entries(trend.breakdown).map(([key, component]) => `
+                                <tr>
+                                    <td>${key.replace(/([A-Z])/g, ' $1').replace(/^./, str => str.toUpperCase())}</td>
+                                    <td>${component.value}</td>
+                                    <td style="color: ${component.score > 0 ? 'var(--positive-green)' : 'var(--text-tertiary)'};">
+                                        +${component.score}
+                                    </td>
+                                    <td style="color: var(--text-secondary);">
+                                        /${key === 'cotBias' || key === 'supportRetest' ? '2' : key === 'trendConfirmation' ? '3' : '1'}
+                                    </td>
+                                </tr>
+                            `).join('')}
+                            <tr style="border-top: 2px solid var(--border-color); font-weight: 700;">
+                                <td>Total D-Size</td>
+                                <td>-</td>
+                                <td style="color: var(--accent-blue); font-size: 1.1rem;">${trend.dsize}</td>
+                                <td style="color: var(--text-secondary);">/10</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                    <div style="margin-top: 1rem; padding: 1rem; background: ${canEnter ? 'rgba(34, 197, 94, 0.1)' : 'rgba(239, 68, 68, 0.1)'}; border-radius: 6px; border-left: 4px solid ${canEnter ? 'var(--positive-green)' : 'var(--negative-red)'};">
+                        <div style="display: flex; justify-content: space-between; align-items: center;">
+                            <div>
+                                <strong>Entry Decision:</strong> Score ≥ 7.0 required for new positions
+                            </div>
+                            <div style="font-size: 1.1rem; font-weight: 700; color: ${canEnter ? 'var(--positive-green)' : 'var(--negative-red)'};">
+                                ${trend.entryStatus}
+                            </div>
+                        </div>
+                        ${!canEnter ? `
+                            <div style="margin-top: 0.5rem; font-size: 0.875rem; color: var(--text-secondary);">
+                                Need ${(7 - totalScore).toFixed(1)} more points to meet entry criteria
+                            </div>
+                        ` : `
+                            <div style="margin-top: 0.5rem; font-size: 0.875rem; color: var(--text-secondary);">
+                                Trend Analysis: ${trend.trendAnalysis.direction} (${trend.trendAnalysis.trendConfirmationScore}/3 timeframes aligned)
+                            </div>
+                        `}
+                    </div>
+                    <div style="margin-top: 1rem; font-size: 0.75rem; color: var(--text-tertiary);">
+                        Last updated: ${new Date(trend.lastUpdated).toLocaleString()}
+                    </div>
+                </div>
+            `;
+        }
+
+        // Page Creation Functions
+        function createDashboardPage() {
+            if (!appState.marketTrendsData) {
+                appState.marketTrendsData = generateMarketDataWithScoring();
+            }
+
+            const topTrends = appState.marketTrendsData.slice(0, 8);
+
+            return `
+                <div class="card">
+                    <div class="card-header">
+                        <h2 class="card-title">Meat Market - Top Opportunities</h2>
+                        <div style="display: flex; align-items: center; gap: 1rem;">
+                            <div class="last-update">
+                                Last Update: ${new Date().toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' })}
+                            </div>
+                            <button class="btn btn-secondary refresh-button" onclick="refreshMarketData()">
+                                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                    <path d="M23 4v6h-6"></path>
+                                    <path d="M20.49 15a9 9 0 1 1-2.12-9.36L23 10"></path>
+                                </svg>
+                                Refresh
+                            </button>
+                        </div>
+                    </div>
+                    ${createMarketTrendsTable(topTrends)}
+                </div>
+
+                <div class="card">
+                    <div class="card-header">
+                        <h2 class="card-title">🤖 Active Bots Dashboard</h2>
+                        <div style="display: flex; align-items: center; gap: 1rem;">
+                            <div class="last-update">
+                                ${appState.activeBots.length} bots running
+                            </div>
+                        </div>
+                    </div>
+                    ${createActiveBotsSection()}
+                </div>
+                
+                <div class="card">
+                    <div class="card-header">
+                        <h2 class="card-title">System Status</h2>
+                    </div>
+                    <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 1rem;">
+                        <div style="background: rgba(34, 197, 94, 0.1); padding: 1rem; border-radius: 8px; border-left: 4px solid var(--positive-green);">
+                            <div style="font-weight: 600; margin-bottom: 0.5rem;">✅ D-Size Algorithm</div>
+                            <div style="color: var(--text-secondary); font-size: 0.875rem;">Active & Scoring</div>
+                        </div>
+                        <div style="background: rgba(34, 197, 94, 0.1); padding: 1rem; border-radius: 8px; border-left: 4px solid var(--positive-green);">
+                            <div style="font-weight: 600; margin-bottom: 0.5rem;">🎯 Trend Analysis</div>
+                            <div style="color: var(--text-secondary); font-size: 0.875rem;">CORRECTED Logic</div>
+                        </div>
+                        <div style="background: rgba(34, 197, 94, 0.1); padding: 1rem; border-radius: 8px; border-left: 4px solid var(--positive-green);">
+                            <div style="font-weight: 600; margin-bottom: 0.5rem;">📊 Market Data</div>
+                            <div style="color: var(--text-secondary); font-size: 0.875rem;">${appState.marketTrendsData?.length || 0} Pairs Active</div>
+                        </div>
+                        <div style="background: rgba(54, 124, 255, 0.1); padding: 1rem; border-radius: 8px; border-left: 4px solid var(--accent-blue);">
+                            <div style="font-weight: 600; margin-bottom: 0.5rem;">🤖 Ready to Trade</div>
+                            <div style="color: var(--text-secondary); font-size: 0.875rem;">Launch New Bots</div>
+                        </div>
+                    </div>
+                </div>
+            `;
+        }
+
+        function createMarketTrendsTable(data) {
+            const sortIcon = (column) => {
+                if (appState.marketDataSort.column !== column) return '';
+                return appState.marketDataSort.direction === 'asc' ? '▲' : '▼';
+            };
+
+            const sortedData = [...data].sort((a, b) => {
+                const { column, direction } = appState.marketDataSort;
+                const asc = direction === 'asc' ? 1 : -1;
+
+                switch (column) {
+                    case 'pair':
+                        return a.pair.localeCompare(b.pair) * asc;
+                    case 'setupQuality':
+                        const qualityOrder = { 'A': 3, 'B': 2, 'C': 1 };
+                        return (qualityOrder[a.setupQuality] - qualityOrder[b.setupQuality]) * asc;
+                    case 'dsize':
+                        return (parseFloat(a.dsize) - parseFloat(b.dsize)) * asc;
+                    default:
+                        return 0;
+                }
+            });
+
+            return `
+                <div class="table-container">
+                    <table class="market-table">
+                        <thead>
+                            <tr>
+                                <th class="sortable-header" data-sort="pair">Pair ${sortIcon('pair')}</th>
+                                <th>Price / Change</th>
+                                <th>Trend Analysis</th>
+                                <th class="sortable-header" data-sort="setupQuality">Quality ${sortIcon('setupQuality')}</th>
+                                <th>Market Conditions</th>
+                                <th class="sortable-header" data-sort="dsize">D-Size ${sortIcon('dsize')}</th>
+                                <th>Entry Signal</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            ${sortedData.map(d => {
+                                const isExpanded = appState.expandedTrendPair === d.pair;
+                                const entryStatusClass = getEntryStatusClass(d.entryStatus);
+                                
+                                return `
+                                    <tr class="is-expandable ${isExpanded ? 'active' : ''}" data-pair='${JSON.stringify(d).replace(/'/g, "&#39;")}'>
+                                        <td>${d.pair}</td>
+                                        <td>
+                                            <div class="price-cell">
+                                                <span class="current-price">${d.currentPrice.toFixed(5)}</span>
+                                                <div class="price-change ${d.dailyChange >= 0 ? 'positive' : 'negative'}">
+                                                    ${d.dailyChange >= 0 ? '↗' : '↘'} ${Math.abs(d.dailyChange).toFixed(4)} 
+                                                    (${d.dailyChangePercent >= 0 ? '+' : ''}${d.dailyChangePercent.toFixed(2)}%)
+                                                </div>
+                                            </div>
+                                        </td>
+                                        <td class="trend-cell">
+                                            <div class="trend-indicator">
+                                                <div class="trend-timeframe">W1</div>
+                                                ${getTrendIcon(d.trendW1)}
+                                            </div>
+                                            <div class="trend-indicator">
+                                                <div class="trend-timeframe">D1</div>
+                                                ${getTrendIcon(d.trendD1)}
+                                            </div>
+                                            <div class="trend-indicator">
+                                                <div class="trend-timeframe">H4</div>
+                                                ${getTrendIcon(d.trendH4)}
+                                            </div>
+                                        </td>
+                                        <td><span class="setup-quality-pill quality-${d.setupQuality}">${d.setupQuality}</span></td>
+                                        <td class="conditions-cell">
+                                            <span class="condition-icon ${d.conditions.cot ? 'active' : ''}" title="COT Bias">${icons.brain}</span>
+                                            <span class="condition-icon ${d.conditions.adx ? 'active' : ''}" title="ADX Strength">${icons.bolt}</span>
+                                            <span class="condition-icon ${d.conditions.spread ? 'active' : ''}" title="Spread Check">${icons.resizeHorizontal}</span>
+                                        </td>
+                                        <td><span class="recommendation-score score-${Number(d.dsize) >= 8 ? 'high' : Number(d.dsize) >= 6 ? 'medium' : 'low'}">${d.dsize}</span></td>
+                                        <td>
+                                            <div class="entry-status ${entryStatusClass}">
+                                                ${getEntryStatusIcon(d.entryStatus)} ${d.entryStatus}
+                                            </div>
+                                        </td>
+                                    </tr>
+                                    ${isExpanded ? `<tr class="expanded-row"><td colspan="7">${createDetailedScoringCard(d)}</td></tr>` : ''}
+                                `;
+                            }).join('')}
+                        </tbody>
+                    </table>
+                </div>
+            `;
+        }
+
+        function createAutoBotPage() {
+            const { autoBot } = appState;
+            const nextScanTime = autoBot.nextScan ? Math.max(0, Math.floor((autoBot.nextScan - Date.now()) / 1000)) : 0;
+            const minutes = Math.floor(nextScanTime / 60);
+            const seconds = nextScanTime % 60;
+
+            return `
+                <div class="auto-bot-config">
+                    <div class="config-section">
+                        <h3>🤖 Auto Bot Configuration</h3>
+                        
+                        <div class="form-group">
+                            <label>Bot Status</label>
+                            <div style="display: flex; align-items: center; gap: 1rem;">
+                                <label class="toggle-switch">
+                                    <input type="checkbox" id="auto-bot-enabled" ${autoBot.enabled ? 'checked' : ''}>
+                                    <span class="toggle-slider"></span>
+                                </label>
+                                <span class="status-indicator ${autoBot.enabled ? (autoBot.scanning ? 'status-scanning' : 'status-active') : 'status-waiting'}">
+                                    ${autoBot.enabled ? (autoBot.scanning ? '🔍 Scanning Markets' : '✅ Active & Monitoring') : '⏸️ Stopped'}
+                                </span>
+                            </div>
+                        </div>
+
+                        <div class="form-group">
+                            <label for="min-score">Minimum D-Size Score</label>
+                            <input type="number" id="min-score" value="${autoBot.config.minScore}" step="0.1" min="6.0" max="9.0">
+                        </div>
+
+                        <div class="form-group">
+                            <label for="max-score">Maximum D-Size Score</label>
+                            <input type="number" id="max-score" value="${autoBot.config.maxScore}" step="0.1" min="7.0" max="10.0">
+                        </div>
+
+                        <div class="form-group">
+                            <label for="stop-score">Auto-Stop Score</label>
+                            <input type="number" id="stop-score" value="${autoBot.config.stopScore}" step="0.1" min="4.0" max="7.0">
+                            <small style="color: var(--text-secondary);">Bot stops when D-Size drops to this level</small>
+                        </div>
+
+                        <div class="form-group">
+                            <label for="max-bots">Max Concurrent Bots</label>
+                            <input type="number" id="max-bots" value="${autoBot.config.maxBots}" min="1" max="5">
+                        </div>
+
+                        <div class="form-group">
+                            <label>Allowed Pairs</label>
+                            <div class="checkbox-group">
+                                ${['EUR/USD', 'GBP/USD', 'USD/JPY', 'AUD/USD', 'USD/CAD', 'NZD/USD', 'XAU/USD', 'GBP/JPY'].map(pair => `
+                                    <div class="checkbox-item">
+                                        <input type="checkbox" id="pair-${pair.replace('/', '')}" value="${pair}" ${autoBot.config.allowedPairs.includes(pair) ? 'checked' : ''}>
+                                        <label for="pair-${pair.replace('/', '')}">${pair}</label>
+                                    </div>
+                                `).join('')}
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="config-section">
+                        <h3>⏰ Scanner Status</h3>
+                        
+                        <div style="text-align: center; margin: 2rem 0;">
+                            <div style="font-size: 0.875rem; color: var(--text-secondary); margin-bottom: 0.5rem;">
+                                Next Scan In:
+                            </div>
+                            <div class="countdown-timer" id="countdown-timer">
+                                ${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')}
+                            </div>
+                        </div>
+
+                        <div style="display: grid; grid-template-columns: repeat(2, 1fr); gap: 1rem; margin: 1rem 0;">
+                            <div style="text-align: center; padding: 1rem; background: var(--bg-main); border-radius: 8px;">
+                                <div style="font-size: 1.5rem; font-weight: 700; color: var(--accent-blue);">${autoBot.opportunities.length}</div>
+                                <div style="font-size: 0.875rem; color: var(--text-secondary);">Opportunities Found</div>
+                            </div>
+                            <div style="text-align: center; padding: 1rem; background: var(--bg-main); border-radius: 8px;">
+                                <div style="font-size: 1.5rem; font-weight: 700; color: var(--positive-green);">${appState.activeBots.filter(b => b.type === 'Auto Bot').length}</div>
+                                <div style="font-size: 0.875rem; color: var(--text-secondary);">Active Auto Bots</div>
+                            </div>
+                        </div>
+
+                        <button class="btn btn-primary" style="width: 100%;" onclick="runManualScan()">
+                            🔍 Run Manual Scan
+                        </button>
+                    </div>
+                </div>
+
+                <div class="card">
+                    <div class="card-header">
+                        <h2 class="card-title">Current Opportunities</h2>
+                        <div class="last-update">
+                            Updated: ${new Date().toLocaleTimeString()}
+                        </div>
+                    </div>
+                    
+                    <div class="opportunities-table">
+                        <div class="table-container">
+                            <table>
+                                <thead>
+                                    <tr>
+                                        <th>Pair</th>
+                                        <th>D-Size Score</th>
+                                        <th>Entry Signal</th>
+                                        <th>Quality</th>
+                                        <th>Trend Alignment</th>
+                                        <th>Action</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    ${autoBot.opportunities.length === 0 ? `
+                                        <tr>
+                                            <td colspan="6" style="text-align: center; padding: 2rem; color: var(--text-secondary);">
+                                                No opportunities found. Adjust criteria or wait for next scan.
+                                            </td>
+                                        </tr>
+                                    ` : autoBot.opportunities.map(opp => `
+                                        <tr>
+                                            <td style="font-weight: 600;">${opp.pair}</td>
+                                            <td><span class="recommendation-score score-${Number(opp.dsize) >= 8 ? 'high' : 'medium'}">${opp.dsize}</span></td>
+                                            <td><span class="entry-status entry-allow">${opp.entrySignal}</span></td>
+                                            <td><span class="setup-quality-pill quality-${opp.quality}">${opp.quality}</span></td>
+                                            <td style="text-align: center;">${opp.trendAlignment}/3</td>
+                                            <td>
+                                                <button class="btn btn-primary btn-sm" onclick="launchAutoBotForPair('${opp.pair}')">
+                                                    Launch Bot
+                                                </button>
+                                            </td>
+                                        </tr>
+                                    `).join('')}
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            `;
+        }
+
+        function createCOTReportPage() {
+            if (!appState.cotData.length) {
+                appState.cotData = generateCOTData();
+            }
+
+            return `
+                <div class="card">
+                    <div class="card-header">
+                        <h2 class="card-title">📊 COT Report - Large Speculators Positioning</h2>
+                        <div class="last-update">
+                            Last Updated: ${new Date().toLocaleDateString()} (Weekly Report)
+                        </div>
+                    </div>
+                    
+                    <div style="margin-bottom: 1.5rem; padding: 1rem; background: var(--bg-main); border-radius: 8px; border-left: 4px solid var(--accent-blue);">
+                        <strong>📈 How to Read COT Data:</strong><br>
+                        <span style="color: var(--text-secondary);">
+                            • <span style="color: var(--positive-green);">Green bars</span> = Long positions (bullish sentiment)<br>
+                            • <span style="color: var(--negative-red);">Red bars</span> = Short positions (bearish sentiment)<br>
+                            • <strong>Net Position</strong> = Long - Short (positive = bullish bias, negative = bearish bias)
+                        </span>
+                    </div>
+
+                    <div class="cot-grid">
+                        ${appState.cotData.map(currencyData => `
+                            <div class="card cot-currency-card">
+                                <div class="cot-currency-header">
+                                    <h3>${currencyData.currency} - Large Speculators</h3>
+                                </div>
+                                
+                                <div class="cot-history-row">
+                                    ${currencyData.history.map(week => {
+                                        const total = week.longPosition + week.shortPosition;
+                                        const longPercent = (week.longPosition / total) * 100;
+                                        const shortPercent = (week.shortPosition / total) * 100;
+                                        const netIsPositive = week.netPosition > 0;
+                                        
+                                        return `
+                                            <div class="cot-week-col">
+                                                <div class="cot-date">${week.date}</div>
+                                                <div class="cot-bar">
+                                                    <div class="cot-long" style="flex-basis: ${longPercent}%;" title="Long: ${week.longPosition.toLocaleString()}"></div>
+                                                    <div class="cot-short" style="flex-basis: ${shortPercent}%;" title="Short: ${week.shortPosition.toLocaleString()}"></div>
+                                                </div>
+                                                <div class="cot-net ${netIsPositive ? 'positive' : 'negative'}">
+                                                    ${netIsPositive ? '+' : ''}${(week.netPosition / 1000).toFixed(0)}K
+                                                </div>
+                                            </div>
+                                        `;
+                                    }).join('')}
+                                </div>
+                            </div>
+                        `).join('')}
+                    </div>
+                </div>
+            `;
+        }
+
+        function createForexNewsPage() {
+            if (!appState.forexNews.length) {
+                appState.forexNews = generateForexNews();
+            }
+
+            return `
+                <div class="card">
+                    <div class="card-header">
+                        <h2 class="card-title">📰 Forex News Calendar</h2>
+                        <div style="display: flex; align-items: center; gap: 1rem;">
+                            <div class="last-update">
+                                Live Updates: ${new Date().toLocaleDateString()}
+                            </div>
+                            <button class="btn btn-secondary refresh-button" onclick="refreshForexNews()">
+                                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                    <path d="M23 4v6h-6"></path>
+                                    <path d="M20.49 15a9 9 0 1 1-2.12-9.36L23 10"></path>
+                                </svg>
+                                Refresh
+                            </button>
+                        </div>
+                    </div>
+
+                    <div class="news-filter-bar">
+                        <div style="display: flex; align-items: center; gap: 0.5rem;">
+                            <span style="font-weight: 600; color: var(--text-secondary);">Impact Level:</span>
+                            <div class="impact-filter">
+                                <span class="impact-badge impact-high active" data-impact="High">High</span>
+                                <span class="impact-badge impact-medium active" data-impact="Medium">Medium</span>
+                                <span class="impact-badge impact-low active" data-impact="Low">Low</span>
+                            </div>
+                        </div>
+                        
+                        <div style="display: flex; align-items: center; gap: 0.5rem;">
+                            <span style="font-weight: 600; color: var(--text-secondary);">Currency:</span>
+                            <select id="currency-filter" style="padding: 0.25rem 0.5rem; background: var(--bg-surface-2); border: 1px solid var(--border-color); border-radius: 4px; color: var(--text-primary);">
+                                <option value="All">All Currencies</option>
+                                <option value="USD">USD</option>
+                                <option value="EUR">EUR</option>
+                                <option value="GBP">GBP</option>
+                                <option value="JPY">JPY</option>
+                                <option value="AUD">AUD</option>
+                                <option value="CAD">CAD</option>
+                            </select>
+                        </div>
+                    </div>
+
+                    <div style="padding: 1rem; background: var(--bg-main); border-radius: 8px; margin-bottom: 1.5rem; border-left: 4px solid var(--warning-yellow);">
+                        <strong>🎯 Trading Impact Guide:</strong><br>
+                        <span style="color: var(--text-secondary); font-size: 0.875rem;">
+                            <span style="color: var(--negative-red);">High Impact</span> - Major volatility expected, avoid trading 30min before/after<br>
+                            <span style="color: var(--warning-yellow);">Medium Impact</span> - Moderate volatility, trade with caution<br>
+                            <span style="color: var(--positive-green);">Low Impact</span> - Minimal market impact, safe to trade
+                        </span>
+                    </div>
+
+                    <div class="table-container">
+                        <table>
+                            <thead>
+                                <tr>
+                                    <th>Time</th>
+                                    <th>Currency</th>
+                                    <th>Event</th>
+                                    <th>Impact</th>
+                                    <th>Forecast</th>
+                                    <th>Actual</th>
+                                    <th>Previous</th>
+                                </tr>
+                            </thead>
+                            <tbody id="news-table-body">
+                                ${appState.forexNews.map(news => `
+                                    <tr class="news-item" data-impact="${news.impact}" data-currency="${news.currency}">
+                                        <td class="news-time">${news.time}</td>
+                                        <td class="news-currency">${news.currency}</td>
+                                        <td class="news-event">${news.event}</td>
+                                        <td><span class="impact-badge impact-${news.impact.toLowerCase()}">${news.impact}</span></td>
+                                        <td class="news-value">${news.forecast}</td>
+                                        <td class="news-value" style="font-weight: 600;">${news.actual}</td>
+                                        <td class="news-value">${news.previous}</td>
+                                    </tr>
+                                `).join('')}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            `;
+        }
+
+        function createPlaceholderPage(pageName) {
+            const descriptions = {
+                'Active Bots': 'Manage all your active trading bots, view performance, and configure strategies.',
+                'Statistics': 'Comprehensive trading statistics, performance metrics, and analytics.',
+                'Settings': 'Application settings, API configurations, and user preferences.'
+            };
+
+            return `
+                <div class="card">
+                    <div class="card-header">
+                        <h2 class="card-title">${pageName}</h2>
+                    </div>
+                    <div class="placeholder-content">
+                        <h3>Coming Soon</h3>
+                        <p class="text-secondary">${descriptions[pageName]}</p>
+                        <button class="btn btn-primary" style="margin-top: 1rem;">Get Started</button>
+                    </div>
+                </div>
+            `;
+        }
+
+        // Auto Bot Functions
+        function startAutoBotScanning() {
+            appState.autoBot.enabled = true;
+            appState.autoBot.nextScan = Date.now() + (appState.autoBot.config.scanInterval * 60 * 1000);
+            updateAutoBotDisplay();
+            
+            // Start the scanning interval
+            if (appState.autoBot.scanInterval) {
+                clearInterval(appState.autoBot.scanInterval);
+            }
+            
+            appState.autoBot.scanInterval = setInterval(() => {
+                runAutoBotScan();
+            }, appState.autoBot.config.scanInterval * 60 * 1000);
+            
+            console.log('🤖 Auto Bot scanning started');
+        }
+
+        function stopAutoBotScanning() {
+            appState.autoBot.enabled = false;
+            appState.autoBot.scanning = false;
+            appState.autoBot.nextScan = null;
+            
+            if (appState.autoBot.scanInterval) {
+                clearInterval(appState.autoBot.scanInterval);
+                appState.autoBot.scanInterval = null;
+            }
+            
+            updateAutoBotDisplay();
+            console.log('🛑 Auto Bot scanning stopped');
+        }
+
+        function runAutoBotScan() {
+            console.log('🔍 Running Auto Bot scan...');
+            appState.autoBot.scanning = true;
+            
+            if (!appState.marketTrendsData) {
+                appState.marketTrendsData = generateMarketDataWithScoring();
+            }
+            
+            // Filter opportunities based on criteria
+            const opportunities = appState.marketTrendsData.filter(trend => {
+                const score = parseFloat(trend.dsize);
+                const meetsScore = score >= appState.autoBot.config.minScore && score <= appState.autoBot.config.maxScore;
+                const isPairAllowed = appState.autoBot.config.allowedPairs.includes(trend.pair);
+                const canEnter = trend.entryStatus.includes('Allow');
+                
+                return meetsScore && isPairAllowed && canEnter;
+            }).map(trend => ({
+                pair: trend.pair,
+                dsize: trend.dsize,
+                entrySignal: trend.entryStatus,
+                quality: trend.setupQuality,
+                trendAlignment: trend.trendAnalysis.trendConfirmationScore,
+                lastScanned: new Date().toISOString()
+            }));
+            
+            appState.autoBot.opportunities = opportunities;
+            appState.autoBot.scanning = false;
+            appState.autoBot.nextScan = Date.now() + (appState.autoBot.config.scanInterval * 60 * 1000);
+            
+            console.log(`✅ Auto Bot scan complete. Found ${opportunities.length} opportunities.`);
+            
+            // Auto-launch bots if opportunities found and under limit
+            const currentAutoBots = appState.activeBots.filter(b => b.type === 'Auto Bot').length;
+            if (opportunities.length > 0 && currentAutoBots < appState.autoBot.config.maxBots) {
+                const topOpportunity = opportunities[0];
+                launchAutoBotForPair(topOpportunity.pair);
+            }
+            
+            updateAutoBotDisplay();
+        }
+
+        function runManualScan() {
+            console.log('🔍 Running manual Auto Bot scan...');
+            runAutoBotScan();
+            
+            if (appState.activePage === 'Auto Bot') {
+                switchPage('Auto Bot');
+            }
+        }
+
+        function launchAutoBotForPair(pair) {
+            const opportunity = appState.autoBot.opportunities.find(o => o.pair === pair);
+            if (!opportunity) {
+                alert('Opportunity no longer available');
+                return;
+            }
+            
+            const currentAutoBots = appState.activeBots.filter(b => b.type === 'Auto Bot').length;
+            if (currentAutoBots >= appState.autoBot.config.maxBots) {
+                alert(`Maximum of ${appState.autoBot.config.maxBots} auto bots allowed`);
+                return;
+            }
+            
+            // Create new auto bot
+            const newBot = {
+                id: `auto_bot_${Date.now()}`,
+                pair: pair,
+                type: 'Auto Bot',
+                totalPL: 0,
+                status: 'active',
+                entryDScore: parseFloat(opportunity.dsize),
+                currentDScore: parseFloat(opportunity.dsize),
+                globalSL: 500,
+                globalTP: 1000,
+                trailingProfitEnabled: true,
+                closeAtNextTP: false,
+                autoStopScore: appState.autoBot.config.stopScore,
+                activeTrades: [{
+                    id: `auto_trade_${Date.now()}`,
+                    botId: `auto_bot_${Date.now()}`,
+                    pair: pair,
+                    direction: opportunity.entrySignal.includes('Buy') ? 'buy' : 'sell',
+                    entryPrice: Math.random() * 2 + 1,
+                    lotSize: 0.01,
+                    sl: 500,
+                    tp: 1000,
+                    currentPL: 0,
+                    isReentry: false,
+                    reentryLevel: 0,
+                    entryTime: new Date().toISOString(),
+                    score: parseFloat(opportunity.dsize),
+                    reason: `Auto Bot entry - D-Size: ${opportunity.dsize}, Signal: ${opportunity.entrySignal}`
+                }],
+                lastUpdate: new Date().toISOString()
+            };
+            
+            appState.activeBots.push(newBot);
+            
+            // Remove opportunity from list
+            appState.autoBot.opportunities = appState.autoBot.opportunities.filter(o => o.pair !== pair);
+            
+            alert(`🤖 Auto Bot launched for ${pair}\nD-Size: ${opportunity.dsize}\nSignal: ${opportunity.entrySignal}`);
+            
+            if (appState.activePage === 'Auto Bot') {
+                switchPage('Auto Bot');
+            }
+        }
+
+        function updateAutoBotDisplay() {
+            if (appState.activePage === 'Auto Bot') {
+                const countdownElement = document.getElementById('countdown-timer');
+                if (countdownElement && appState.autoBot.nextScan) {
+                    const nextScanTime = Math.max(0, Math.floor((appState.autoBot.nextScan - Date.now()) / 1000));
+                    const minutes = Math.floor(nextScanTime / 60);
+                    const seconds = nextScanTime % 60;
+                    countdownElement.textContent = `${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')}`;
+                }
+            }
+        }
+
+        // Event Handlers
+        function toggleSidebar() {
+            appState.sidebarExpanded = !appState.sidebarExpanded;
+            const container = document.getElementById('app-container');
+            if (appState.sidebarExpanded) {
+                container.classList.add('sidebar-expanded');
+            } else {
+                container.classList.remove('sidebar-expanded');
+            }
+        }
+
+        function switchPage(pageName) {
+            console.log(`🔄 Switching to page: ${pageName}`);
+            appState.activePage = pageName;
+            
+            // Update sidebar active state
+            document.querySelectorAll('.sidebar-nav-item a').forEach(link => {
+                link.classList.remove('active');
+                if (link.dataset.page === pageName) {
+                    link.classList.add('active');
+                }
+            });
+
+            // Update main content
+            const mainPanel = document.getElementById('main-panel');
+            
+            switch (pageName) {
+                case 'Dashboard':
+                    mainPanel.innerHTML = createDashboardPage();
+                    attachEventListeners();
+                    break;
+                case 'Meat Market':
+                    if (!appState.marketTrendsData) {
+                        appState.marketTrendsData = generateMarketDataWithScoring();
+                    }
+                    mainPanel.innerHTML = `
+                        <div class="card">
+                            <div class="card-header">
+                                <h2 class="card-title">Meat Market - Full Analysis</h2>
+                                <div class="last-update">
+                                    Last Update: ${new Date().toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' })}
+                                </div>
+                            </div>
+                            ${createMarketTrendsTable(appState.marketTrendsData)}
+                        </div>
+                    `;
+                    attachMarketEventListeners();
+                    break;
+                case 'Auto Bot':
+                    mainPanel.innerHTML = createAutoBotPage();
+                    attachAutoBotEventListeners();
+                    break;
+                case 'Active Bots':
+                    mainPanel.innerHTML = `
+                     <div class="card">
+                         <div class="card-header">
+                          <h2 class="card-title">🤖 Active Bots Management</h2>
+                           <div style="display: flex; align-items: center; gap: 1rem;">
+                             <div class="last-update">
+                              ${appState.activeBots.length} bots running
+                             </div>
+                           <button class="btn btn-primary" onclick="switchPage('Auto Bot')">Launch New Bot</button>
+                       </div>
+             </div>
+            ${createActiveBotsSection()}
+        </div>
+    `;
+    attachEventListeners();
+    break;
+                case 'COT Report':
+                    mainPanel.innerHTML = createCOTReportPage();
+                    break;
+                case 'Forex News':
+                    mainPanel.innerHTML = createForexNewsPage();
+                    attachNewsEventListeners();
+                    break;
+                default:
+                    mainPanel.innerHTML = createPlaceholderPage(pageName);
+            }
+        }
+
+        function attachEventListeners() {
+            // Market trends event listeners
+            attachMarketEventListeners();
+        }
+
+        function attachMarketEventListeners() {
+            // Table row expansion
+            document.querySelectorAll('tr.is-expandable').forEach(row => {
+                row.addEventListener('click', (e) => {
+                    if (e.target.tagName === 'INPUT' || e.target.tagName === 'BUTTON') return;
+                    
+                    const pairData = JSON.parse(row.dataset.pair);
+                    const pair = pairData.pair;
+                    
+                    if (appState.expandedTrendPair === pair) {
+                        appState.expandedTrendPair = null;
+                    } else {
+                        appState.expandedTrendPair = pair;
+                    }
+                    
+                    // Refresh the current page to show/hide expansion
+                    if (appState.activePage === 'Dashboard') {
+                        document.getElementById('main-panel').innerHTML = createDashboardPage();
+                        attachEventListeners();
+                    } else if (appState.activePage === 'Meat Market') {
+                        document.getElementById('main-panel').innerHTML = `
+                            <div class="card">
+                                <div class="card-header">
+                                    <h2 class="card-title">Meat Market - Full Analysis</h2>
+                                    <div class="last-update">
+                                        Last Update: ${new Date().toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' })}
+                                    </div>
+                                </div>
+                                ${createMarketTrendsTable(appState.marketTrendsData)}
+                            </div>
+                        `;
+                        attachMarketEventListeners();
+                    }
+                });
+            });
+
+            // Sortable headers
+            document.querySelectorAll('.sortable-header').forEach(header => {
+                header.addEventListener('click', (e) => {
+                    const column = e.target.dataset.sort;
+                    if (appState.marketDataSort.column === column) {
+                        appState.marketDataSort.direction = appState.marketDataSort.direction === 'asc' ? 'desc' : 'asc';
+                    } else {
+                        appState.marketDataSort.column = column;
+                        appState.marketDataSort.direction = 'desc';
+                    }
+                    
+                    // Refresh the current page to show new sort
+                    if (appState.activePage === 'Dashboard') {
+                        document.getElementById('main-panel').innerHTML = createDashboardPage();
+                        attachEventListeners();
+                    } else if (appState.activePage === 'Meat Market') {
+                        document.getElementById('main-panel').innerHTML = `
+                            <div class="card">
+                                <div class="card-header">
+                                    <h2 class="card-title">Meat Market - Full Analysis</h2>
+                                    <div class="last-update">
+                                        Last Update: ${new Date().toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' })}
+                                    </div>
+                                </div>
+                                ${createMarketTrendsTable(appState.marketTrendsData)}
+                            </div>
+                        `;
+                        attachMarketEventListeners();
+                    }
+                });
+            });
+        }
+
+        function attachAutoBotEventListeners() {
+            // Auto bot enable/disable toggle
+            const enableToggle = document.getElementById('auto-bot-enabled');
+            if (enableToggle) {
+                enableToggle.addEventListener('change', (e) => {
+                    if (e.target.checked) {
+                        startAutoBotScanning();
+                    } else {
+                        stopAutoBotScanning();
+                    }
+                });
+            }
+
+            // Configuration inputs - FIXED: Corrected the property mapping
+            const configMapping = {
+                'min-score': 'minScore',
+                'max-score': 'maxScore',
+                'stop-score': 'stopScore',
+                'max-bots': 'maxBots'
+            };
+
+            Object.keys(configMapping).forEach(id => {
+                const input = document.getElementById(id);
+                if (input) {
+                    input.addEventListener('change', (e) => {
+                        const configKey = configMapping[id];
+                        appState.autoBot.config[configKey] = parseFloat(e.target.value);
+                        console.log(`Updated ${configKey}:`, e.target.value);
+                    });
+                }
+            });
+
+            // Pair checkboxes
+            document.querySelectorAll('input[type="checkbox"][id^="pair-"]').forEach(checkbox => {
+                checkbox.addEventListener('change', (e) => {
+                    const pair = e.target.value;
+                    if (e.target.checked) {
+                        if (!appState.autoBot.config.allowedPairs.includes(pair)) {
+                            appState.autoBot.config.allowedPairs.push(pair);
+                        }
+                    } else {
+                        appState.autoBot.config.allowedPairs = appState.autoBot.config.allowedPairs.filter(p => p !== pair);
+                    }
+                    console.log('Updated allowed pairs:', appState.autoBot.config.allowedPairs);
+                });
+            });
+        }
+
+        function attachNewsEventListeners() {
+            // Impact filter badges
+            document.querySelectorAll('.impact-badge').forEach(badge => {
+                badge.addEventListener('click', (e) => {
+                    e.target.classList.toggle('active');
+                    filterNews();
+                });
+            });
+
+            // Currency filter
+            const currencyFilter = document.getElementById('currency-filter');
+            if (currencyFilter) {
+                currencyFilter.addEventListener('change', filterNews);
+            }
+        }
+
+        function filterNews() {
+            const activeImpacts = Array.from(document.querySelectorAll('.impact-badge.active')).map(badge => badge.dataset.impact);
+            const selectedCurrency = document.getElementById('currency-filter')?.value || 'All';
+            
+            document.querySelectorAll('.news-item').forEach(item => {
+                const impact = item.dataset.impact;
+                const currency = item.dataset.currency;
+                const showImpact = activeImpacts.includes(impact);
+                const showCurrency = selectedCurrency === 'All' || currency === selectedCurrency;
+                
+                item.style.display = (showImpact && showCurrency) ? 'grid' : 'none';
+            });
+        }
+
+        function updateKPIWidgets() {
+            const kpiData = [
+                { label: 'P/L Summary', value: '+$1,284.50', positive: true },
+                { label: 'Equity', value: '$11,432.12', positive: null },
+                { label: 'Balance', value: '$10,147.62', positive: null },
+                { label: 'Margin Use', value: '15.7%', positive: false }
+            ];
+
+            const kpiContainer = document.getElementById('kpi-widgets');
+            if (kpiContainer) {
+                kpiContainer.innerHTML = kpiData.map(kpi => `
+                    <div class="kpi-widget">
+                        <span class="kpi-label">${kpi.label}</span>
+                        <span class="kpi-value ${kpi.positive === true ? 'positive' : kpi.positive === false ? 'negative' : ''}">${kpi.value}</span>
+                    </div>
+                `).join('');
+            }
+        }
+
+        // Auto-refresh functions
+        function refreshMarketData() {
+            console.log('🔄 Manually refreshing market data...');
+            
+            // Add spinning animation
+            const refreshButtons = document.querySelectorAll('.refresh-button');
+            refreshButtons.forEach(btn => btn.classList.add('refreshing'));
+            
+            // Simulate API call delay
+            setTimeout(() => {
+                appState.marketTrendsData = generateMarketDataWithScoring();
+                
+                if (appState.activePage === 'Dashboard' || appState.activePage === 'Meat Market') {
+                    switchPage(appState.activePage);
+                }
+                
+                // Remove spinning animation
+                refreshButtons.forEach(btn => btn.classList.remove('refreshing'));
+            }, 800);
+        }
+
+        function refreshForexNews() {
+            console.log('📰 Refreshing forex news...');
+            appState.forexNews = generateForexNews();
+            
+            if (appState.activePage === 'Forex News') {
+                switchPage('Forex News');
+            }
+        }
+
+        // Make functions globally available
+        window.refreshMarketData = refreshMarketData;
+        window.refreshForexNews = refreshForexNews;
+        window.runManualScan = runManualScan;
+        window.launchAutoBotForPair = launchAutoBotForPair;
+
+        // Initialize Application
+        function initApp() {
+            console.log('🚀 Initializing DalyDough 3.0...');
+            
+            // Set up sidebar navigation
+            document.querySelectorAll('.sidebar-nav-item a').forEach(link => {
+                link.addEventListener('click', (e) => {
+                    e.preventDefault();
+                    const pageName = e.currentTarget.dataset.page;
+                    switchPage(pageName);
+                });
+            });
+
+            // Initialize data
+            appState.marketTrendsData = generateMarketDataWithScoring();
+            appState.activeBots = generateActiveBots();
+            appState.cotData = generateCOTData();
+            appState.forexNews = generateForexNews();
+            
+            // Set up launch new bot button
+            const launchBtn = document.getElementById('launch-new-bot-btn');
+            if (launchBtn) {
+                launchBtn.addEventListener('click', () => {
+                    switchPage('Auto Bot');
+                });
+            }
+            
+            // Load initial page
+            updateKPIWidgets();
+            switchPage('Dashboard');
+            
+            // Set up auto-refresh intervals
+            setInterval(updateKPIWidgets, 30000); // Refresh KPIs every 30 seconds
+            
+            // Auto Bot countdown timer
+            setInterval(() => {
+                if (appState.autoBot.enabled && appState.autoBot.nextScan) {
+                    updateAutoBotDisplay();
+                }
+            }, 1000);
+            
+            console.log('✅ DalyDough 3.0 initialized successfully!');
+            console.log('🎯 Key Features:');
+            console.log('   ✅ Corrected Trend Scoring Logic');
+            console.log('   ✅ 29 Currency Pairs + XAU/USD');
+            console.log('   ✅ Real D-Size Algorithm');
+            console.log('   ✅ Interactive Market Analysis');
+            console.log('   ✅ Auto Bot Scanner');
+            console.log('   ✅ COT Report Analysis');
+            console.log('   ✅ Forex News Calendar');
+            console.log('   ✅ Responsive Design');
+        }
+
+        // Start the application when DOM is ready
+        if (document.readyState === 'loading') {
+            document.addEventListener('DOMContentLoaded', initApp);
+        } else {
+            initApp();
+        }
+
+        // Global click handler for debugging
+        document.addEventListener('click', (e) => {
+            if (e.target.classList.contains('btn-primary')) {
+                console.log('🚀 Primary button clicked:', e.target.textContent);
+            }
+            if (e.target.classList.contains('btn-danger')) {
+                console.log('⚠️ Danger button clicked:', e.target.textContent);
+            }
+        });
+
+        console.log('🎯 DalyDough 3.0 JavaScript loaded successfully!');
+    </script>
+</body>
+</html>
