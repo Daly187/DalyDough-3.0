@@ -2553,8 +2553,8 @@
             const launchBtn = document.getElementById('launch-new-bot-btn');
             if (launchBtn) {
                 launchBtn.addEventListener('click', () => {
-                    alert('🚀 Bot Launcher Coming Soon!\n\nThis will open the advanced bot configuration panel with:\n• D-Size threshold selection\n• Risk management settings\n• Entry/exit strategies\n• Real-time market filtering');
-                });
+                    window.open('./bot-launcher.html', 'BotLauncher', 'width=1400,height=900,scrollbars=yes,resizable=yes');
+});
             }
             
             // Load initial page

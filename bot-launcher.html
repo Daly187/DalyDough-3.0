@@ -1,0 +1,1168 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>DalyDough 3.0 - Launch New Bot</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --bg-main: #10111a;
+            --bg-surface: #1c1d2b;
+            --bg-surface-2: #282a3d;
+            --border-color: #31334a;
+            --text-primary: #f0f0f5;
+            --text-secondary: #a8a9b8;
+            --text-tertiary: #7b7d94;
+            --accent-blue: #367cff;
+            --accent-blue-hover: #5a95ff;
+            --positive-green: #22c55e;
+            --negative-red: #ef4444;
+            --warning-yellow: #f59e0b;
+            --font-family: 'Inter', sans-serif;
+            --border-radius: 12px;
+            --transition-speed: 0.3s ease;
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        body {
+            font-family: var(--font-family);
+            background: linear-gradient(135deg, var(--bg-main) 0%, #0f1019 100%);
+            color: var(--text-primary);
+            min-height: 100vh;
+            overflow-x: hidden;
+        }
+
+        .launcher-container {
+            max-width: 1400px;
+            margin: 0 auto;
+            padding: 2rem;
+            min-height: 100vh;
+        }
+
+        .header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 2rem;
+            padding: 1.5rem 2rem;
+            background: var(--bg-surface);
+            border-radius: var(--border-radius);
+            border: 1px solid var(--border-color);
+            backdrop-filter: blur(10px);
+        }
+
+        .header h1 {
+            font-size: 2rem;
+            font-weight: 700;
+            background: linear-gradient(135deg, var(--accent-blue), #5a95ff);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+
+        .close-btn {
+            background: var(--bg-surface-2);
+            border: 1px solid var(--border-color);
+            color: var(--text-secondary);
+            border-radius: 8px;
+            padding: 0.5rem 1rem;
+            cursor: pointer;
+            transition: all var(--transition-speed);
+            font-family: inherit;
+        }
+
+        .close-btn:hover {
+            background: var(--border-color);
+            color: var(--text-primary);
+        }
+
+        .launcher-grid {
+            display: grid;
+            grid-template-columns: 1fr 400px;
+            gap: 2rem;
+            height: calc(100vh - 200px);
+        }
+
+        .left-panel {
+            display: flex;
+            flex-direction: column;
+            gap: 1.5rem;
+        }
+
+        .right-panel {
+            display: flex;
+            flex-direction: column;
+            gap: 1.5rem;
+        }
+
+        .card {
+            background: var(--bg-surface);
+            border: 1px solid var(--border-color);
+            border-radius: var(--border-radius);
+            padding: 1.5rem;
+            backdrop-filter: blur(10px);
+            position: relative;
+            overflow: hidden;
+        }
+
+        .card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 1px;
+            background: linear-gradient(90deg, transparent, var(--accent-blue), transparent);
+            opacity: 0.3;
+        }
+
+        .card-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 1.5rem;
+        }
+
+        .card-title {
+            font-size: 1.25rem;
+            font-weight: 600;
+            color: var(--text-primary);
+        }
+
+        .filter-section {
+            flex: 1;
+            overflow-y: auto;
+        }
+
+        .filter-controls {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 1rem;
+            margin-bottom: 1.5rem;
+        }
+
+        .form-group {
+            display: flex;
+            flex-direction: column;
+            gap: 0.5rem;
+        }
+
+        .form-group label {
+            font-weight: 500;
+            color: var(--text-secondary);
+            font-size: 0.875rem;
+        }
+
+        .form-group input,
+        .form-group select {
+            padding: 0.75rem;
+            background: var(--bg-surface-2);
+            border: 1px solid var(--border-color);
+            border-radius: 8px;
+            color: var(--text-primary);
+            font-size: 1rem;
+            transition: all var(--transition-speed);
+        }
+
+        .form-group input:focus,
+        .form-group select:focus {
+            outline: none;
+            border-color: var(--accent-blue);
+            box-shadow: 0 0 0 3px rgba(54, 124, 255, 0.1);
+        }
+
+        .btn {
+            padding: 0.75rem 1.5rem;
+            border: none;
+            border-radius: 8px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all var(--transition-speed);
+            font-size: 1rem;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            gap: 0.5rem;
+            font-family: inherit;
+        }
+
+        .btn-primary {
+            background: linear-gradient(135deg, var(--accent-blue), #5a95ff);
+            color: white;
+            box-shadow: 0 4px 15px rgba(54, 124, 255, 0.3);
+        }
+
+        .btn-primary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(54, 124, 255, 0.4);
+        }
+
+        .btn-secondary {
+            background: var(--bg-surface-2);
+            color: var(--text-secondary);
+            border: 1px solid var(--border-color);
+        }
+
+        .btn-secondary:hover {
+            background: var(--border-color);
+            color: var(--text-primary);
+        }
+
+        .btn-sm {
+            padding: 0.5rem 1rem;
+            font-size: 0.875rem;
+        }
+
+        .market-opportunities {
+            flex: 2;
+            overflow: hidden;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .opportunities-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 1rem;
+        }
+
+        .opportunities-count {
+            background: var(--accent-blue);
+            color: white;
+            padding: 0.25rem 0.75rem;
+            border-radius: 20px;
+            font-size: 0.875rem;
+            font-weight: 600;
+        }
+
+        .opportunities-list {
+            flex: 1;
+            overflow-y: auto;
+            margin: -0.5rem;
+            padding: 0.5rem;
+        }
+
+        .opportunity-item {
+            display: grid;
+            grid-template-columns: 120px 80px 100px 1fr 120px 100px;
+            gap: 1rem;
+            align-items: center;
+            padding: 1rem;
+            background: var(--bg-surface-2);
+            border: 1px solid var(--border-color);
+            border-radius: 8px;
+            margin-bottom: 0.75rem;
+            transition: all var(--transition-speed);
+            cursor: pointer;
+            position: relative;
+        }
+
+        .opportunity-item:hover {
+            background: var(--border-color);
+            transform: translateY(-1px);
+        }
+
+        .opportunity-item.selected {
+            border-color: var(--accent-blue);
+            background: rgba(54, 124, 255, 0.1);
+            box-shadow: 0 0 0 1px var(--accent-blue);
+        }
+
+        .pair-name {
+            font-weight: 700;
+            font-size: 1.1rem;
+            color: var(--text-primary);
+        }
+
+        .dsize-score {
+            font-weight: 700;
+            padding: 0.5rem;
+            border-radius: 8px;
+            text-align: center;
+            color: white;
+            font-size: 0.9rem;
+        }
+
+        .dsize-high { background: linear-gradient(135deg, var(--positive-green), #16a34a); }
+        .dsize-medium { background: linear-gradient(135deg, var(--warning-yellow), #d97706); }
+        .dsize-low { background: linear-gradient(135deg, var(--negative-red), #dc2626); }
+
+        .quality-pill {
+            font-weight: 700;
+            padding: 0.4rem 0.8rem;
+            border-radius: 12px;
+            font-size: 0.85rem;
+            text-align: center;
+            color: white;
+        }
+
+        .quality-A { background: linear-gradient(135deg, var(--positive-green), #16a34a); }
+        .quality-B { background: linear-gradient(135deg, var(--accent-blue), #2563eb); }
+        .quality-C { background: linear-gradient(135deg, var(--text-tertiary), #6b7280); }
+
+        .trend-indicators {
+            display: flex;
+            gap: 0.25rem;
+        }
+
+        .trend-dot {
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+        }
+
+        .trend-up { background: var(--positive-green); }
+        .trend-down { background: var(--negative-red); }
+        .trend-neutral { background: var(--text-tertiary); }
+
+        .entry-signal {
+            font-weight: 600;
+            font-size: 0.85rem;
+            padding: 0.4rem 0.8rem;
+            border-radius: 8px;
+            text-align: center;
+        }
+
+        .entry-allow { background: rgba(34, 197, 94, 0.2); color: var(--positive-green); }
+        .entry-block { background: rgba(239, 68, 68, 0.2); color: var(--negative-red); }
+
+        .bot-config {
+            max-height: 70vh;
+            overflow-y: auto;
+        }
+
+        .config-tabs {
+            display: flex;
+            border-bottom: 1px solid var(--border-color);
+            margin-bottom: 1.5rem;
+        }
+
+        .tab-btn {
+            padding: 0.75rem 1.5rem;
+            background: none;
+            border: none;
+            color: var(--text-secondary);
+            cursor: pointer;
+            border-bottom: 2px solid transparent;
+            transition: all var(--transition-speed);
+            font-family: inherit;
+            font-weight: 500;
+        }
+
+        .tab-btn.active {
+            color: var(--accent-blue);
+            border-bottom-color: var(--accent-blue);
+        }
+
+        .tab-content {
+            display: none;
+        }
+
+        .tab-content.active {
+            display: block;
+        }
+
+        .config-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 1rem;
+            margin-bottom: 1.5rem;
+        }
+
+        .toggle-switch {
+            position: relative;
+            width: 50px;
+            height: 28px;
+            flex-shrink: 0;
+        }
+
+        .toggle-switch input {
+            opacity: 0;
+            width: 0;
+            height: 0;
+        }
+
+        .toggle-slider {
+            position: absolute;
+            cursor: pointer;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background-color: var(--bg-surface-2);
+            border: 1px solid var(--border-color);
+            transition: 0.4s;
+            border-radius: 28px;
+        }
+
+        .toggle-slider:before {
+            position: absolute;
+            content: "";
+            height: 20px;
+            width: 20px;
+            left: 3px;
+            bottom: 3px;
+            background-color: var(--text-secondary);
+            transition: 0.4s;
+            border-radius: 50%;
+        }
+
+        input:checked + .toggle-slider {
+            background-color: var(--accent-blue);
+            border-color: var(--accent-blue);
+        }
+
+        input:checked + .toggle-slider:before {
+            transform: translateX(22px);
+            background-color: white;
+        }
+
+        .risk-preview {
+            background: var(--bg-surface-2);
+            border-radius: 8px;
+            padding: 1rem;
+            margin-top: 1rem;
+        }
+
+        .risk-item {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 0.5rem;
+        }
+
+        .launch-summary {
+            background: linear-gradient(135deg, rgba(54, 124, 255, 0.1), rgba(54, 124, 255, 0.05));
+            border: 1px solid rgba(54, 124, 255, 0.2);
+            border-radius: var(--border-radius);
+            padding: 1.5rem;
+            margin-bottom: 1.5rem;
+        }
+
+        .summary-item {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 0.75rem;
+            padding-bottom: 0.75rem;
+            border-bottom: 1px solid rgba(54, 124, 255, 0.1);
+        }
+
+        .summary-item:last-child {
+            margin-bottom: 0;
+            padding-bottom: 0;
+            border-bottom: none;
+        }
+
+        .loading-state {
+            display: none;
+            text-align: center;
+            padding: 2rem;
+            color: var(--text-secondary);
+        }
+
+        .loading-state.active {
+            display: block;
+        }
+
+        .spinner {
+            border: 3px solid var(--bg-surface-2);
+            border-top: 3px solid var(--accent-blue);
+            border-radius: 50%;
+            width: 40px;
+            height: 40px;
+            animation: spin 1s linear infinite;
+            margin: 0 auto 1rem;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        .card {
+            animation: fadeIn 0.6s ease-out;
+        }
+
+        @media (max-width: 1200px) {
+            .launcher-grid {
+                grid-template-columns: 1fr;
+                gap: 1.5rem;
+            }
+
+            .right-panel {
+                order: -1;
+            }
+
+            .opportunity-item {
+                grid-template-columns: 1fr 80px 100px;
+                gap: 0.75rem;
+            }
+
+            .config-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        @media (max-width: 768px) {
+            .launcher-container {
+                padding: 1rem;
+            }
+
+            .header {
+                padding: 1rem;
+                flex-direction: column;
+                gap: 1rem;
+            }
+
+            .filter-controls {
+                grid-template-columns: 1fr;
+            }
+
+            .opportunity-item {
+                grid-template-columns: 1fr;
+                text-align: center;
+                gap: 0.5rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="launcher-container">
+        <div class="header">
+            <div>
+                <h1>🚀 Launch New Bot</h1>
+                <p style="color: var(--text-secondary); margin-top: 0.5rem;">Advanced D-Size powered bot configuration</p>
+            </div>
+            <button class="close-btn" onclick="window.close()">✕ Close</button>
+        </div>
+
+        <div class="launcher-grid">
+            <div class="left-panel">
+                <div class="card filter-section">
+                    <div class="card-header">
+                        <h3 class="card-title">🎯 Market Filter</h3>
+                        <button class="btn btn-secondary btn-sm" id="refresh-data">
+                            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                <path d="M23 4v6h-6"></path>
+                                <path d="M20.49 15a9 9 0 1 1-2.12-9.36L23 10"></path>
+                            </svg>
+                            Refresh
+                        </button>
+                    </div>
+
+                    <div class="filter-controls">
+                        <div class="form-group">
+                            <label for="min-dsize">Min D-Size Score</label>
+                            <input type="number" id="min-dsize" value="7.0" step="0.1" min="0" max="10">
+                        </div>
+                        <div class="form-group">
+                            <label for="max-dsize">Max D-Size Score</label>
+                            <input type="number" id="max-dsize" value="10.0" step="0.1" min="0" max="10">
+                        </div>
+                        <div class="form-group">
+                            <label for="quality-filter">Setup Quality</label>
+                            <select id="quality-filter">
+                                <option value="all">All Grades</option>
+                                <option value="A">Grade A Only</option>
+                                <option value="B">Grade B+</option>
+                                <option value="C">Grade C+</option>
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <label for="trend-filter">Trend Alignment</label>
+                            <select id="trend-filter">
+                                <option value="all">All Trends</option>
+                                <option value="bullish">Bullish Only</option>
+                                <option value="bearish">Bearish Only</option>
+                                <option value="neutral">Neutral/Mixed</option>
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <label for="entry-filter">Entry Status</label>
+                            <select id="entry-filter">
+                                <option value="all">All Signals</option>
+                                <option value="allow">Allow Only</option>
+                                <option value="block">Block Only</option>
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <label for="pair-search">Search Pairs</label>
+                            <input type="text" id="pair-search" placeholder="EUR/USD, GBP...">
+                        </div>
+                    </div>
+
+                    <button class="btn btn-primary" id="apply-filters">
+                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <polygon points="22 3 2 3 10 12.46 10 19 14 21 14 12.46 22 3"></polygon>
+                        </svg>
+                        Apply Filters
+                    </button>
+                </div>
+
+                <div class="card market-opportunities">
+                    <div class="opportunities-header">
+                        <h3 class="card-title">📊 Market Opportunities</h3>
+                        <span class="opportunities-count" id="opportunities-count">0 pairs</span>
+                    </div>
+
+                    <div class="loading-state" id="loading-state">
+                        <div class="spinner"></div>
+                        <p>Analyzing market conditions...</p>
+                    </div>
+
+                    <div class="opportunities-list" id="opportunities-list">
+                        <!-- Opportunities will be populated here -->
+                    </div>
+                </div>
+            </div>
+
+            <div class="right-panel">
+                <div class="card bot-config">
+                    <div class="card-header">
+                        <h3 class="card-title">⚙️ Bot Configuration</h3>
+                    </div>
+
+                    <div id="no-selection" style="text-align: center; padding: 2rem; color: var(--text-secondary);">
+                        <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1" style="margin-bottom: 1rem; opacity: 0.5;">
+                            <circle cx="12" cy="12" r="10"></circle>
+                            <path d="M9.5 9a3 3 0 0 1 5.5 0c0 2-3 3-3 3"></path>
+                            <path d="M12 17h.01"></path>
+                        </svg>
+                        <p>Select a market opportunity to configure your bot</p>
+                    </div>
+
+                    <div id="config-panel" style="display: none;">
+                        <div class="launch-summary">
+                            <h4 style="margin-bottom: 1rem; color: var(--accent-blue);">📋 Launch Summary</h4>
+                            <div class="summary-item">
+                                <span>Selected Pair:</span>
+                                <strong id="selected-pair">-</strong>
+                            </div>
+                            <div class="summary-item">
+                                <span>D-Size Score:</span>
+                                <strong id="selected-score">-</strong>
+                            </div>
+                            <div class="summary-item">
+                                <span>Entry Signal:</span>
+                                <strong id="selected-signal">-</strong>
+                            </div>
+                            <div class="summary-item">
+                                <span>Bot Type:</span>
+                                <strong id="selected-bot-type">Dynamic DCA</strong>
+                            </div>
+                        </div>
+
+                        <div class="config-tabs">
+                            <button class="tab-btn active" data-tab="basic">Basic Setup</button>
+                            <button class="tab-btn" data-tab="risk">Risk Management</button>
+                            <button class="tab-btn" data-tab="advanced">Advanced</button>
+                        </div>
+
+                        <div class="tab-content active" id="basic-tab">
+                            <div class="config-grid">
+                                <div class="form-group">
+                                    <label for="bot-type">Bot Type</label>
+                                    <select id="bot-type">
+                                        <option value="dynamic-dca">Dynamic DCA</option>
+                                        <option value="static-grid">Static Grid</option>
+                                        <option value="ai-trend">AI Trend Follower</option>
+                                        <option value="scalper">High-Frequency Scalper</option>
+                                    </select>
+                                </div>
+                                <div class="form-group">
+                                    <label for="initial-investment">Initial Investment ($)</label>
+                                    <input type="number" id="initial-investment" value="1000" min="100" step="50">
+                                </div>
+                                <div class="form-group">
+                                    <label for="lot-size">Lot Size</label>
+                                    <input type="number" id="lot-size" value="0.01" step="0.01" min="0.01">
+                                </div>
+                                <div class="form-group">
+                                    <label for="max-positions">Max Positions</label>
+                                    <input type="number" id="max-positions" value="5" min="1" max="20">
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="tab-content" id="risk-tab">
+                            <div class="config-grid">
+                                <div class="form-group">
+                                    <label for="stop-loss">Stop Loss (pips)</label>
+                                    <input type="number" id="stop-loss" value="50" min="10" step="5">
+                                </div>
+                                <div class="form-group">
+                                    <label for="take-profit">Take Profit (pips)</label>
+                                    <input type="number" id="take-profit" value="100" min="10" step="5">
+                                </div>
+                                <div class="form-group">
+                                    <label for="max-drawdown">Max Drawdown (%)</label>
+                                    <input type="number" id="max-drawdown" value="20" min="5" max="50" step="1">
+                                </div>
+                                <div class="form-group">
+                                    <label for="daily-loss-limit">Daily Loss Limit ($)</label>
+                                    <input type="number" id="daily-loss-limit" value="200" min="50" step="25">
+                                </div>
+                            </div>
+
+                            <div class="form-group" style="margin-top: 1rem;">
+                                <label style="display: flex; align-items: center; gap: 1rem;">
+                                    <span>Enable Trailing Stop</span>
+                                    <label class="toggle-switch">
+                                        <input type="checkbox" id="trailing-stop">
+                                        <span class="toggle-slider"></span>
+                                    </label>
+                                </label>
+                            </div>
+
+                            <div class="risk-preview">
+                                <h4 style="margin-bottom: 0.75rem;">Risk Assessment</h4>
+                                <div class="risk-item">
+                                    <span>Position Risk:</span>
+                                    <span id="position-risk">2.5%</span>
+                                </div>
+                                <div class="risk-item">
+                                    <span>Account Risk:</span>
+                                    <span id="account-risk">Low</span>
+                                </div>
+                                <div class="risk-item">
+                                    <span>Risk/Reward:</span>
+                                    <span id="risk-reward">1:2.0</span>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="tab-content" id="advanced-tab">
+                            <div class="config-grid">
+                                <div class="form-group">
+                                    <label for="dsize-threshold">D-Size Exit Threshold</label>
+                                    <input type="number" id="dsize-threshold" value="6.0" step="0.1" min="4.0" max="8.0">
+                                </div>
+                                <div class="form-group">
+                                    <label for="reentry-delay">Re-entry Delay (mins)</label>
+                                    <input type="number" id="reentry-delay" value="15" min="5" step="5">
+                                </div>
+                            </div>
+
+                            <div style="margin-top: 1rem; display: flex; flex-direction: column; gap: 1rem;">
+                                <label style="display: flex; align-items: center; gap: 1rem;">
+                                    <span>News Filter (Pause during high-impact news)</span>
+                                    <label class="toggle-switch">
+                                        <input type="checkbox" id="news-filter" checked>
+                                        <span class="toggle-slider"></span>
+                                    </label>
+                                </label>
+
+                                <label style="display: flex; align-items: center; gap: 1rem;">
+                                    <span>Weekend Trading</span>
+                                    <label class="toggle-switch">
+                                        <input type="checkbox" id="weekend-trading">
+                                        <span class="toggle-slider"></span>
+                                    </label>
+                                </label>
+
+                                <label style="display: flex; align-items: center; gap: 1rem;">
+                                    <span>AI Optimization</span>
+                                    <label class="toggle-switch">
+                                        <input type="checkbox" id="ai-optimization" checked>
+                                        <span class="toggle-slider"></span>
+                                    </label>
+                                </label>
+                            </div>
+                        </div>
+
+                        <div style="margin-top: 2rem; display: flex; gap: 1rem;">
+                            <button class="btn btn-primary" id="launch-bot" style="flex: 1;">
+                                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                    <path d="M9 19c-5 1.5-5-2.5-7-3m14 6v-3.87a3.37 3.37 0 0 0-.94-2.61c3.14-.35 6.44-1.54 6.44-7A5.44 5.44 0 0 0 20 4.77 5.07 5.07 0 0 0 19.91 1S18.73.65 16 2.48a13.38 13.38 0 0 0-7 0C6.27.65 5.09 1 5.09 1A5.07 5.07 0 0 0 5 4.77a5.44 5.44 0 0 0-1.5 3.78c0 5.42 3.3 6.61 6.44 7A3.37 3.37 0 0 0 9 18.13V22"></path>
+                                </svg>
+                                Launch Bot
+                            </button>
+                            <button class="btn btn-secondary" id="save-template">
+                                Save Template
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Application State
+        let appState = {
+            marketData: [],
+            selectedOpportunity: null,
+            filters: {
+                minDsize: 7.0,
+                maxDsize: 10.0,
+                quality: 'all',
+                trend: 'all',
+                entry: 'all',
+                search: ''
+            },
+            config: {
+                botType: 'dynamic-dca',
+                initialInvestment: 1000,
+                lotSize: 0.01,
+                maxPositions: 5,
+                stopLoss: 50,
+                takeProfit: 100,
+                maxDrawdown: 20,
+                dailyLossLimit: 200,
+                trailingStop: false,
+                dsizeThreshold: 6.0,
+                reentryDelay: 15,
+                newsFilter: true,
+                weekendTrading: false,
+                aiOptimization: true
+            }
+        };
+
+        // Market Data Generation (Enhanced version from your existing code)
+        function generateMarketDataWithScoring() {
+            const pairs = [
+                'AUD/CAD', 'AUD/CHF', 'AUD/JPY', 'AUD/NZD', 'AUD/USD',
+                'CAD/JPY', 'CHF/JPY', 'EUR/CAD', 'EUR/CHF', 'EUR/GBP', 
+                'EUR/JPY', 'EUR/NZD', 'EUR/TRY', 'EUR/USD', 'GBP/AUD',
+                'GBP/CAD', 'GBP/CHF', 'GBP/JPY', 'GBP/USD', 'NZD/CAD',
+                'NZD/CHF', 'NZD/JPY', 'NZD/USD', 'USD/CAD', 'USD/CHF',
+                'USD/JPY', 'USD/TRY', 'USD/ZAR', 'XAU/USD'
+            ];
+            
+            const trends = ['Up', 'Down', 'Neutral'];
+            
+            return pairs.map(pair => {
+                // Generate scoring breakdown
+                const cotScore = Math.random() > 0.6 ? 2 : Math.random() > 0.3 ? 1 : 0;
+                const trendScore = Math.floor(Math.random() * 4);
+                const adxScore = Math.random() > 0.5 ? 1 : 0;
+                const supportScore = Math.random() > 0.5 ? 2 : Math.random() > 0.3 ? 1 : 0;
+                const structureScore = Math.random() > 0.4 ? 1 : 0;
+                const spreadScore = Math.random() > 0.6 ? 1 : 0;
+                
+                const dsize = cotScore + trendScore + adxScore + supportScore + structureScore + spreadScore;
+                
+                // Generate trend data
+                const trendH4 = trends[Math.floor(Math.random() * trends.length)];
+                const trendD1 = trends[Math.floor(Math.random() * trends.length)];
+                const trendW1 = trends[Math.floor(Math.random() * trends.length)];
+                
+                // Analyze trend alignment
+                const trendArray = [trendH4, trendD1, trendW1];
+                const upCount = trendArray.filter(t => t === 'Up').length;
+                const downCount = trendArray.filter(t => t === 'Down').length;
+                
+                let trendDirection = 'neutral';
+                if (upCount > downCount) trendDirection = 'bullish';
+                else if (downCount > upCount) trendDirection = 'bearish';
+                
+                // Price data
+                const currentPrice = Math.random() * 2 + 1;
+                const dailyChange = (Math.random() - 0.5) * 0.02;
+                const dailyChangePercent = (dailyChange / currentPrice) * 100;
+                
+                // Entry status
+                const canEnter = dsize >= 7;
+                let entryStatus;
+                if (!canEnter) {
+                    entryStatus = 'Block';
+                } else {
+                    switch (trendDirection) {
+                        case 'bullish': entryStatus = 'Allow Buy'; break;
+                        case 'bearish': entryStatus = 'Allow Sell'; break;
+                        default: entryStatus = dailyChange > 0 ? 'Allow Buy' : 'Allow Sell';
+                    }
+                }
+                
+                return {
+                    pair,
+                    dsize,
+                    setupQuality: dsize >= 8 ? 'A' : dsize >= 6 ? 'B' : 'C',
+                    trendH4,
+                    trendD1,
+                    trendW1,
+                    trendDirection,
+                    currentPrice,
+                    dailyChange,
+                    dailyChangePercent,
+                    entryStatus,
+                    lastUpdated: new Date().toISOString(),
+                    breakdown: {
+                        cotScore,
+                        trendScore,
+                        adxScore,
+                        supportScore,
+                        structureScore,
+                        spreadScore
+                    }
+                };
+            }).sort((a, b) => b.dsize - a.dsize);
+        }
+
+        // Filter Functions
+        function applyFilters() {
+            const { minDsize, maxDsize, quality, trend, entry, search } = appState.filters;
+            
+            let filtered = appState.marketData.filter(item => {
+                // D-Size filter
+                if (item.dsize < minDsize || item.dsize > maxDsize) return false;
+                
+                // Quality filter
+                if (quality !== 'all') {
+                    if (quality === 'A' && item.setupQuality !== 'A') return false;
+                    if (quality === 'B' && !['A', 'B'].includes(item.setupQuality)) return false;
+                    if (quality === 'C' && !['A', 'B', 'C'].includes(item.setupQuality)) return false;
+                }
+                
+                // Trend filter
+                if (trend !== 'all' && item.trendDirection !== trend) return false;
+                
+                // Entry filter
+                if (entry !== 'all') {
+                    if (entry === 'allow' && item.entryStatus === 'Block') return false;
+                    if (entry === 'block' && item.entryStatus !== 'Block') return false;
+                }
+                
+                // Search filter
+                if (search && !item.pair.toLowerCase().includes(search.toLowerCase())) return false;
+                
+                return true;
+            });
+            
+            renderOpportunities(filtered);
+        }
+
+        // Render Functions
+        function renderOpportunities(opportunities) {
+            const container = document.getElementById('opportunities-list');
+            const countElement = document.getElementById('opportunities-count');
+            
+            countElement.textContent = `${opportunities.length} pairs`;
+            
+            if (opportunities.length === 0) {
+                container.innerHTML = `
+                    <div style="text-align: center; padding: 2rem; color: var(--text-secondary);">
+                        <p>No opportunities match your current filters</p>
+                        <button class="btn btn-secondary btn-sm" onclick="resetFilters()" style="margin-top: 1rem;">Reset Filters</button>
+                    </div>
+                `;
+                return;
+            }
+            
+            container.innerHTML = opportunities.map(opp => {
+                const dsizeClass = opp.dsize >= 8 ? 'dsize-high' : opp.dsize >= 6 ? 'dsize-medium' : 'dsize-low';
+                const trendDots = [opp.trendW1, opp.trendD1, opp.trendH4].map(trend => {
+                    const trendClass = trend === 'Up' ? 'trend-up' : trend === 'Down' ? 'trend-down' : 'trend-neutral';
+                    return `<div class="trend-dot ${trendClass}" title="${trend}"></div>`;
+                }).join('');
+                
+                const entryClass = opp.entryStatus.includes('Allow') ? 'entry-allow' : 'entry-block';
+                
+                return `
+                    <div class="opportunity-item" data-pair='${JSON.stringify(opp).replace(/'/g, "&#39;")}'>
+                        <div class="pair-name">${opp.pair}</div>
+                        <div class="dsize-score ${dsizeClass}">${opp.dsize.toFixed(1)}</div>
+                        <div class="quality-pill quality-${opp.setupQuality}">${opp.setupQuality}</div>
+                        <div class="trend-indicators" title="W1/D1/H4 Trends">${trendDots}</div>
+                        <div class="entry-signal ${entryClass}">${opp.entryStatus}</div>
+                        <div style="color: var(--text-secondary); font-size: 0.8rem;">
+                            ${opp.currentPrice.toFixed(5)}<br>
+                            <span style="color: ${opp.dailyChange >= 0 ? 'var(--positive-green)' : 'var(--negative-red)'};">
+                                ${opp.dailyChange >= 0 ? '+' : ''}${opp.dailyChangePercent.toFixed(2)}%
+                            </span>
+                        </div>
+                    </div>
+                `;
+            }).join('');
+            
+            // Add click handlers
+            container.querySelectorAll('.opportunity-item').forEach(item => {
+                item.addEventListener('click', () => selectOpportunity(JSON.parse(item.dataset.pair)));
+            });
+        }
+
+        function selectOpportunity(opportunity) {
+            appState.selectedOpportunity = opportunity;
+            
+            // Update UI
+            document.querySelectorAll('.opportunity-item').forEach(item => item.classList.remove('selected'));
+            event.currentTarget.classList.add('selected');
+            
+            // Show config panel
+            document.getElementById('no-selection').style.display = 'none';
+            document.getElementById('config-panel').style.display = 'block';
+            
+            // Update summary
+            document.getElementById('selected-pair').textContent = opportunity.pair;
+            document.getElementById('selected-score').textContent = opportunity.dsize.toFixed(1) + '/10';
+            document.getElementById('selected-signal').textContent = opportunity.entryStatus;
+            document.getElementById('selected-bot-type').textContent = document.getElementById('bot-type').options[document.getElementById('bot-type').selectedIndex].text;
+            
+            updateRiskAssessment();
+        }
+
+        function updateRiskAssessment() {
+            if (!appState.selectedOpportunity) return;
+            
+            const stopLoss = parseInt(document.getElementById('stop-loss').value);
+            const takeProfit = parseInt(document.getElementById('take-profit').value);
+            const investment = parseInt(document.getElementById('initial-investment').value);
+            const maxDrawdown = parseInt(document.getElementById('max-drawdown').value);
+            
+            // Calculate risk metrics
+            const positionRisk = (stopLoss / 10000) * 100; // Simplified calculation
+            const riskReward = takeProfit / stopLoss;
+            const accountRisk = maxDrawdown <= 15 ? 'Low' : maxDrawdown <= 25 ? 'Medium' : 'High';
+            
+            document.getElementById('position-risk').textContent = positionRisk.toFixed(1) + '%';
+            document.getElementById('account-risk').textContent = accountRisk;
+            document.getElementById('risk-reward').textContent = `1:${riskReward.toFixed(1)}`;
+        }
+
+        // Event Handlers
+        function resetFilters() {
+            document.getElementById('min-dsize').value = 0;
+            document.getElementById('max-dsize').value = 10;
+            document.getElementById('quality-filter').value = 'all';
+            document.getElementById('trend-filter').value = 'all';
+            document.getElementById('entry-filter').value = 'all';
+            document.getElementById('pair-search').value = '';
+            updateFiltersFromUI();
+            applyFilters();
+        }
+
+        function updateFiltersFromUI() {
+            appState.filters = {
+                minDsize: parseFloat(document.getElementById('min-dsize').value),
+                maxDsize: parseFloat(document.getElementById('max-dsize').value),
+                quality: document.getElementById('quality-filter').value,
+                trend: document.getElementById('trend-filter').value,
+                entry: document.getElementById('entry-filter').value,
+                search: document.getElementById('pair-search').value
+            };
+        }
+
+        function refreshMarketData() {
+            const loadingState = document.getElementById('loading-state');
+            const opportunitiesList = document.getElementById('opportunities-list');
+            
+            loadingState.classList.add('active');
+            opportunitiesList.style.display = 'none';
+            
+            setTimeout(() => {
+                appState.marketData = generateMarketDataWithScoring();
+                applyFilters();
+                
+                loadingState.classList.remove('active');
+                opportunitiesList.style.display = 'block';
+            }, 1500);
+        }
+
+        function launchBot() {
+            if (!appState.selectedOpportunity) {
+                alert('Please select a market opportunity first');
+                return;
+            }
+            
+            const config = {
+                pair: appState.selectedOpportunity.pair,
+                dsize: appState.selectedOpportunity.dsize,
+                entrySignal: appState.selectedOpportunity.entryStatus,
+                botType: document.getElementById('bot-type').value,
+                initialInvestment: document.getElementById('initial-investment').value,
+                lotSize: document.getElementById('lot-size').value,
+                maxPositions: document.getElementById('max-positions').value,
+                stopLoss: document.getElementById('stop-loss').value,
+                takeProfit: document.getElementById('take-profit').value,
+                maxDrawdown: document.getElementById('max-drawdown').value,
+                dailyLossLimit: document.getElementById('daily-loss-limit').value,
+                trailingStop: document.getElementById('trailing-stop').checked,
+                dsizeThreshold: document.getElementById('dsize-threshold').value,
+                reentryDelay: document.getElementById('reentry-delay').value,
+                newsFilter: document.getElementById('news-filter').checked,
+                weekendTrading: document.getElementById('weekend-trading').checked,
+                aiOptimization: document.getElementById('ai-optimization').checked
+            };
+            
+            // Simulate bot launch
+            const launchBtn = document.getElementById('launch-bot');
+            launchBtn.innerHTML = '<div class="spinner" style="width: 16px; height: 16px; margin: 0;"></div> Launching...';
+            launchBtn.disabled = true;
+            
+            setTimeout(() => {
+                alert(`🚀 Bot Launched Successfully!\n\nPair: ${config.pair}\nD-Size: ${appState.selectedOpportunity.dsize.toFixed(1)}/10\nStrategy: ${config.botType}\nInvestment: $${config.initialInvestment}\n\nBot ID: BOT_${Date.now()}\n\nThe bot is now actively monitoring market conditions and will execute trades based on your configuration.`);
+                
+                // Reset UI
+                launchBtn.innerHTML = '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 19c-5 1.5-5-2.5-7-3m14 6v-3.87a3.37 3.37 0 0 0-.94-2.61c3.14-.35 6.44-1.54 6.44-7A5.44 5.44 0 0 0 20 4.77 5.07 5.07 0 0 0 19.91 1S18.73.65 16 2.48a13.38 13.38 0 0 0-7 0C6.27.65 5.09 1 5.09 1A5.07 5.07 0 0 0 5 4.77a5.44 5.44 0 0 0-1.5 3.78c0 5.42 3.3 6.61 6.44 7A3.37 3.37 0 0 0 9 18.13V22"></path></svg> Launch Bot';
+                launchBtn.disabled = false;
+            }, 2000);
+        }
+
+        // Initialize Application
+        function initLauncher() {
+            console.log('🚀 Initializing DalyDough Bot Launcher...');
+            
+            // Generate initial market data
+            appState.marketData = generateMarketDataWithScoring();
+            applyFilters();
+            
+            // Event listeners
+            document.getElementById('apply-filters').addEventListener('click', () => {
+                updateFiltersFromUI();
+                applyFilters();
+            });
+            
+            document.getElementById('refresh-data').addEventListener('click', refreshMarketData);
+            document.getElementById('launch-bot').addEventListener('click', launchBot);
+            
+            // Tab switching
+            document.querySelectorAll('.tab-btn').forEach(btn => {
+                btn.addEventListener('click', () => {
+                    const tabName = btn.dataset.tab;
+                    
+                    // Update active tab
+                    document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+                    document.querySelectorAll('.tab-content').forEach(c => c.classList.remove('active'));
+                    
+                    btn.classList.add('active');
+                    document.getElementById(tabName + '-tab').classList.add('active');
+                });
+            });
+            
+            // Config change handlers
+            ['bot-type', 'stop-loss', 'take-profit', 'max-drawdown', 'initial-investment'].forEach(id => {
+                document.getElementById(id).addEventListener('change', () => {
+                    if (id === 'bot-type') {
+                        document.getElementById('selected-bot-type').textContent = 
+                            document.getElementById('bot-type').options[document.getElementById('bot-type').selectedIndex].text;
+                    }
+                    updateRiskAssessment();
+                });
+            });
+            
+            console.log('✅ Bot Launcher initialized successfully!');
+            console.log(`📊 Loaded ${appState.marketData.length} market opportunities`);
+        }
+
+        // Start the application
+        if (document.readyState === 'loading') {
+            document.addEventListener('DOMContentLoaded', initLauncher);
+        } else {
+            initLauncher();
+        }
+    </script>
+</body>
+</html>
