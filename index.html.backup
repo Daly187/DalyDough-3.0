@@ -1246,12 +1246,11 @@
         // Application State
         let appState = {
             activePage: 'Dashboard',
-            expandedBotId: null,
-    marketDataSort: {
-        column: 'dsize',
-        direction: 'desc'
-    },
-
+            expandedTrendPair: null,
+            marketDataSort: {
+                column: 'dsize',
+                direction: 'desc'
+            },
             marketTrendsData: null,
             activeBots: [],
             sidebarExpanded: false,
@@ -1608,287 +1607,6 @@
             }
             return '—';
         }
-// Bot Management Functions
-function toggleBotExpansion(botId) {
-    if (appState.expandedBotId === botId) {
-        appState.expandedBotId = null;
-    } else {
-        appState.expandedBotId = botId;
-    }
-    
-    // Refresh current page to show/hide expansion
-    if (appState.activePage === 'Dashboard') {
-        document.getElementById('main-panel').innerHTML = createDashboardPage();
-        attachEventListeners();
-    } else if (appState.activePage === 'Active Bots') {
-        switchPage('Active Bots');
-    }
-}
-
-function editBot(botId) {
-    const bot = appState.activeBots.find(b => b.id === botId);
-    if (!bot) return;
-    
-    // Create a simple edit dialog
-    const newSL = prompt(`Edit Global Stop Loss for ${bot.pair}:`, bot.globalSL);
-    const newTP = prompt(`Edit Global Take Profit for ${bot.pair}:`, bot.globalTP);
-    
-    if (newSL !== null && newTP !== null) {
-        bot.globalSL = parseInt(newSL);
-        bot.globalTP = parseInt(newTP);
-        bot.lastUpdate = new Date().toISOString();
-        
-        // Refresh display
-        if (appState.activePage === 'Dashboard') {
-            document.getElementById('main-panel').innerHTML = createDashboardPage();
-            attachEventListeners();
-        } else if (appState.activePage === 'Active Bots') {
-            switchPage('Active Bots');
-        }
-        
-        console.log(`✅ Updated bot ${botId} - SL: $${newSL}, TP: $${newTP}`);
-    }
-}
-
-function closeBot(botId) {
-    const bot = appState.activeBots.find(b => b.id === botId);
-    if (!bot) return;
-    
-    if (confirm(`Are you sure you want to close bot for ${bot.pair}?\n\nCurrent P&L: ${formatCurrency(bot.totalPL)}`)) {
-        // Remove bot from active bots
-        appState.activeBots = appState.activeBots.filter(b => b.id !== botId);
-        
-        // Clear expansion state
-        if (appState.expandedBotId === botId) {
-            appState.expandedBotId = null;
-        }
-        
-        // Refresh display
-        if (appState.activePage === 'Dashboard') {
-            document.getElementById('main-panel').innerHTML = createDashboardPage();
-            attachEventListeners();
-        } else if (appState.activePage === 'Active Bots') {
-            switchPage('Active Bots');
-        }
-        
-        console.log(`🛑 Closed bot ${botId} for ${bot.pair}`);
-        alert(`✅ Bot closed for ${bot.pair}\nFinal P&L: ${formatCurrency(bot.totalPL)}`);
-    }
-}
-
-function closeAllBots() {
-    if (appState.activeBots.length === 0) {
-        alert('No active bots to close');
-        return;
-    }
-    
-    const totalPnL = appState.activeBots.reduce((sum, bot) => sum + bot.totalPL, 0);
-    
-    if (confirm(`⚠️ Emergency Stop All Bots?\n\nThis will close ${appState.activeBots.length} active bots.\nCurrent Total P&L: ${formatCurrency(totalPnL)}\n\nThis action cannot be undone.`)) {
-        const closedBots = [...appState.activeBots];
-        appState.activeBots = [];
-        appState.expandedBotId = null;
-        
-        // Refresh display
-        if (appState.activePage === 'Dashboard') {
-            document.getElementById('main-panel').innerHTML = createDashboardPage();
-            attachEventListeners();
-        } else if (appState.activePage === 'Active Bots') {
-            switchPage('Active Bots');
-        }
-        
-        console.log(`🚨 Emergency stop: Closed ${closedBots.length} bots`);
-        alert(`🛑 All bots closed!\n\nClosed ${closedBots.length} bots\nFinal P&L: ${formatCurrency(totalPnL)}`);
-    }
-}
-
-// Make functions globally available
-window.toggleBotExpansion = toggleBotExpansion;
-window.editBot = editBot;
-window.closeBot = closeBot;
-window.closeAllBots = closeAllBots;
-
-// Create Active Bots Functions
-        function createActiveBotsSection() {
-            if (!appState.activeBots || appState.activeBots.length === 0) {
-                return `
-                    <div style="text-align: center; padding: 2rem; color: var(--text-secondary);">
-                        <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1" style="margin-bottom: 1rem; opacity: 0.5;">
-                            <circle cx="12" cy="12" r="10"></circle>
-                            <path d="M8 14s1.5 2 4 2 4-2 4-2"></path>
-                            <path d="M9 9h.01"></path>
-                            <path d="M15 9h.01"></path>
-                        </svg>
-                        <p>No active bots running</p>
-                        <button class="btn btn-primary" style="margin-top: 1rem;" onclick="switchPage('Auto Bot')">Launch Your First Bot</button>
-                    </div>
-                `;
-            }
-
-            const totalPnL = appState.activeBots.reduce((sum, bot) => sum + bot.totalPL, 0);
-            const isRiskBreach = totalPnL <= -500; // Example threshold
-            
-            return `
-                ${createGlobalRiskManager(totalPnL, isRiskBreach)}
-                ${createActiveBotsTable()}
-            `;
-        }
-        function createGlobalRiskManager(totalPnL, isRiskBreach) {
-            const pnlClass = totalPnL >= 0 ? 'positive' : 'negative';
-            const statusClass = isRiskBreach ? 'breached' : totalPnL < -200 ? 'warning' : '';
-            
-            return `
-                <div class="global-risk-manager ${statusClass}">
-                    <div class="risk-manager-header">
-                        <h3 class="card-title">🛡️ Global Risk Manager</h3>
-                        <div class="risk-manager-pnl">
-                            <span>Total P&L:</span>
-                            <span class="pnl-value ${pnlClass}">${formatCurrency(totalPnL)}</span>
-                        </div>
-                    </div>
-                    <div class="risk-manager-controls">
-                        <div class="form-group">
-                            <label for="global-stop-loss">Global Stop Loss ($)</label>
-                            <input type="number" id="global-stop-loss" value="500" step="50">
-                        </div>
-                        <div class="form-group">
-                            <label for="max-daily-loss">Max Daily Loss ($)</label>
-                            <input type="number" id="max-daily-loss" value="200" step="25">
-                        </div>
-                        <button class="btn ${isRiskBreach ? 'btn-danger close-all-bots-btn' : 'btn-secondary'}" onclick="closeAllBots()">
-                            ${isRiskBreach ? '🚨 Emergency Stop All' : '⏸️ Close All Bots'}
-                        </button>
-                    </div>
-                </div>
-            `;
-        }
-        function createActiveBotsTable() {
-            const bots = appState.activeBots;
-            
-            return `
-                <div class="table-container">
-                    <table>
-                        <thead>
-                            <tr>
-                                <th>Bot / Pair</th>
-                                <th>Type</th>
-                                <th>P&L</th>
-                                <th>D-Size Score</th>
-                                <th>Global Limits</th>
-                                <th>Actions</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            ${bots.map(bot => createBotRow(bot)).join('')}
-                        </tbody>
-                    </table>
-                </div>
-            `;
-        }
-        function createBotRow(bot) {
-            const isExpanded = appState.expandedBotId === bot.id;
-            const pnlClass = bot.totalPL >= 0 ? 'positive' : 'negative';
-            const scoreClass = bot.currentDScore >= 7 ? 'score-high' : bot.currentDScore >= 5 ? 'score-medium' : 'score-low';
-            
-            return `
-                <tr class="is-expandable ${isExpanded ? 'active' : ''}" onclick="toggleBotExpansion('${bot.id}')">
-                    <td>
-                        <div style="font-weight: 600; font-size: 1.1rem;">${bot.pair}</div>
-                        <div style="font-size: 0.875rem; color: var(--text-secondary);">
-                            Bot ID: ${bot.id}
-                        </div>
-                    </td>
-                    <td>${bot.type}</td>
-                    <td>
-                        <div style="font-weight: 600; font-family: 'Monaco', 'Menlo', monospace;" class="${pnlClass}">
-                            ${formatCurrency(bot.totalPL)}
-                        </div>
-                    </td>
-                    <td>
-                        <div class="recommendation-score ${scoreClass}">
-                            ${bot.currentDScore.toFixed(1)}
-                        </div>
-                        <div style="font-size: 0.75rem; color: var(--text-secondary); margin-top: 0.25rem;">
-                            Entry: ${bot.entryDScore.toFixed(1)}
-                        </div>
-                    </td>
-                    <td>
-                        <div style="font-size: 0.875rem;">
-                            <div>SL: $${bot.globalSL}</div>
-                            <div>TP: $${bot.globalTP}</div>
-                            ${bot.trailingProfitEnabled ? '<div style="color: var(--positive-green);">✓ Trailing</div>' : ''}
-                        </div>
-                    </td>
-                    <td>
-                        <div style="display: flex; gap: 0.5rem; align-items: center;">
-                            <button class="btn btn-secondary btn-sm" onclick="event.stopPropagation(); editBot('${bot.id}')">Edit</button>
-                            <button class="btn btn-danger btn-sm" onclick="event.stopPropagation(); closeBot('${bot.id}')">Close</button>
-                            <span style="color: var(--text-tertiary);">${isExpanded ? '▼' : '▶'}</span>
-                        </div>
-                    </td>
-                </tr>
-                ${isExpanded ? `<tr class="expanded-row"><td colspan="6">${createBotDetails(bot)}</td></tr>` : ''}
-            `;
-        }
-        function createBotDetails(bot) {
-            return `
-                <div class="detailed-reentry-card">
-                    <h4>📋 Bot Configuration & Active Trades</h4>
-                    
-                    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 2rem; margin-bottom: 1.5rem;">
-                        <div>
-                            <h5 style="margin-bottom: 0.75rem;">⚙️ Configuration</h5>
-                            <table>
-                                <tr><td>Bot Type:</td><td>${bot.type}</td></tr>
-                                <tr><td>Entry D-Size:</td><td>${bot.entryDScore.toFixed(1)}/10</td></tr>
-                                <tr><td>Current D-Size:</td><td class="${bot.currentDScore >= 7 ? 'success' : bot.currentDScore >= 5 ? 'warning' : 'error'}">${bot.currentDScore.toFixed(1)}/10</td></tr>
-                                <tr><td>Global Stop Loss:</td><td>$${bot.globalSL}</td></tr>
-                                <tr><td>Global Take Profit:</td><td>$${bot.globalTP}</td></tr>
-                                <tr><td>Trailing Profit:</td><td>${bot.trailingProfitEnabled ? '✅ Enabled' : '❌ Disabled'}</td></tr>
-                                <tr><td>Close at Next TP:</td><td>${bot.closeAtNextTP ? '✅ Yes' : '❌ No'}</td></tr>
-                            </table>
-                        </div>
-                        
-                        <div>
-                            <h5 style="margin-bottom: 0.75rem;">📊 Performance</h5>
-                            <table>
-                                <tr><td>Total P&L:</td><td class="${bot.totalPL >= 0 ? 'success' : 'error'}">${formatCurrency(bot.totalPL)}</td></tr>
-                                <tr><td>Active Trades:</td><td>${bot.activeTrades.length}</td></tr>
-                                <tr><td>Status:</td><td class="success">✅ Active</td></tr>
-                                <tr><td>Last Update:</td><td>${new Date(bot.lastUpdate).toLocaleString()}</td></tr>
-                            </table>
-                        </div>
-                    </div>
-
-                    <h5 style="margin-bottom: 0.75rem;">🔄 Active Trades</h5>
-                    <div class="trades-list">
-                        ${bot.activeTrades.map(trade => `
-                            <div class="trade-item">
-                                <div class="trade-info">
-                                    <span class="trade-type">${trade.pair}</span>
-                                    <span class="trade-direction ${trade.direction}">${trade.direction.toUpperCase()}</span>
-                                    <span class="trade-size">${trade.lotSize} lots</span>
-                                    <span class="trade-price">Entry: ${trade.entryPrice.toFixed(5)}</span>
-                                </div>
-                                <div style="display: flex; align-items: center; gap: 1rem;">
-                                    <span class="trade-pnl ${trade.currentPL >= 0 ? 'positive' : 'negative'}">
-                                        ${formatCurrency(trade.currentPL)}
-                                    </span>
-                                    <span class="trade-score">D-Size: ${trade.score.toFixed(1)}</span>
-                                </div>
-                            </div>
-                        `).join('')}
-                    </div>
-
-                    <div style="margin-top: 1rem; padding: 1rem; background: var(--bg-surface-2); border-radius: 8px;">
-                        <strong>💡 Strategy Notes:</strong><br>
-                        <span style="color: var(--text-secondary); font-size: 0.875rem;">
-                            ${bot.activeTrades[0]?.reason || 'Dynamic DCA strategy with D-Size exit criteria'}
-                        </span>
-                    </div>
-                </div>
-            `;
-        }
 
         // UI Creation Functions
         function createDetailedScoringCard(trend) {
@@ -1955,7 +1673,7 @@ window.closeAllBots = closeAllBots;
         }
 
         // Page Creation Functions
-       function createDashboardPage() {
+        function createDashboardPage() {
             if (!appState.marketTrendsData) {
                 appState.marketTrendsData = generateMarketDataWithScoring();
             }
@@ -1980,18 +1698,6 @@ window.closeAllBots = closeAllBots;
                         </div>
                     </div>
                     ${createMarketTrendsTable(topTrends)}
-                </div>
-
-                <div class="card">
-                    <div class="card-header">
-                        <h2 class="card-title">🤖 Active Bots Dashboard</h2>
-                        <div style="display: flex; align-items: center; gap: 1rem;">
-                            <div class="last-update">
-                                ${appState.activeBots.length} bots running
-                            </div>
-                        </div>
-                    </div>
-                    ${createActiveBotsSection()}
                 </div>
                 
                 <div class="card">
@@ -2618,23 +2324,6 @@ window.closeAllBots = closeAllBots;
                     mainPanel.innerHTML = createAutoBotPage();
                     attachAutoBotEventListeners();
                     break;
-                case 'Active Bots':
-                    mainPanel.innerHTML = `
-                     <div class="card">
-                         <div class="card-header">
-                          <h2 class="card-title">🤖 Active Bots Management</h2>
-                           <div style="display: flex; align-items: center; gap: 1rem;">
-                             <div class="last-update">
-                              ${appState.activeBots.length} bots running
-                             </div>
-                           <button class="btn btn-primary" onclick="switchPage('Auto Bot')">Launch New Bot</button>
-                       </div>
-             </div>
-            ${createActiveBotsSection()}
-        </div>
-    `;
-    attachEventListeners();
-    break;
                 case 'COT Report':
                     mainPanel.innerHTML = createCOTReportPage();
                     break;
