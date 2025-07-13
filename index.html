@@ -1624,6 +1624,46 @@ function toggleBotExpansion(botId) {
         switchPage('Active Bots');
     }
 }
+// NEW: Toggle Functions for Bot Settings
+function toggleTrailingProfit(botId) {
+    const bot = appState.activeBots.find(b => b.id === botId);
+    if (!bot) return;
+    
+    bot.trailingProfitEnabled = !bot.trailingProfitEnabled;
+    bot.lastUpdate = new Date().toISOString();
+    
+    console.log(`🔄 Toggled trailing profit for ${bot.pair}: ${bot.trailingProfitEnabled ? 'ON' : 'OFF'}`);
+    
+    // Refresh display
+    refreshCurrentPage();
+}
+
+function toggleCloseAtNextTP(botId) {
+    const bot = appState.activeBots.find(b => b.id === botId);
+    if (!bot) return;
+    
+    bot.closeAtNextTP = !bot.closeAtNextTP;
+    bot.lastUpdate = new Date().toISOString();
+    
+    console.log(`🔄 Toggled close at next TP for ${bot.pair}: ${bot.closeAtNextTP ? 'ON' : 'OFF'}`);
+    
+    // Refresh display
+    refreshCurrentPage();
+}
+
+// Helper function to refresh current page
+function refreshCurrentPage() {
+    if (appState.activePage === 'Dashboard') {
+        document.getElementById('main-panel').innerHTML = createDashboardPage();
+        attachEventListeners();
+    } else if (appState.activePage === 'Active Bots') {
+        switchPage('Active Bots');
+    }
+}
+
+// Make functions globally available
+window.toggleTrailingProfit = toggleTrailingProfit;
+window.toggleCloseAtNextTP = toggleCloseAtNextTP;
 
 function editBot(botId) {
     const bot = appState.activeBots.find(b => b.id === botId);
@@ -1710,58 +1750,79 @@ window.closeAllBots = closeAllBots;
 
 // Create Active Bots Functions
         function createActiveBotsSection() {
-            if (!appState.activeBots || appState.activeBots.length === 0) {
-                return `
-                    <div style="text-align: center; padding: 2rem; color: var(--text-secondary);">
-                        <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1" style="margin-bottom: 1rem; opacity: 0.5;">
-                            <circle cx="12" cy="12" r="10"></circle>
-                            <path d="M8 14s1.5 2 4 2 4-2 4-2"></path>
-                            <path d="M9 9h.01"></path>
-                            <path d="M15 9h.01"></path>
-                        </svg>
-                        <p>No active bots running</p>
-                        <button class="btn btn-primary" style="margin-top: 1rem;" onclick="switchPage('Auto Bot')">Launch Your First Bot</button>
-                    </div>
-                `;
-            }
+    if (!appState.activeBots || appState.activeBots.length === 0) {
+        return `
+            <div style="text-align: center; padding: 2rem; color: var(--text-secondary);">
+                <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1" style="margin-bottom: 1rem; opacity: 0.5;">
+                    <circle cx="12" cy="12" r="10"></circle>
+                    <path d="M8 14s1.5 2 4 2 4-2 4-2"></path>
+                    <path d="M9 9h.01"></path>
+                    <path d="M15 9h.01"></path>
+                </svg>
+                <p>No active bots running</p>
+                <button class="btn btn-primary" style="margin-top: 1rem;" onclick="switchPage('Auto Bot')">Launch Your First Bot</button>
+            </div>
+        `;
+    }
 
-            const totalPnL = appState.activeBots.reduce((sum, bot) => sum + bot.totalPL, 0);
-            const isRiskBreach = totalPnL <= -500; // Example threshold
-            
-            return `
-                ${createGlobalRiskManager(totalPnL, isRiskBreach)}
-                ${createActiveBotsTable()}
-            `;
-        }
-        function createGlobalRiskManager(totalPnL, isRiskBreach) {
-            const pnlClass = totalPnL >= 0 ? 'positive' : 'negative';
-            const statusClass = isRiskBreach ? 'breached' : totalPnL < -200 ? 'warning' : '';
-            
-            return `
-                <div class="global-risk-manager ${statusClass}">
-                    <div class="risk-manager-header">
-                        <h3 class="card-title">🛡️ Global Risk Manager</h3>
-                        <div class="risk-manager-pnl">
-                            <span>Total P&L:</span>
-                            <span class="pnl-value ${pnlClass}">${formatCurrency(totalPnL)}</span>
-                        </div>
-                    </div>
-                    <div class="risk-manager-controls">
-                        <div class="form-group">
-                            <label for="global-stop-loss">Global Stop Loss ($)</label>
-                            <input type="number" id="global-stop-loss" value="500" step="50">
-                        </div>
-                        <div class="form-group">
-                            <label for="max-daily-loss">Max Daily Loss ($)</label>
-                            <input type="number" id="max-daily-loss" value="200" step="25">
-                        </div>
-                        <button class="btn ${isRiskBreach ? 'btn-danger close-all-bots-btn' : 'btn-secondary'}" onclick="closeAllBots()">
-                            ${isRiskBreach ? '🚨 Emergency Stop All' : '⏸️ Close All Bots'}
-                        </button>
-                    </div>
-                </div>
-            `;
-        }
+    const totalPnL = appState.activeBots.reduce((sum, bot) => sum + bot.totalPL, 0);
+    const isRiskBreach = totalPnL <= -500; // Example threshold
+    
+    return `
+        ${createGlobalRiskManager(totalPnL, isRiskBreach)}
+        
+        <!-- NEW: Quick Bot Controls for Dashboard -->
+        <div style="margin-bottom: 1rem;">
+            <h4 style="margin-bottom: 0.75rem;">🎛️ Quick Bot Controls</h4>
+            <div class="table-container">
+                <table style="min-width: 600px;">
+                    <thead>
+                        <tr>
+                            <th>Bot</th>
+                            <th>P&L</th>
+                            <th>Trailing Profit</th>
+                            <th>Close at Next TP</th>
+                            <th>Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        ${appState.activeBots.map(bot => `
+                            <tr>
+                                <td>
+                                    <div style="font-weight: 600;">${bot.pair}</div>
+                                    <div style="font-size: 0.8rem; color: var(--text-secondary);">${bot.type}</div>
+                                </td>
+                                <td>
+                                    <span class="trade-pnl ${bot.totalPL >= 0 ? 'positive' : 'negative'}">
+                                        ${formatCurrency(bot.totalPL)}
+                                    </span>
+                                </td>
+                                <td style="text-align: center;">
+                                    <label class="toggle-switch">
+                                        <input type="checkbox" ${bot.trailingProfitEnabled ? 'checked' : ''} 
+                                               onchange="toggleTrailingProfit('${bot.id}')">
+                                        <span class="toggle-slider"></span>
+                                    </label>
+                                </td>
+                                <td style="text-align: center;">
+                                    <label class="toggle-switch">
+                                        <input type="checkbox" ${bot.closeAtNextTP ? 'checked' : ''} 
+                                               onchange="toggleCloseAtNextTP('${bot.id}')">
+                                        <span class="toggle-slider"></span>
+                                    </label>
+                                </td>
+                                <td>
+                                    <button class="btn btn-secondary btn-sm" onclick="toggleBotExpansion('${bot.id}')">Details</button>
+                                    <button class="btn btn-danger btn-sm" onclick="closeBot('${bot.id}')">Close</button>
+                                </td>
+                            </tr>
+                        `).join('')}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    `;
+}
         function createActiveBotsTable() {
             const bots = appState.activeBots;
             
@@ -1831,64 +1892,98 @@ window.closeAllBots = closeAllBots;
             `;
         }
         function createBotDetails(bot) {
-            return `
-                <div class="detailed-reentry-card">
-                    <h4>📋 Bot Configuration & Active Trades</h4>
+    return `
+        <div class="detailed-reentry-card">
+            <h4>📋 Bot Configuration & Active Trades</h4>
+            
+            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 2rem; margin-bottom: 1.5rem;">
+                <div>
+                    <h5 style="margin-bottom: 0.75rem;">⚙️ Configuration</h5>
+                    <table>
+                        <tr><td>Bot Type:</td><td>${bot.type}</td></tr>
+                        <tr><td>Entry D-Size:</td><td>${bot.entryDScore.toFixed(1)}/10</td></tr>
+                        <tr><td>Current D-Size:</td><td class="${bot.currentDScore >= 7 ? 'success' : bot.currentDScore >= 5 ? 'warning' : 'error'}">${bot.currentDScore.toFixed(1)}/10</td></tr>
+                        <tr><td>Global Stop Loss:</td><td>$${bot.globalSL}</td></tr>
+                        <tr><td>Global Take Profit:</td><td>$${bot.globalTP}</td></tr>
+                    </table>
+                </div>
+                
+                <div>
+                    <h5 style="margin-bottom: 0.75rem;">📊 Performance</h5>
+                    <table>
+                        <tr><td>Total P&L:</td><td class="${bot.totalPL >= 0 ? 'success' : 'error'}">${formatCurrency(bot.totalPL)}</td></tr>
+                        <tr><td>Active Trades:</td><td>${bot.activeTrades.length}</td></tr>
+                        <tr><td>Status:</td><td class="success">✅ Active</td></tr>
+                        <tr><td>Last Update:</td><td>${new Date(bot.lastUpdate).toLocaleString()}</td></tr>
+                    </table>
+                </div>
+            </div>
+
+            <!-- NEW: Bot Control Toggles -->
+            <div style="margin-bottom: 1.5rem;">
+                <h5 style="margin-bottom: 0.75rem;">🎛️ Bot Controls</h5>
+                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem;">
+                    <div class="form-toggle-item">
+                        <div class="setting-label">
+                            <span>Trailing Profit</span>
+                            <div class="setting-description">Automatically adjust TP as price moves favorably</div>
+                        </div>
+                        <div class="setting-control-group">
+                            <label class="toggle-switch">
+                                <input type="checkbox" ${bot.trailingProfitEnabled ? 'checked' : ''} 
+                                       onchange="toggleTrailingProfit('${bot.id}')">
+                                <span class="toggle-slider"></span>
+                            </label>
+                        </div>
+                    </div>
                     
-                    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 2rem; margin-bottom: 1.5rem;">
-                        <div>
-                            <h5 style="margin-bottom: 0.75rem;">⚙️ Configuration</h5>
-                            <table>
-                                <tr><td>Bot Type:</td><td>${bot.type}</td></tr>
-                                <tr><td>Entry D-Size:</td><td>${bot.entryDScore.toFixed(1)}/10</td></tr>
-                                <tr><td>Current D-Size:</td><td class="${bot.currentDScore >= 7 ? 'success' : bot.currentDScore >= 5 ? 'warning' : 'error'}">${bot.currentDScore.toFixed(1)}/10</td></tr>
-                                <tr><td>Global Stop Loss:</td><td>$${bot.globalSL}</td></tr>
-                                <tr><td>Global Take Profit:</td><td>$${bot.globalTP}</td></tr>
-                                <tr><td>Trailing Profit:</td><td>${bot.trailingProfitEnabled ? '✅ Enabled' : '❌ Disabled'}</td></tr>
-                                <tr><td>Close at Next TP:</td><td>${bot.closeAtNextTP ? '✅ Yes' : '❌ No'}</td></tr>
-                            </table>
+                    <div class="form-toggle-item">
+                        <div class="setting-label">
+                            <span>Close at Next TP</span>
+                            <div class="setting-description">Close entire bot when next TP is hit</div>
                         </div>
-                        
-                        <div>
-                            <h5 style="margin-bottom: 0.75rem;">📊 Performance</h5>
-                            <table>
-                                <tr><td>Total P&L:</td><td class="${bot.totalPL >= 0 ? 'success' : 'error'}">${formatCurrency(bot.totalPL)}</td></tr>
-                                <tr><td>Active Trades:</td><td>${bot.activeTrades.length}</td></tr>
-                                <tr><td>Status:</td><td class="success">✅ Active</td></tr>
-                                <tr><td>Last Update:</td><td>${new Date(bot.lastUpdate).toLocaleString()}</td></tr>
-                            </table>
+                        <div class="setting-control-group">
+                            <label class="toggle-switch">
+                                <input type="checkbox" ${bot.closeAtNextTP ? 'checked' : ''} 
+                                       onchange="toggleCloseAtNextTP('${bot.id}')">
+                                <span class="toggle-slider"></span>
+                            </label>
                         </div>
-                    </div>
-
-                    <h5 style="margin-bottom: 0.75rem;">🔄 Active Trades</h5>
-                    <div class="trades-list">
-                        ${bot.activeTrades.map(trade => `
-                            <div class="trade-item">
-                                <div class="trade-info">
-                                    <span class="trade-type">${trade.pair}</span>
-                                    <span class="trade-direction ${trade.direction}">${trade.direction.toUpperCase()}</span>
-                                    <span class="trade-size">${trade.lotSize} lots</span>
-                                    <span class="trade-price">Entry: ${trade.entryPrice.toFixed(5)}</span>
-                                </div>
-                                <div style="display: flex; align-items: center; gap: 1rem;">
-                                    <span class="trade-pnl ${trade.currentPL >= 0 ? 'positive' : 'negative'}">
-                                        ${formatCurrency(trade.currentPL)}
-                                    </span>
-                                    <span class="trade-score">D-Size: ${trade.score.toFixed(1)}</span>
-                                </div>
-                            </div>
-                        `).join('')}
-                    </div>
-
-                    <div style="margin-top: 1rem; padding: 1rem; background: var(--bg-surface-2); border-radius: 8px;">
-                        <strong>💡 Strategy Notes:</strong><br>
-                        <span style="color: var(--text-secondary); font-size: 0.875rem;">
-                            ${bot.activeTrades[0]?.reason || 'Dynamic DCA strategy with D-Size exit criteria'}
-                        </span>
                     </div>
                 </div>
-            `;
-        }
+            </div>
+
+            <h5 style="margin-bottom: 0.75rem;">🔄 Active Trades</h5>
+            <div class="trades-list">
+                ${bot.activeTrades.map(trade => `
+                    <div class="trade-item">
+                        <div class="trade-info">
+                            <span class="trade-type">${trade.pair}</span>
+                            <span class="trade-direction ${trade.direction}">${trade.direction.toUpperCase()}</span>
+                            <span class="trade-size">${trade.lotSize} lots</span>
+                            <span class="trade-price">Entry: ${trade.entryPrice.toFixed(5)}</span>
+                        </div>
+                        <div style="display: flex; align-items: center; gap: 1rem;">
+                            <span class="trade-pnl ${trade.currentPL >= 0 ? 'positive' : 'negative'}">
+                                ${formatCurrency(trade.currentPL)}
+                            </span>
+                            <span class="trade-score">D-Size: ${trade.score.toFixed(1)}</span>
+                        </div>
+                    </div>
+                `).join('')}
+            </div>
+
+            <div style="margin-top: 1rem; padding: 1rem; background: var(--bg-surface-2); border-radius: 8px;">
+                <strong>💡 Strategy Notes:</strong><br>
+                <span style="color: var(--text-secondary); font-size: 0.875rem;">
+                    ${bot.activeTrades[0]?.reason || 'Dynamic DCA strategy with D-Size exit criteria'}
+                    ${bot.trailingProfitEnabled ? '<br>🎯 Trailing profit is active' : ''}
+                    ${bot.closeAtNextTP ? '<br>⚡ Bot will close at next TP hit' : ''}
+                </span>
+            </div>
+        </div>
+    `;
+}
 
         // UI Creation Functions
         function createDetailedScoringCard(trend) {
