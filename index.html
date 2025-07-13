@@ -311,14 +311,28 @@
             font-size: 0.75rem;
         }
 
-        /* Main Content */
+        .btn-secondary {
+            background-color: var(--bg-surface-2);
+            color: var(--text-secondary);
+            border-color: var(--border-color);
+        }
+
+        .btn-secondary:hover:not(:disabled) {
+            background-color: var(--border-color);
+            color: var(--text-primary);
+        }
+
+        /* Main Content with Proper Scrolling */
         .main-panel {
             grid-area: main;
             overflow-y: auto;
+            overflow-x: hidden;
             padding: 2rem;
             display: flex;
             flex-direction: column;
             gap: 2rem;
+            height: calc(100vh - var(--header-height));
+            max-height: calc(100vh - var(--header-height));
         }
 
         .card {
@@ -328,6 +342,7 @@
             padding: 1.5rem;
             min-width: 0;
             overflow: hidden;
+            flex-shrink: 0;
         }
 
         .card-header {
@@ -349,459 +364,17 @@
             font-weight: normal;
         }
 
-        /* Table Styles */
+        /* Enhanced Table Styles with Better Scrolling */
         .table-container {
             overflow-x: auto;
-            width: 100%;
-            margin: 0;
-            padding: 0;
-            -webkit-overflow-scrolling: touch;
-        }
-
-        .table-container table {
-            width: 100%;
-            min-width: 800px;
-            border-collapse: collapse;
-            table-layout: fixed;
-        }
-
-        th, td {
-            padding: 0.75rem 1rem;
-            text-align: left;
-            border-bottom: 1px solid var(--border-color);
-            vertical-align: middle;
-            overflow: hidden;
-            text-overflow: ellipsis;
-        }
-
-        thead th {
-            color: var(--text-secondary);
-            font-weight: 500;
-            font-size: 0.875rem;
-            text-transform: uppercase;
-            background-color: var(--bg-surface-2);
-        }
-
-        tbody tr {
-            transition: background-color var(--transition-speed);
-            cursor: pointer;
-        }
-
-        tbody tr:not(.expanded-row):hover {
-            background-color: var(--bg-surface-2);
-        }
-
-        tbody tr:last-child td {
-            border-bottom: none;
-        }
-
-        .sortable-header {
-            cursor: pointer;
-            user-select: none;
-        }
-
-        .sortable-header:hover {
-            background-color: var(--border-color);
-        }
-
-        /* Price Display */
-        .price-cell {
-            font-family: 'Monaco', 'Menlo', monospace;
-        }
-
-        .current-price {
-            font-weight: 600;
-            font-size: 0.95rem;
-            color: var(--text-primary);
-        }
-
-        .price-change {
-            font-size: 0.8rem;
-            font-weight: 500;
-            margin-top: 0.25rem;
-        }
-
-        .price-change.positive {
-            color: var(--positive-green);
-        }
-
-        .price-change.negative {
-            color: var(--negative-red);
-        }
-
-        /* Trend Icons */
-        .trend-cell {
-            display: flex;
-            gap: 0.5rem;
-            align-items: center;
-            justify-content: center;
-        }
-
-        .trend-cell svg {
-            width: 20px;
-            height: 20px;
-            flex-shrink: 0;
-        }
-
-        .trend-up { color: var(--positive-green); }
-        .trend-down { color: var(--negative-red); }
-        .trend-neutral { color: var(--text-tertiary); }
-
-        /* Setup Quality Pills */
-        .setup-quality-pill {
-            font-weight: 700;
-            padding: 0.35rem 0.75rem;
-            border-radius: 12px;
-            font-size: 0.875rem;
-            color: var(--bg-surface);
-            min-width: 36px;
-            text-align: center;
-            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
-        }
-
-        .quality-A {
-            background: linear-gradient(135deg, var(--quality-a), #16a34a);
-        }
-
-        .quality-B {
-            background: linear-gradient(135deg, var(--quality-b), #2563eb);
-        }
-
-        .quality-C {
-            background: linear-gradient(135deg, var(--quality-c), #6b7280);
-            color: var(--text-primary);
-        }
-
-        /* Conditions Icons */
-        .conditions-cell {
-            display: flex;
-            gap: 1rem;
-            align-items: center;
-            justify-content: center;
-        }
-
-        .condition-icon {
-            color: var(--text-tertiary);
-            transition: color var(--transition-speed);
-        }
-
-        .condition-icon.active {
-            color: var(--accent-blue);
-        }
-
-        .condition-icon svg {
-            width: 20px;
-            height: 20px;
-        }
-
-        /* D-Size Score */
-        .recommendation-score {
-            font-weight: 700;
-            padding: 0.25rem 0.5rem;
-            border-radius: 6px;
-            flex-shrink: 0;
-            display: inline-block;
-            min-width: 40px;
-            text-align: center;
-        }
-
-        .score-high { background-color: var(--positive-green); color: var(--bg-surface); }
-        .score-medium { background-color: var(--warning-yellow); color: var(--bg-surface); }
-        .score-low { background-color: var(--negative-red); color: var(--text-primary); }
-
-        /* Expandable Rows */
-        tr.is-expandable.active {
-            background-color: #2e3047;
-            box-shadow: inset 3px 0 0 0 var(--accent-blue);
-        }
-
-        .expanded-row td {
-            padding: 0 !important;
-            border-bottom: 1px solid var(--border-color) !important;
-            border-top: 1px solid var(--bg-main) !important;
-        }
-
-        .detailed-scoring-card {
-            background-color: var(--bg-main);
-            padding: 1.5rem;
-            border-radius: var(--border-radius);
-        }
-
-        .detailed-scoring-card h4 {
-            margin-bottom: 1rem;
-            color: var(--text-primary);
-            font-size: 1.25rem;
-            font-weight: 600;
-        }
-
-        .detailed-scoring-card table {
-            width: 100%;
-            margin-bottom: 1rem;
-        }
-
-        .detailed-scoring-card th {
-            background-color: var(--bg-surface-2);
-            padding: 0.75rem 0.5rem;
-            font-weight: 600;
-            font-size: 0.875rem;
-            color: var(--text-secondary);
-            text-align: left;
-            border-bottom: 1px solid var(--border-color);
-        }
-
-        .detailed-scoring-card td {
-            padding: 0.75rem 0.5rem;
-            border-bottom: 1px solid var(--border-color);
-            vertical-align: middle;
-        }
-
-        .detailed-scoring-card td:first-child {
-            font-weight: 500;
-            color: var(--text-primary);
-        }
-
-        .detailed-scoring-card td:nth-child(2) {
-            color: var(--text-secondary);
-            font-family: 'Monaco', 'Menlo', monospace;
-            font-size: 0.875rem;
-        }
-
-        .detailed-scoring-card td:nth-child(3) {
-            font-weight: 600;
-            text-align: center;
-        }
-
-        .detailed-scoring-card td:nth-child(4) {
-            text-align: center;
-            font-size: 0.875rem;
-        }
-
-        /* D's Riding Hard Table */
-        .ds-riding-hard-table .pair-cell {
-            min-width: 120px;
-        }
-
-        .ds-riding-hard-table .trades-count {
-            font-size: 0.75rem;
-            color: var(--text-secondary);
-            margin-top: 0.25rem;
-        }
-
-        .ds-riding-hard-table .pnl-cell {
-            font-weight: 600;
-            font-family: 'Monaco', 'Menlo', monospace;
-        }
-
-        .ds-riding-hard-table .score-cell {
-            text-align: center;
-        }
-
-        .score-change {
-            font-size: 0.75rem;
-            margin-top: 0.25rem;
-            font-weight: 500;
-        }
-
-        .score-change.positive {
-            color: var(--positive-green);
-        }
-
-        .score-change.negative {
-            color: var(--negative-red);
-        }
-
-        .table-input {
-            background-color: var(--bg-surface-2);
-            border: 1px solid var(--border-color);
-            border-radius: var(--border-radius);
-            color: var(--text-primary);
-            padding: 0.5rem;
-            width: 80px;
-            text-align: right;
-            transition: all var(--transition-speed);
-            min-width: 50px;
-            max-width: 100%;
-            font-size: 0.875rem;
-        }
-
-        .table-input:focus {
-            outline: none;
-            border-color: var(--accent-blue);
-            background-color: var(--bg-main);
-        }
-
-        /* Toggle Switch */
-        .toggle-switch {
-            position: relative;
-            display: inline-block;
-            width: 50px;
-            height: 28px;
-            flex-shrink: 0;
-        }
-
-        .toggle-switch input {
-            opacity: 0;
-            width: 0;
-            height: 0;
-        }
-
-        .toggle-slider {
-            position: absolute;
-            cursor: pointer;
-            top: 0;
-            left: 0;
-            right: 0;
-            bottom: 0;
-            background-color: var(--bg-surface-2);
-            border: 1px solid var(--border-color);
-            transition: .4s;
-            border-radius: 28px;
-        }
-
-        .toggle-slider:before {
-            position: absolute;
-            content: "";
-            height: 20px;
-            width: 20px;
-            left: 3px;
-            bottom: 3px;
-            background-color: var(--text-secondary);
-            transition: .4s;
-            border-radius: 50%;
-        }
-
-        input:checked + .toggle-slider {
-            background-color: var(--accent-blue);
-            border-color: var(--accent-blue);
-        }
-
-        input:checked + .toggle-slider:before {
-            transform: translateX(22px);
-            background-color: white;
-        }
-
-        /* Global Risk Manager */
-        .global-risk-manager {
-            padding: 1rem 1.5rem;
-            margin: 0 -1.5rem 1.5rem -1.5rem;
-            border-bottom: 1px solid var(--border-color);
-            background-color: var(--bg-main);
-            transition: all 0.3s ease;
-            border-left: 4px solid transparent;
-        }
-
-        .risk-manager-header {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            margin-bottom: 1rem;
-            flex-wrap: wrap;
-            gap: 0.5rem;
-        }
-
-        .risk-manager-header .card-title {
-            margin-bottom: 0;
-            font-size: 1.1rem;
-        }
-
-        .risk-manager-pnl {
-            display: flex;
-            gap: 0.5rem;
-            align-items: baseline;
-        }
-
-        .risk-manager-pnl span:first-child {
-            color: var(--text-secondary);
-            font-size: 0.875rem;
-            white-space: nowrap;
-        }
-
-        .risk-manager-pnl .pnl-value {
-            font-size: 1.25rem;
-            font-weight: 700;
-        }
-
-        .risk-manager-pnl .pnl-value.positive {
-            color: var(--positive-green);
-        }
-
-        .risk-manager-pnl .pnl-value.negative {
-            color: var(--negative-red);
-        }
-
-        .risk-manager-controls {
-            display: flex;
-            justify-content: space-between;
-            align-items: flex-end;
-            gap: 1rem;
-            flex-wrap: wrap;
-        }
-
-        .form-group {
-            display: flex;
-            flex-direction: column;
-            gap: 0.5rem;
-            flex-grow: 1;
-        }
-
-        .form-group label {
-            font-weight: 500;
-            color: var(--text-secondary);
-            font-size: 0.875rem;
-        }
-
-        .form-group input {
-            width: 100%;
-            max-width: 200px;
-            padding: 0.75rem;
-            background-color: var(--bg-surface-2);
-            border: 1px solid var(--border-color);
-            border-radius: var(--border-radius);
-            color: var(--text-primary);
-            font-size: 1rem;
-            transition: border-color var(--transition-speed);
-        }
-
-        .form-group input:focus {
-            outline: none;
-            border-color: var(--accent-blue);
-        }
-
-        /* Placeholder Content */
-        .placeholder-content {
-            min-height: 200px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            text-align: center;
-            padding: 2rem;
-            flex-direction: column;
-            gap: 1rem;
-        }
-
-        .text-secondary {
-            color: var(--text-secondary);
-        }
-
-        /* Animations */
-        @keyframes fadeIn {
-            from { opacity: 0; transform: translateY(20px); }
-            to { opacity: 1; transform: translateY(0); }
-        }
-
-        .card {
-            animation: fadeIn 0.6s ease-out;
-        }
-
-        /* Enhanced Table Styles */
-        .table-container {
-            overflow-x: auto;
+            overflow-y: visible;
             width: 100%;
             margin: 0;
             padding: 0;
             -webkit-overflow-scrolling: touch;
             border-radius: var(--border-radius);
             border: 1px solid var(--border-color);
+            max-height: 70vh;
         }
 
         .table-container table {
@@ -868,7 +441,7 @@
         .market-table th:nth-child(7),
         .market-table td:nth-child(7) {
             width: 12%;
-            min-width: 100px;
+            min-width: 120px;
             text-align: center;
         }
 
@@ -894,6 +467,15 @@
 
         tbody tr:last-child td {
             border-bottom: none;
+        }
+
+        .sortable-header {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .sortable-header:hover {
+            background-color: var(--border-color);
         }
 
         /* Enhanced Price Display */
@@ -958,6 +540,10 @@
             height: 18px;
             flex-shrink: 0;
         }
+
+        .trend-up { color: var(--positive-green); }
+        .trend-down { color: var(--negative-red); }
+        .trend-neutral { color: var(--text-tertiary); }
 
         /* Enhanced Quality Pills */
         .setup-quality-pill {
@@ -1042,7 +628,7 @@
             color: white;
         }
 
-        /* Enhanced Entry Status */
+        /* Enhanced Entry Status Styling */
         .entry-status {
             font-weight: 700;
             font-size: 0.85rem;
@@ -1051,6 +637,11 @@
             text-align: center;
             text-transform: uppercase;
             letter-spacing: 0.5px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 0.5rem;
+            min-width: 120px;
         }
 
         .entry-allow {
@@ -1065,11 +656,236 @@
             box-shadow: 0 3px 8px rgba(239, 68, 68, 0.3);
         }
 
-        /* Pair selector enhancement */
-        .pair-option-count {
-            color: var(--accent-blue);
+        .entry-neutral {
+            background: linear-gradient(135deg, var(--text-tertiary), #6b7280);
+            color: white;
+            box-shadow: 0 3px 8px rgba(107, 114, 128, 0.3);
+        }
+
+        /* Expandable Rows */
+        tr.is-expandable.active {
+            background-color: #2e3047;
+            box-shadow: inset 3px 0 0 0 var(--accent-blue);
+        }
+
+        .expanded-row td {
+            padding: 0 !important;
+            border-bottom: 1px solid var(--border-color) !important;
+            border-top: 1px solid var(--bg-main) !important;
+        }
+
+        .detailed-scoring-card {
+            background-color: var(--bg-main);
+            padding: 1.5rem;
+            border-radius: var(--border-radius);
+        }
+
+        .detailed-scoring-card h4 {
+            margin-bottom: 1rem;
+            color: var(--text-primary);
+            font-size: 1.25rem;
             font-weight: 600;
-            font-size: 0.85rem;
+        }
+
+        .detailed-scoring-card table {
+            width: 100%;
+            margin-bottom: 1rem;
+        }
+
+        .detailed-scoring-card th {
+            background-color: var(--bg-surface-2);
+            padding: 0.75rem 0.5rem;
+            font-weight: 600;
+            font-size: 0.875rem;
+            color: var(--text-secondary);
+            text-align: left;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .detailed-scoring-card td {
+            padding: 0.75rem 0.5rem;
+            border-bottom: 1px solid var(--border-color);
+            vertical-align: middle;
+        }
+
+        .detailed-scoring-card td:first-child {
+            font-weight: 500;
+            color: var(--text-primary);
+        }
+
+        .detailed-scoring-card td:nth-child(2) {
+            color: var(--text-secondary);
+            font-family: 'Monaco', 'Menlo', monospace;
+            font-size: 0.875rem;
+        }
+
+        .detailed-scoring-card td:nth-child(3) {
+            font-weight: 600;
+            text-align: center;
+        }
+
+        .detailed-scoring-card td:nth-child(4) {
+            text-align: center;
+            font-size: 0.875rem;
+        }
+
+        /* Global Risk Manager */
+        .global-risk-manager {
+            padding: 1rem 1.5rem;
+            margin: 0 -1.5rem 1.5rem -1.5rem;
+            border-bottom: 1px solid var(--border-color);
+            background-color: var(--bg-main);
+            transition: all 0.3s ease;
+            border-left: 4px solid transparent;
+        }
+
+        .risk-manager-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 1rem;
+            flex-wrap: wrap;
+            gap: 0.5rem;
+        }
+
+        .risk-manager-header .card-title {
+            margin-bottom: 0;
+            font-size: 1.1rem;
+        }
+
+        .risk-manager-pnl {
+            display: flex;
+            gap: 0.5rem;
+            align-items: baseline;
+        }
+
+        .risk-manager-pnl span:first-child {
+            color: var(--text-secondary);
+            font-size: 0.875rem;
+            white-space: nowrap;
+        }
+
+        .risk-manager-pnl .pnl-value {
+            font-size: 1.25rem;
+            font-weight: 700;
+        }
+
+        .risk-manager-pnl .pnl-value.positive {
+            color: var(--positive-green);
+        }
+
+        .risk-manager-pnl .pnl-value.negative {
+            color: var(--negative-red);
+        }
+
+        .risk-manager-controls {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-end;
+            gap: 1rem;
+            flex-wrap: wrap;
+        }
+
+        .form-group {
+            display: flex;
+            flex-direction: column;
+            gap: 0.5rem;
+            flex-grow: 1;
+        }
+
+        .form-group label {
+            font-weight: 500;
+            color: var(--text-secondary);
+            font-size: 0.875rem;
+        }
+
+        .form-group input,
+        .form-group select {
+            width: 100%;
+            max-width: 200px;
+            padding: 0.75rem;
+            background-color: var(--bg-surface-2);
+            border: 1px solid var(--border-color);
+            border-radius: var(--border-radius);
+            color: var(--text-primary);
+            font-size: 1rem;
+            transition: border-color var(--transition-speed);
+        }
+
+        .form-group input:focus,
+        .form-group select:focus {
+            outline: none;
+            border-color: var(--accent-blue);
+        }
+
+        .table-input {
+            background-color: var(--bg-surface-2);
+            border: 1px solid var(--border-color);
+            border-radius: var(--border-radius);
+            color: var(--text-primary);
+            padding: 0.5rem;
+            width: 80px;
+            text-align: right;
+            transition: all var(--transition-speed);
+            min-width: 50px;
+            max-width: 100%;
+            font-size: 0.875rem;
+        }
+
+        .table-input:focus {
+            outline: none;
+            border-color: var(--accent-blue);
+            background-color: var(--bg-main);
+        }
+
+        /* Toggle Switch */
+        .toggle-switch {
+            position: relative;
+            display: inline-block;
+            width: 50px;
+            height: 28px;
+            flex-shrink: 0;
+        }
+
+        .toggle-switch input {
+            opacity: 0;
+            width: 0;
+            height: 0;
+        }
+
+        .toggle-slider {
+            position: absolute;
+            cursor: pointer;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background-color: var(--bg-surface-2);
+            border: 1px solid var(--border-color);
+            transition: .4s;
+            border-radius: 28px;
+        }
+
+        .toggle-slider:before {
+            position: absolute;
+            content: "";
+            height: 20px;
+            width: 20px;
+            left: 3px;
+            bottom: 3px;
+            background-color: var(--text-secondary);
+            transition: .4s;
+            border-radius: 50%;
+        }
+
+        input:checked + .toggle-slider {
+            background-color: var(--accent-blue);
+            border-color: var(--accent-blue);
+        }
+
+        input:checked + .toggle-slider:before {
+            transform: translateX(22px);
+            background-color: white;
         }
 
         /* Bot Launcher Modal */
@@ -1286,17 +1102,6 @@
             border-bottom-right-radius: var(--border-radius);
         }
 
-        .btn-secondary {
-            background-color: var(--bg-surface-2);
-            color: var(--text-secondary);
-            border-color: var(--border-color);
-        }
-
-        .btn-secondary:hover:not(:disabled) {
-            background-color: var(--border-color);
-            color: var(--text-primary);
-        }
-
         .refresh-button {
             display: flex;
             align-items: center;
@@ -1316,6 +1121,39 @@
         @keyframes spin {
             from { transform: rotate(0deg); }
             to { transform: rotate(360deg); }
+        }
+
+        /* Pair option styling in dropdown */
+        .pair-option-count {
+            color: var(--accent-blue);
+            font-weight: 600;
+            font-size: 0.85rem;
+        }
+
+        /* Placeholder Content */
+        .placeholder-content {
+            min-height: 200px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            text-align: center;
+            padding: 2rem;
+            flex-direction: column;
+            gap: 1rem;
+        }
+
+        .text-secondary {
+            color: var(--text-secondary);
+        }
+
+        /* Animations */
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        .card {
+            animation: fadeIn 0.6s ease-out;
         }
 
         /* Responsive */
@@ -1352,13 +1190,20 @@
                 padding-right: 0;
             }
             
+            /* Mobile Responsive with Better Scrolling */
             .main-panel {
                 padding: 1rem;
                 gap: 1rem;
+                height: calc(100vh - 120px);
+                max-height: calc(100vh - 120px);
             }
             
             .card {
                 padding: 1rem;
+            }
+            
+            .table-container {
+                max-height: 60vh;
             }
             
             .table-container table {
@@ -1492,24 +1337,41 @@
                 </div>
                 <div class="modal-body">
                     <div class="form-group">
-                        <label for="pair-select">Pair</label>
+                        <label for="pair-select">Currency Pair</label>
                         <select id="pair-select" name="pair">
-                            <option value="AUD/CAD">AUD/CAD</option>
-                            <option value="AUD/CHF">AUD/CHF</option>
-                            <option value="AUD/JPY">AUD/JPY</option>
-                            <option value="AUD/NZD">AUD/NZD</option>
-                            <option value="AUD/USD">AUD/USD</option>
-                            <option value="EUR/USD">EUR/USD</option>
-                            <option value="GBP/USD">GBP/USD</option>
-                            <option value="USD/JPY">USD/JPY</option>
-                            <option value="USD/CHF">USD/CHF</option>
-                            <option value="USD/CAD">USD/CAD</option>
-                            <option value="NZD/USD">NZD/USD</option>
-                            <option value="EUR/GBP">EUR/GBP</option>
-                            <option value="EUR/JPY">EUR/JPY</option>
-                            <option value="GBP/JPY">GBP/JPY</option>
-                            <option value="XAU/USD">XAU/USD</option>
+                            <option value="AUD/CAD">AUD/CAD - Australian Dollar / Canadian Dollar</option>
+                            <option value="AUD/CHF">AUD/CHF - Australian Dollar / Swiss Franc</option>
+                            <option value="AUD/JPY">AUD/JPY - Australian Dollar / Japanese Yen</option>
+                            <option value="AUD/NZD">AUD/NZD - Australian Dollar / New Zealand Dollar</option>
+                            <option value="AUD/USD">AUD/USD - Australian Dollar / US Dollar</option>
+                            <option value="CAD/JPY">CAD/JPY - Canadian Dollar / Japanese Yen</option>
+                            <option value="CHF/JPY">CHF/JPY - Swiss Franc / Japanese Yen</option>
+                            <option value="EUR/CAD">EUR/CAD - Euro / Canadian Dollar</option>
+                            <option value="EUR/CHF">EUR/CHF - Euro / Swiss Franc</option>
+                            <option value="EUR/GBP">EUR/GBP - Euro / British Pound</option>
+                            <option value="EUR/JPY">EUR/JPY - Euro / Japanese Yen</option>
+                            <option value="EUR/NZD">EUR/NZD - Euro / New Zealand Dollar</option>
+                            <option value="EUR/TRY">EUR/TRY - Euro / Turkish Lira</option>
+                            <option value="EUR/USD">EUR/USD - Euro / US Dollar</option>
+                            <option value="GBP/AUD">GBP/AUD - British Pound / Australian Dollar</option>
+                            <option value="GBP/CAD">GBP/CAD - British Pound / Canadian Dollar</option>
+                            <option value="GBP/CHF">GBP/CHF - British Pound / Swiss Franc</option>
+                            <option value="GBP/JPY">GBP/JPY - British Pound / Japanese Yen</option>
+                            <option value="GBP/USD">GBP/USD - British Pound / US Dollar</option>
+                            <option value="NZD/CAD">NZD/CAD - New Zealand Dollar / Canadian Dollar</option>
+                            <option value="NZD/CHF">NZD/CHF - New Zealand Dollar / Swiss Franc</option>
+                            <option value="NZD/JPY">NZD/JPY - New Zealand Dollar / Japanese Yen</option>
+                            <option value="NZD/USD">NZD/USD - New Zealand Dollar / US Dollar</option>
+                            <option value="USD/CAD">USD/CAD - US Dollar / Canadian Dollar</option>
+                            <option value="USD/CHF">USD/CHF - US Dollar / Swiss Franc</option>
+                            <option value="USD/JPY">USD/JPY - US Dollar / Japanese Yen</option>
+                            <option value="USD/TRY">USD/TRY - US Dollar / Turkish Lira</option>
+                            <option value="USD/ZAR">USD/ZAR - US Dollar / South African Rand</option>
+                            <option value="XAU/USD">XAU/USD - Gold / US Dollar</option>
                         </select>
+                        <div style="margin-top: 0.5rem; font-size: 0.875rem; color: var(--text-secondary);">
+                            Only pairs with D-Size ≥ threshold and directional signals are shown
+                        </div>
                     </div>
                     
                     <div class="form-grid">
@@ -1572,6 +1434,17 @@
                         
                         <div class="form-toggle-item">
                             <div class="setting-label">
+                                <span>Follow Trend Direction</span>
+                                <span class="setting-description">Automatically aligns with D-Size trend signal.</span>
+                            </div>
+                            <label class="toggle-switch">
+                                <input type="checkbox" id="follow-trend" checked>
+                                <span class="toggle-slider"></span>
+                            </label>
+                        </div>
+                        
+                        <div class="form-toggle-item">
+                            <div class="setting-label">
                                 <span>Avoid High-Impact News</span>
                                 <span class="setting-description">Pauses entries 30min around news.</span>
                             </div>
@@ -1593,7 +1466,7 @@
                 </div>
                 <div class="modal-footer">
                     <button class="btn btn-secondary" onclick="closeBotLauncher()">Cancel</button>
-                    <button class="btn btn-primary" onclick="launchBot()">Launch</button>
+                    <button class="btn btn-primary" onclick="launchBot()">Launch Bot</button>
                 </div>
             </div>
         </div>
@@ -1623,10 +1496,53 @@
             resizeHorizontal: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="17 8 21 12 17 16"></polyline><polyline points="7 8 3 12 7 16"></polyline><line x1="3" y1="12" x2="21" y2="12"></line></svg>`
         };
 
-        // D-Size Scoring Functions
-        function generateScoringBreakdown(pair) {
+        // Enhanced trend analysis function with corrected scoring
+        function analyzeTrend(trendH4, trendD1, trendW1) {
+            const trends = [trendH4, trendD1, trendW1];
+            const upCount = trends.filter(t => t === 'Up').length;
+            const downCount = trends.filter(t => t === 'Down').length;
+            
+            // Calculate trend confirmation score (1 point per timeframe in same direction)
+            let trendConfirmationScore = 0;
+            if (upCount >= 2 && upCount > downCount) {
+                // Bullish trend - count aligned timeframes
+                trendConfirmationScore = upCount;
+            } else if (downCount >= 2 && downCount > upCount) {
+                // Bearish trend - count aligned timeframes  
+                trendConfirmationScore = downCount;
+            } else {
+                // No clear direction or mixed signals
+                trendConfirmationScore = 0;
+            }
+            
+            // Maximum is 3 points (all timeframes aligned)
+            trendConfirmationScore = Math.min(trendConfirmationScore, 3);
+            
+            // Calculate alignment (how many timeframes agree)
+            const alignment = Math.max(upCount, downCount);
+            
+            // Determine overall direction
+            let direction;
+            if (upCount > downCount) {
+                direction = 'bullish';
+            } else if (downCount > upCount) {
+                direction = 'bearish';
+            } else {
+                direction = 'neutral';
+            }
+            
+            return { 
+                direction, 
+                alignment, 
+                trendConfirmationScore  // This will be used in D-Size calculation
+            };
+        }
+
+        // D-Size Scoring Functions with corrected trend scoring
+        function generateScoringBreakdown(pair, trendConfirmationScore) {
             const cotScore = Math.random() > 0.6 ? 2 : Math.random() > 0.3 ? 1 : 0;
-            const trendScore = Math.floor(Math.random() * 4);
+            // Use the passed trend confirmation score
+            const trendScore = trendConfirmationScore || 0;
             const adxValue = Math.random() * 50 + 10;
             const adxScore = adxValue >= 20 ? 1 : 0;
             const supportScore = Math.random() > 0.5 ? 2 : Math.random() > 0.3 ? 1 : 0;
@@ -1643,7 +1559,7 @@
                 trendConfirmation: {
                     score: trendScore,
                     value: `${trendScore}/3 timeframes aligned`,
-                    description: '+1 for each aligned timeframe (4H, 1D, 1W)'
+                    description: '1 point per timeframe in same direction (max 3)'
                 },
                 adxStrength: {
                     score: adxScore,
@@ -1678,25 +1594,72 @@
         }
 
         function generateMarketDataWithScoring() {
+            // Expanded pairs list with all requested pairs
             const pairs = [
-                'EUR/USD', 'GBP/USD', 'USD/JPY', 'USD/CHF', 'AUD/USD', 'USD/CAD',
-                'NZD/USD', 'EUR/GBP', 'EUR/JPY', 'GBP/JPY', 'XAU/USD', 'GBP/CHF'
+                'AUD/CAD', 'AUD/CHF', 'AUD/JPY', 'AUD/NZD', 'AUD/USD',
+                'CAD/JPY', 'CHF/JPY', 'EUR/CAD', 'EUR/CHF', 'EUR/GBP', 
+                'EUR/JPY', 'EUR/NZD', 'EUR/TRY', 'EUR/USD', 'GBP/AUD',
+                'GBP/CAD', 'GBP/CHF', 'GBP/JPY', 'GBP/USD', 'NZD/CAD',
+                'NZD/CHF', 'NZD/JPY', 'NZD/USD', 'USD/CAD', 'USD/CHF',
+                'USD/JPY', 'USD/TRY', 'USD/ZAR', 'XAU/USD'
             ];
             
             const trends = ['Up', 'Down', 'Neutral'];
             
             return pairs.map(pair => {
+                // Generate trend data
+                const trendH4 = trends[Math.floor(Math.random() * trends.length)];
+                const trendD1 = trends[Math.floor(Math.random() * trends.length)];
+                const trendW1 = trends[Math.floor(Math.random() * trends.length)];
+                
+                // Generate scoring breakdown
                 const breakdown = generateScoringBreakdown(pair);
                 const dsize = calculateDSize(breakdown);
+                
+                // Generate price data
                 const currentPrice = Math.random() * 2 + 1;
                 const dailyChange = (Math.random() - 0.5) * 0.02;
                 const dailyChangePercent = (dailyChange / currentPrice) * 100;
                 
+                // Analyze trend for directional signal
+                const trendAnalysis = analyzeTrend(trendH4, trendD1, trendW1);
+                
+                // Determine entry status with direction
+                const canEnter = dsize >= 7;
+                let entryStatus;
+                
+                if (!canEnter) {
+                    entryStatus = 'Block';
+                } else {
+                    // If can enter, show direction based on trend analysis
+                    switch (trendAnalysis.direction) {
+                        case 'bullish':
+                            entryStatus = 'Allow Buy';
+                            break;
+                        case 'bearish':
+                            entryStatus = 'Allow Sell';
+                            break;
+                        case 'neutral':
+                            // For neutral trends, look at recent price action
+                            if (dailyChange > 0) {
+                                entryStatus = 'Allow Buy';
+                            } else if (dailyChange < 0) {
+                                entryStatus = 'Allow Sell';
+                            } else {
+                                entryStatus = 'Allow Trade';
+                            }
+                            break;
+                        default:
+                            entryStatus = 'Block';
+                    }
+                }
+                
                 return {
                     pair,
-                    trendH4: trends[Math.floor(Math.random() * trends.length)],
-                    trendD1: trends[Math.floor(Math.random() * trends.length)],
-                    trendW1: trends[Math.floor(Math.random() * trends.length)],
+                    trendH4,
+                    trendD1,
+                    trendW1,
+                    trendAnalysis,
                     setupQuality: dsize >= 8 ? 'A' : dsize >= 6 ? 'B' : 'C',
                     conditions: {
                         cot: breakdown.cotBias.score > 0,
@@ -1707,6 +1670,7 @@
                     currentPrice,
                     dailyChange,
                     dailyChangePercent,
+                    entryStatus,
                     breakdown,
                     lastUpdated: new Date().toISOString()
                 };
@@ -1771,6 +1735,30 @@
             }).format(value);
         }
 
+        // Helper function to get entry status styling class
+        function getEntryStatusClass(entryStatus) {
+            if (entryStatus === 'Block') {
+                return 'entry-block';
+            } else if (entryStatus.includes('Allow')) {
+                return 'entry-allow';
+            }
+            return 'entry-neutral';
+        }
+
+        // Helper function to get entry status icon
+        function getEntryStatusIcon(entryStatus) {
+            if (entryStatus === 'Block') {
+                return '✗';
+            } else if (entryStatus === 'Allow Buy') {
+                return '↗';
+            } else if (entryStatus === 'Allow Sell') {
+                return '↘';
+            } else if (entryStatus.includes('Allow')) {
+                return '✓';
+            }
+            return '—';
+        }
+
         // UI Creation Functions
         function createDetailedScoringCard(trend) {
             const totalScore = parseFloat(trend.dsize);
@@ -1815,14 +1803,18 @@
                                 <strong>Entry Decision:</strong> Score ≥ 7.0 required for new positions
                             </div>
                             <div style="font-size: 1.1rem; font-weight: 700; color: ${canEnter ? 'var(--positive-green)' : 'var(--negative-red)'};">
-                                ${canEnter ? '✓ ENTRY ALLOWED' : '✗ ENTRY BLOCKED'}
+                                ${trend.entryStatus}
                             </div>
                         </div>
                         ${!canEnter ? `
                             <div style="margin-top: 0.5rem; font-size: 0.875rem; color: var(--text-secondary);">
                                 Need ${(7 - totalScore).toFixed(1)} more points to meet entry criteria
                             </div>
-                        ` : ''}
+                        ` : `
+                            <div style="margin-top: 0.5rem; font-size: 0.875rem; color: var(--text-secondary);">
+                                Trend Analysis: ${trend.trendAnalysis.direction} (${trend.trendAnalysis.trendConfirmationScore}/3 timeframes aligned)
+                            </div>
+                        `}
                     </div>
                     <div style="margin-top: 1rem; font-size: 0.75rem; color: var(--text-tertiary);">
                         Last updated: ${new Date(trend.lastUpdated).toLocaleString()}
@@ -1967,18 +1959,9 @@
                     <div class="card-header">
                         <h2 class="card-title">Meat Market</h2>
                         <div style="display: flex; align-items: center; gap: 1rem;">
-                        <div style="display: flex; align-items: center; gap: 1rem;">
                             <div class="last-update">
                                 Last Update: ${new Date().toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' })}
                             </div>
-                            <button class="btn btn-secondary refresh-button" onclick="refreshMarketData()">
-                                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                                    <path d="M23 4v6h-6"></path>
-                                    <path d="M20.49 15a9 9 0 1 1-2.12-9.36L23 10"></path>
-                                </svg>
-                                Refresh
-                            </button>
-                        </div>
                             <button class="btn btn-secondary refresh-button" onclick="refreshMarketData()">
                                 <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                                     <path d="M23 4v6h-6"></path>
@@ -2035,13 +2018,13 @@
                                 <th class="sortable-header" data-sort="setupQuality">Quality ${sortIcon('setupQuality')}</th>
                                 <th>Market Conditions</th>
                                 <th class="sortable-header" data-sort="dsize">D-Size ${sortIcon('dsize')}</th>
-                                <th>Entry Status</th>
+                                <th>Entry Signal</th>
                             </tr>
                         </thead>
                         <tbody>
                             ${sortedData.map(d => {
                                 const isExpanded = appState.expandedTrendPair === d.pair;
-                                const canEnter = parseFloat(d.dsize) >= 7;
+                                const entryStatusClass = getEntryStatusClass(d.entryStatus);
                                 
                                 return `
                                     <tr class="is-expandable ${isExpanded ? 'active' : ''}" data-pair='${JSON.stringify(d).replace(/'/g, "&#39;")}'>
@@ -2077,8 +2060,8 @@
                                         </td>
                                         <td><span class="recommendation-score score-${Number(d.dsize) >= 8 ? 'high' : Number(d.dsize) >= 6 ? 'medium' : 'low'}">${d.dsize}</span></td>
                                         <td>
-                                            <div class="entry-status ${canEnter ? 'entry-allow' : 'entry-block'}">
-                                                ${canEnter ? '✓ Allow' : '✗ Block'}
+                                            <div class="entry-status ${entryStatusClass}">
+                                                ${getEntryStatusIcon(d.entryStatus)} ${d.entryStatus}
                                             </div>
                                         </td>
                                     </tr>
@@ -2143,12 +2126,14 @@
             // Get current score threshold from slider
             const scoreThreshold = parseFloat(document.getElementById('score-threshold')?.value || '7.0');
             
-            // Available pairs from market data
+            // All available pairs (expanded list)
             const availablePairs = [
                 'AUD/CAD', 'AUD/CHF', 'AUD/JPY', 'AUD/NZD', 'AUD/USD',
-                'EUR/USD', 'GBP/USD', 'USD/JPY', 'USD/CHF', 'USD/CAD',
-                'NZD/USD', 'EUR/GBP', 'EUR/JPY', 'GBP/JPY', 'XAU/USD',
-                'GBP/CHF'
+                'CAD/JPY', 'CHF/JPY', 'EUR/CAD', 'EUR/CHF', 'EUR/GBP', 
+                'EUR/JPY', 'EUR/NZD', 'EUR/TRY', 'EUR/USD', 'GBP/AUD',
+                'GBP/CAD', 'GBP/CHF', 'GBP/JPY', 'GBP/USD', 'NZD/CAD',
+                'NZD/CHF', 'NZD/JPY', 'NZD/USD', 'USD/CAD', 'USD/CHF',
+                'USD/JPY', 'USD/TRY', 'USD/ZAR', 'XAU/USD'
             ];
             
             // Filter pairs based on D-Size score threshold
@@ -2161,8 +2146,12 @@
             // Build options HTML
             const options = allowedPairs.map(pair => {
                 const count = botCounts[pair] || 0;
+                const marketInfo = marketDataMap.get(pair);
+                const entrySignal = marketInfo?.entryStatus || 'Unknown';
                 const countText = count > 0 ? ` <span class="pair-option-count">(${count})</span>` : '';
-                return `<option value="${pair}">${pair}${countText}</option>`;
+                const signalText = entrySignal !== 'Block' ? ` - ${entrySignal}` : '';
+                
+                return `<option value="${pair}">${pair}${signalText}${countText}</option>`;
             }).join('');
             
             pairSelect.innerHTML = options;
@@ -2205,6 +2194,7 @@
                 trailingProfitEnabled: document.getElementById('trailing-profit-enabled').checked,
                 trailingProfitPips: parseInt(document.getElementById('trailing-profit-pips').value),
                 reentrySR: document.getElementById('reentry-sr').checked,
+                followTrend: document.getElementById('follow-trend').checked,
                 avoidNews: document.getElementById('avoid-news').checked,
                 scoreThreshold: parseFloat(document.getElementById('score-threshold').value)
             };
@@ -2227,8 +2217,9 @@
                 return;
             }
             
-            // Show success message with S/R info
-            alert(`Bot launched for ${formData.pair}!\n\nD-Size: ${currentDSize}/10\nThreshold: ${formData.scoreThreshold}\n\n${formData.reentrySR ? '⚠️ Re-entry after S/R: Bot will wait for support/resistance flip before making additional entries.' : 'ℹ️ Standard DCA: Bot will make re-entries based on price levels only.'}`);
+            // Show success message with direction info
+            const entrySignal = pairData?.entryStatus || 'Unknown';
+            alert(`Bot launched for ${formData.pair}!\n\nD-Size: ${currentDSize}/10\nEntry Signal: ${entrySignal}\nThreshold: ${formData.scoreThreshold}\n\n${formData.followTrend ? '🎯 Trend Following: Bot will align with D-Size directional signals' : '📊 Manual Direction: Bot will use your configured settings'}\n\n${formData.reentrySR ? '⚠️ Re-entry after S/R: Bot will wait for support/resistance flip before making additional entries.' : 'ℹ️ Standard DCA: Bot will make re-entries based on price levels only.'}`);
             
             closeBotLauncher();
             
@@ -2249,7 +2240,7 @@
                     id: `trade_${Date.now()}`,
                     botId: `bot_${Date.now()}`,
                     pair: formData.pair,
-                    direction: 'buy',
+                    direction: entrySignal.includes('Buy') ? 'buy' : 'sell',
                     entryPrice: pairData?.currentPrice || 1.0000,
                     lotSize: formData.orderSize,
                     sl: formData.slLimit,
@@ -2259,10 +2250,11 @@
                     reentryLevel: 0,
                     entryTime: new Date().toISOString(),
                     score: currentDSize,
-                    reason: `Initial entry - D-Size: ${currentDSize}/10`
+                    reason: `Initial entry - D-Size: ${currentDSize}/10, Signal: ${entrySignal}`
                 }],
                 lastUpdate: new Date().toISOString(),
-                reentrySR: formData.reentrySR
+                reentrySR: formData.reentrySR,
+                followTrend: formData.followTrend
             };
             
             appState.activeBots.push(newBot);

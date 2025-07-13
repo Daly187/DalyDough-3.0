@@ -1,3 +1,4 @@
+// supabase/functions/get-market-data-with-scoring/index.ts
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts"
 
 const corsHeaders = {
@@ -79,6 +80,39 @@ class FMPApiService {
   }
 }
 
+// Enhanced trend analysis function
+function analyzeTrend(trendH4: string, trendD1: string, trendW1: string): { 
+  direction: 'bullish' | 'bearish' | 'neutral'; 
+  strength: number;
+  alignment: number; 
+} {
+  const trends = [trendH4, trendD1, trendW1];
+  const upCount = trends.filter(t => t === 'Up').length;
+  const downCount = trends.filter(t => t === 'Down').length;
+  const neutralCount = trends.filter(t => t === 'Neutral').length;
+  
+  // Calculate alignment (how many timeframes agree)
+  const alignment = Math.max(upCount, downCount);
+  
+  // Determine overall direction
+  let direction: 'bullish' | 'bearish' | 'neutral';
+  if (upCount > downCount) {
+    direction = 'bullish';
+  } else if (downCount > upCount) {
+    direction = 'bearish';
+  } else {
+    direction = 'neutral';
+  }
+  
+  // Calculate strength based on alignment and timeframe hierarchy
+  let strength = 0;
+  if (trendW1 !== 'Neutral') strength += 3;
+  if (trendD1 !== 'Neutral') strength += 2;
+  if (trendH4 !== 'Neutral') strength += 1;
+  
+  return { direction, strength, alignment };
+}
+
 // D-Size Scoring Functions
 function generateScoringBreakdown(pair: string): ScoringComponents {
   // In production, this would analyze real market data
@@ -135,9 +169,14 @@ function calculateDSize(breakdown: ScoringComponents): number {
 }
 
 async function generateMarketDataWithScoring() {
+  // Expanded pairs list with all requested pairs
   const pairs = [
-    'EUR/USD', 'GBP/USD', 'USD/JPY', 'USD/CHF', 'AUD/USD', 'USD/CAD',
-    'NZD/USD', 'EUR/GBP', 'EUR/JPY', 'GBP/JPY', 'XAU/USD', 'GBP/CHF'
+    'AUD/CAD', 'AUD/CHF', 'AUD/JPY', 'AUD/NZD', 'AUD/USD',
+    'CAD/JPY', 'CHF/JPY', 'EUR/CAD', 'EUR/CHF', 'EUR/GBP', 
+    'EUR/JPY', 'EUR/NZD', 'EUR/TRY', 'EUR/USD', 'GBP/AUD',
+    'GBP/CAD', 'GBP/CHF', 'GBP/JPY', 'GBP/USD', 'NZD/CAD',
+    'NZD/CHF', 'NZD/JPY', 'NZD/USD', 'USD/CAD', 'USD/CHF',
+    'USD/JPY', 'USD/TRY', 'USD/ZAR', 'XAU/USD'
   ];
   
   const trends: ('Up' | 'Down' | 'Neutral')[] = ['Up', 'Down', 'Neutral'];
@@ -165,16 +204,55 @@ async function generateMarketDataWithScoring() {
     const dsize = calculateDSize(breakdown);
     const realPrice = priceMap.get(pair);
     
+    // Generate trend data
+    const trendH4 = trends[Math.floor(Math.random() * trends.length)];
+    const trendD1 = trends[Math.floor(Math.random() * trends.length)];
+    const trendW1 = trends[Math.floor(Math.random() * trends.length)];
+    
+    // Analyze trend for directional signal
+    const trendAnalysis = analyzeTrend(trendH4, trendD1, trendW1);
+    
     // Use real price data if available, otherwise generate mock data
     const currentPrice = realPrice?.price || (Math.random() * 2 + 1);
     const dailyChange = realPrice?.dailyChange || ((Math.random() - 0.5) * 0.02);
     const dailyChangePercent = realPrice?.dailyChangePercent || ((dailyChange / currentPrice) * 100);
     
+    // Determine entry status with direction
+    const canEnter = dsize >= 7;
+    let entryStatus: string;
+    
+    if (!canEnter) {
+      entryStatus = 'Block';
+    } else {
+      // If can enter, show direction based on trend analysis
+      switch (trendAnalysis.direction) {
+        case 'bullish':
+          entryStatus = 'Allow Buy';
+          break;
+        case 'bearish':
+          entryStatus = 'Allow Sell';
+          break;
+        case 'neutral':
+          // For neutral trends, look at shorter timeframe bias or recent price action
+          if (dailyChange > 0) {
+            entryStatus = 'Allow Buy';
+          } else if (dailyChange < 0) {
+            entryStatus = 'Allow Sell';
+          } else {
+            entryStatus = 'Allow Trade'; // Fallback for truly neutral
+          }
+          break;
+        default:
+          entryStatus = 'Block';
+      }
+    }
+    
     return {
       pair,
-      trendH4: trends[Math.floor(Math.random() * trends.length)],
-      trendD1: trends[Math.floor(Math.random() * trends.length)],
-      trendW1: trends[Math.floor(Math.random() * trends.length)],
+      trendH4,
+      trendD1,
+      trendW1,
+      trendAnalysis,
       setupQuality: dsize >= 8 ? 'A' : dsize >= 6 ? 'B' : 'C',
       conditions: {
         cot: breakdown.cotBias.score > 0,
@@ -185,13 +263,14 @@ async function generateMarketDataWithScoring() {
       currentPrice,
       dailyChange,
       dailyChangePercent,
+      entryStatus,
       breakdown,
       lastUpdated: new Date().toISOString()
     };
   }).sort((a, b) => parseFloat(b.dsize) - parseFloat(a.dsize));
 }
 
-console.log("🚀 Enhanced market data function starting up...")
+console.log("🚀 Enhanced market data function with expanded pairs starting up...")
 
 serve(async (req) => {
   console.log(`📥 Received ${req.method} request to get-market-data-with-scoring`)
@@ -201,12 +280,13 @@ serve(async (req) => {
   }
 
   try {
-    console.log('🎯 Generating market data with D-Size scoring and real prices...');
+    console.log('🎯 Generating market data with D-Size scoring for all 29 pairs...');
     
     const marketData = await generateMarketDataWithScoring();
     
     console.log(`✅ Generated ${marketData.length} market trends with enhanced scoring`);
     console.log(`📊 D-Size scores range: ${Math.min(...marketData.map(d => parseFloat(d.dsize)))} - ${Math.max(...marketData.map(d => parseFloat(d.dsize)))}`);
+    console.log(`🎯 Entry signals: ${marketData.filter(d => d.entryStatus.includes('Allow')).length} allowed, ${marketData.filter(d => d.entryStatus === 'Block').length} blocked`);
     
     return new Response(
       JSON.stringify(marketData),
@@ -231,119 +311,6 @@ serve(async (req) => {
         headers: { ...corsHeaders, 'Content-Type': 'application/json' },
         status: 500
       }
-    );
-  }
-})
-EOF
-
-# Create bot control functions
-mkdir -p supabase/functions/update-bot-limits
-cat > supabase/functions/update-bot-limits/index.ts << 'EOF'
-import { serve } from "https://deno.land/std@0.168.0/http/server.ts"
-
-const corsHeaders = {
-  'Access-Control-Allow-Origin': '*',
-  'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
-  'Access-Control-Allow-Methods': 'GET, POST, PUT, DELETE, OPTIONS'
-}
-
-serve(async (req) => {
-  if (req.method === 'OPTIONS') {
-    return new Response('ok', { headers: corsHeaders })
-  }
-
-  try {
-    const { botId, type, value } = await req.json();
-    
-    console.log(`🤖 Updating bot ${botId} ${type.toUpperCase()} to ${value}`);
-    
-    // TODO: Send update to MT5 via your trading API
-    // This would typically update the bot configuration in your database
-    // and send a signal to MT5 to update the global SL/TP
-    
-    return new Response(
-      JSON.stringify({ success: true, botId, type, value }),
-      { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
-    );
-    
-  } catch (error) {
-    return new Response(
-      JSON.stringify({ error: error.message }),
-      { headers: { ...corsHeaders, 'Content-Type': 'application/json' }, status: 500 }
-    );
-  }
-})
-EOF
-
-mkdir -p supabase/functions/update-bot-config
-cat > supabase/functions/update-bot-config/index.ts << 'EOF'
-import { serve } from "https://deno.land/std@0.168.0/http/server.ts"
-
-const corsHeaders = {
-  'Access-Control-Allow-Origin': '*',
-  'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
-  'Access-Control-Allow-Methods': 'GET, POST, PUT, DELETE, OPTIONS'
-}
-
-serve(async (req) => {
-  if (req.method === 'OPTIONS') {
-    return new Response('ok', { headers: corsHeaders })
-  }
-
-  try {
-    const body = await req.json();
-    const { botId } = body;
-    
-    console.log(`🤖 Updating bot ${botId} configuration:`, body);
-    
-    // TODO: Update bot configuration in your database
-    // and send signal to MT5 if needed
-    
-    return new Response(
-      JSON.stringify({ success: true, botId, updated: body }),
-      { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
-    );
-    
-  } catch (error) {
-    return new Response(
-      JSON.stringify({ error: error.message }),
-      { headers: { ...corsHeaders, 'Content-Type': 'application/json' }, status: 500 }
-    );
-  }
-})
-EOF
-
-mkdir -p supabase/functions/close-bot-positions
-cat > supabase/functions/close-bot-positions/index.ts << 'EOF'
-import { serve } from "https://deno.land/std@0.168.0/http/server.ts"
-
-const corsHeaders = {
-  'Access-Control-Allow-Origin': '*',
-  'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
-  'Access-Control-Allow-Methods': 'GET, POST, PUT, DELETE, OPTIONS'
-}
-
-serve(async (req) => {
-  if (req.method === 'OPTIONS') {
-    return new Response('ok', { headers: corsHeaders })
-  }
-
-  try {
-    const { botId } = await req.json();
-    
-    console.log(`🚨 Closing all positions for bot ${botId}`);
-    
-    // TODO: Send close signal to MT5 for all positions of this bot
-    
-    return new Response(
-      JSON.stringify({ success: true, botId, action: 'close_all' }),
-      { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
-    );
-    
-  } catch (error) {
-    return new Response(
-      JSON.stringify({ error: error.message }),
-      { headers: { ...corsHeaders, 'Content-Type': 'application/json' }, status: 500 }
     );
   }
 })
