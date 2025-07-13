@@ -1,4 +1,4 @@
-// Navigation Functions
+// Enhanced Navigation Functions - Replace assets/js/core/navigation.js
 function toggleSidebar() {
     appState.sidebarExpanded = !appState.sidebarExpanded;
     const container = document.getElementById('app-container');
@@ -29,6 +29,12 @@ function switchPage(pageName) {
             mainPanel.innerHTML = createDashboardPage();
             attachEventListeners();
             break;
+            
+        case 'Accounts':
+            mainPanel.innerHTML = createAccountsPage();
+            attachAccountsEventListeners();
+            break;
+            
         case 'Meat Market':
             if (!appState.marketTrendsData) {
                 appState.marketTrendsData = generateMarketDataWithScoring();
@@ -36,27 +42,34 @@ function switchPage(pageName) {
             mainPanel.innerHTML = createMeatMarketPage();
             attachMarketEventListeners();
             break;
+            
         case 'Auto Bot':
             mainPanel.innerHTML = createAutoBotPage();
             attachAutoBotEventListeners();
             break;
+            
         case 'Active Bots':
             mainPanel.innerHTML = createActiveBotsPage();
             attachEventListeners();
             break;
+            
         case 'COT Report':
             mainPanel.innerHTML = createCOTReportPage();
             break;
+            
         case 'Forex News':
             mainPanel.innerHTML = createForexNewsPage();
             attachNewsEventListeners();
             break;
+            
         case 'Settings':
             mainPanel.innerHTML = createSettingsPage();
             break;
+            
         case 'Statistics':
             mainPanel.innerHTML = createStatisticsPage();
             break;
+            
         default:
             mainPanel.innerHTML = createPlaceholderPage(pageName);
     }
@@ -92,4 +105,4 @@ function attachEventListeners() {
 window.toggleSidebar = toggleSidebar;
 window.switchPage = switchPage;
 
-console.log('✅ Navigation loaded');
+console.log('✅ Enhanced Navigation loaded with Accounts page support');
