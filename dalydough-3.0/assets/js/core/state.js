@@ -10,6 +10,12 @@ let appState = {
     marketTrendsData: null,
     activeBots: [],
     sidebarExpanded: false,
+    riskSettings: {
+        stopLossType: 'dollar', // 'dollar' or 'percent'
+        stopLossValue: 500, // $500 or 5%
+        autoCloseEnabled: true
+    },
+    riskMonitoringInterval: null,
     autoBot: {
         enabled: false,
         scanning: false,
@@ -29,4 +35,4 @@ let appState = {
     forexNews: []
 };
 
-console.log('✅ State initialized');
+console.log('✅ Enhanced State initialized with risk management');

@@ -85,15 +85,17 @@ function createActiveBotsSection() {
     return `
         ${createGlobalRiskManager(totalPnL, isRiskBreach)}
         
-        <!-- Quick Bot Controls for Dashboard -->
+        <!-- Enhanced Quick Bot Controls for Dashboard -->
         <div style="margin-bottom: 1rem;">
             <h4 style="margin-bottom: 0.75rem;">🎛️ Quick Bot Controls</h4>
             <div class="table-container">
-                <table style="min-width: 600px;">
+                <table style="min-width: 800px;">
                     <thead>
                         <tr>
                             <th>Bot</th>
                             <th>P&L</th>
+                            <th>Manual SL/TP</th>
+                            <th>D-Size Scores</th>
                             <th>Trailing Profit</th>
                             <th>Close at Next TP</th>
                             <th>Actions</th>
@@ -111,6 +113,42 @@ function createActiveBotsSection() {
                                         ${formatCurrency(bot.totalPL)}
                                     </span>
                                 </td>
+                                <td>
+                                    <div style="display: flex; flex-direction: column; gap: 0.25rem;">
+                                        <div style="display: flex; align-items: center; gap: 0.5rem;">
+                                            <span style="font-size: 0.75rem; color: var(--text-secondary); width: 20px;">SL:</span>
+                                            <input type="number" 
+                                                   value="${bot.manualSL || ''}" 
+                                                   placeholder="Auto"
+                                                   style="width: 60px; padding: 0.25rem; background: var(--bg-surface-2); border: 1px solid var(--border-color); border-radius: 4px; color: var(--text-primary); font-size: 0.75rem;"
+                                                   onchange="updateManualSL('${bot.id}', this.value)">
+                                        </div>
+                                        <div style="display: flex; align-items: center; gap: 0.5rem;">
+                                            <span style="font-size: 0.75rem; color: var(--text-secondary); width: 20px;">TP:</span>
+                                            <input type="number" 
+                                                   value="${bot.manualTP || ''}" 
+                                                   placeholder="Auto"
+                                                   style="width: 60px; padding: 0.25rem; background: var(--bg-surface-2); border: 1px solid var(--border-color); border-radius: 4px; color: var(--text-primary); font-size: 0.75rem;"
+                                                   onchange="updateManualTP('${bot.id}', this.value)">
+                                        </div>
+                                    </div>
+                                </td>
+                                <td>
+                                    <div style="display: flex; gap: 1rem; align-items: center;">
+                                        <div style="text-align: center;">
+                                            <div class="recommendation-score ${bot.currentDScore >= 7 ? 'score-high' : bot.currentDScore >= 5 ? 'score-medium' : 'score-low'}" style="margin-bottom: 0.25rem; font-size: 0.8rem; padding: 0.25rem 0.5rem;">
+                                                ${bot.currentDScore.toFixed(1)}
+                                            </div>
+                                            <div style="font-size: 0.7rem; color: var(--text-secondary);">Current</div>
+                                        </div>
+                                        <div style="text-align: center;">
+                                            <div class="recommendation-score ${bot.entryDScore >= 7 ? 'score-high' : bot.entryDScore >= 5 ? 'score-medium' : 'score-low'}" style="margin-bottom: 0.25rem; font-size: 0.8rem; padding: 0.25rem 0.5rem;">
+                                                ${bot.entryDScore.toFixed(1)}
+                                            </div>
+                                            <div style="font-size: 0.7rem; color: var(--text-secondary);">Entry</div>
+                                        </div>
+                                    </div>
+                                </td>
                                 <td style="text-align: center;">
                                     <label class="toggle-switch">
                                         <input type="checkbox" ${bot.trailingProfitEnabled ? 'checked' : ''} 
@@ -126,14 +164,22 @@ function createActiveBotsSection() {
                                     </label>
                                 </td>
                                 <td>
-                                    <button class="btn btn-secondary btn-sm" onclick="toggleBotExpansion('${bot.id}')">Details</button>
-                                    <button class="btn btn-danger btn-sm" onclick="closeBot('${bot.id}')">Close</button>
+                                    <div style="display: flex; gap: 0.5rem;">
+                                        <button class="btn btn-secondary btn-sm" onclick="switchPage('Active Bots'); setTimeout(() => toggleBotExpansion('${bot.id}'), 100)">Details</button>
+                                        <button class="btn btn-danger btn-sm" onclick="closeBot('${bot.id}')">Close</button>
+                                    </div>
                                 </td>
                             </tr>
                         `).join('')}
                     </tbody>
                 </table>
             </div>
+        </div>
+        
+        <div style="text-align: center; margin-top: 1rem;">
+            <button class="btn btn-secondary" onclick="switchPage('Active Bots')">
+                View Full Active Bots Management →
+            </button>
         </div>
     `;
 }

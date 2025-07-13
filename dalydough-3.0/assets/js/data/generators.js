@@ -125,7 +125,7 @@ function generateMarketDataWithScoring() {
     }).sort((a, b) => parseFloat(b.dsize) - parseFloat(a.dsize));
 }
 
-// Generate mock active bots
+// Generate enhanced mock active bots with new fields
 function generateActiveBots() {
     const pairs = ['EUR/USD', 'GBP/USD', 'USD/JPY', 'AUD/USD', 'XAU/USD'];
     
@@ -134,34 +134,53 @@ function generateActiveBots() {
         const entryDScore = Math.random() * 3 + 7;
         const currentDScore = entryDScore + (Math.random() - 0.5) * 2;
         
+        // Generate multiple active trades per bot
+        const numTrades = Math.floor(Math.random() * 4) + 1; // 1-4 trades
+        const activeTrades = [];
+        
+        for (let j = 0; j < numTrades; j++) {
+            const direction = j === 0 ? (Math.random() > 0.5 ? 'buy' : 'sell') : 
+                             (activeTrades[0].direction === 'buy' ? 'buy' : 'sell'); // Keep same direction
+            const entryPrice = 1.25000 + (Math.random() - 0.5) * 0.1;
+            const lotSize = (0.01 * Math.pow(1.5, j)).toFixed(2); // Increasing lot sizes
+            const tradePL = (Math.random() - 0.5) * 200;
+            
+            activeTrades.push({
+                id: `${pair.replace('/', '')}_T${j + 1}_${Date.now()}`,
+                botId: `bot_${i}`,
+                pair,
+                direction,
+                entryPrice,
+                lotSize: parseFloat(lotSize),
+                sl: 500,
+                tp: 1000,
+                currentPL: tradePL,
+                isReentry: j > 0,
+                reentryLevel: j,
+                entryTime: new Date(Date.now() - (j * 3600000)).toISOString(), // Stagger entry times
+                score: entryDScore,
+                reason: j === 0 ? 'Initial entry based on D-size criteria' : `Re-entry level ${j}`
+            });
+        }
+        
+        // Calculate total P&L from all trades
+        const calculatedPL = activeTrades.reduce((sum, trade) => sum + trade.currentPL, 0);
+        
         return {
             id: `bot_${i}`,
             pair,
             type: BOT_TYPES[Math.floor(Math.random() * BOT_TYPES.length)],
-            totalPL,
+            totalPL: calculatedPL,
             status: 'active',
             entryDScore,
             currentDScore: Math.max(0, Math.min(10, currentDScore)),
             globalSL: Math.floor(Math.random() * 500) + 100,
             globalTP: Math.floor(Math.random() * 1000) + 200,
+            manualSL: Math.random() > 0.7 ? Math.floor(Math.random() * 100) + 50 : null, // 30% chance of manual SL
+            manualTP: Math.random() > 0.7 ? Math.floor(Math.random() * 200) + 100 : null, // 30% chance of manual TP
             trailingProfitEnabled: Math.random() > 0.5,
             closeAtNextTP: Math.random() > 0.7,
-            activeTrades: [{
-                id: `${i}_trade_1`,
-                botId: `bot_${i}`,
-                pair,
-                direction: 'buy',
-                entryPrice: 1.25000,
-                lotSize: 0.01,
-                sl: 500,
-                tp: 1000,
-                currentPL: totalPL,
-                isReentry: false,
-                reentryLevel: 0,
-                entryTime: new Date().toISOString(),
-                score: entryDScore,
-                reason: 'Initial entry based on D-size criteria'
-            }],
+            activeTrades,
             lastUpdate: new Date().toISOString()
         };
     });

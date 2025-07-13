@@ -18,6 +18,30 @@ function updateKPIWidgets() {
     }
 }
 
+// Launch manual bot function
+function launchManualBot() {
+    console.log('🚀 Opening manual bot launcher...');
+    
+    // Try to open in new window first
+    const launcherWindow = window.open(
+        './bot-launcher.html', 
+        'botLauncher', 
+        'width=1400,height=900,scrollbars=yes,resizable=yes,menubar=no,toolbar=no,location=no,status=no'
+    );
+    
+    if (launcherWindow) {
+        launcherWindow.focus();
+        console.log('✅ Manual Bot Launcher opened in new window');
+        if (typeof showNotification === 'function') {
+            showNotification('Manual Bot Launcher opened in new window', 'success');
+        }
+    } else {
+        // Fallback if popup blocked - navigate in same window
+        console.log('Popup blocked, navigating in same window...');
+        window.location.href = './bot-launcher.html';
+    }
+}
+
 // Initialize Application
 function initApp() {
     console.log('🚀 Initializing DalyDough 3.0...');
@@ -37,18 +61,43 @@ function initApp() {
     appState.cotData = generateCOTData();
     appState.forexNews = generateForexNews();
     
-    // Set up launch new bot button
+    // Set up launch new bot button - CONFIGURED FOR MANUAL LAUNCHER
     const launchBtn = document.getElementById('launch-new-bot-btn');
     if (launchBtn) {
-        launchBtn.addEventListener('click', () => {
-            switchPage('Auto Bot');
+        launchBtn.addEventListener('click', (e) => {
+            e.preventDefault();
+            launchManualBot();
         });
+        console.log('✅ Launch button configured for manual bot launcher');
     }
+    
+    // Set up any other launch bot buttons that might appear dynamically
+    document.addEventListener('click', (e) => {
+        // Check if the clicked element or its text contains launch bot references
+        if (e.target.textContent && (
+            e.target.textContent.includes('Launch New Bot') || 
+            e.target.textContent.includes('Launch Your First Bot') ||
+            e.target.textContent.includes('Launch Bot')
+        )) {
+            // Only prevent default if it's not the main navigation
+            if (e.target.id === 'launch-new-bot-btn' || 
+                e.target.classList.contains('btn-primary')) {
+                e.preventDefault();
+                launchManualBot();
+            }
+        }
+    });
     
     // Set up close all positions button
     const closeAllBtn = document.querySelector('.btn-danger');
     if (closeAllBtn && closeAllBtn.textContent.includes('Close All Positions')) {
-        closeAllBtn.addEventListener('click', closeAllBots);
+        closeAllBtn.addEventListener('click', () => {
+            if (typeof emergencyStopAll === 'function') {
+                emergencyStopAll();
+            } else {
+                closeAllBots();
+            }
+        });
     }
     
     // Load initial page
@@ -58,10 +107,12 @@ function initApp() {
     // Set up auto-refresh intervals
     setInterval(updateKPIWidgets, 30000); // Refresh KPIs every 30 seconds
     
-    // Auto Bot countdown timer
+    // Auto Bot countdown timer (if auto bot functionality exists)
     setInterval(() => {
-        if (appState.autoBot.enabled && appState.autoBot.nextScan) {
-            updateAutoBotDisplay();
+        if (appState.autoBot && appState.autoBot.enabled && appState.autoBot.nextScan) {
+            if (typeof updateAutoBotDisplay === 'function') {
+                updateAutoBotDisplay();
+            }
         }
     }, 1000);
     
@@ -71,9 +122,11 @@ function initApp() {
     console.log('   ✅ 29 Currency Pairs + XAU/USD');
     console.log('   ✅ Real D-Size Algorithm');
     console.log('   ✅ Interactive Market Analysis');
+    console.log('   ✅ Manual Bot Launcher');
     console.log('   ✅ Auto Bot Scanner');
     console.log('   ✅ COT Report Analysis');
     console.log('   ✅ Forex News Calendar');
+    console.log('   ✅ Enhanced Risk Management');
     console.log('   ✅ Responsive Design');
 }
 
@@ -93,5 +146,8 @@ document.addEventListener('click', (e) => {
         console.log('⚠️ Danger button clicked:', e.target.textContent);
     }
 });
+
+// Make launchManualBot globally available
+window.launchManualBot = launchManualBot;
 
 console.log('🎯 DalyDough 3.0 JavaScript loaded successfully!');
