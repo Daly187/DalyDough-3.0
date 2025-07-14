@@ -223,11 +223,20 @@ window.emergencyStopAll = emergencyStopAll;
 window.updateKPIWidgets = updateKPIWidgets;
 window.refreshMarketData = refreshMarketData;
 
-// Start the application when DOM is ready
+// Start the application when DOM is ready and supabaseApi is available
+function startApp() {
+    if (window.supabaseApi) {
+        initApp();
+    } else {
+        console.warn('Supabase API not ready, waiting...');
+        setTimeout(startApp, 100); // Check again in 100ms
+    }
+}
+
 if (document.readyState === 'loading') {
-    document.addEventListener('DOMContentLoaded', initApp);
+    document.addEventListener('DOMContentLoaded', startApp);
 } else {
-    initApp();
+    startApp();
 }
 
 console.log('🎯 Enhanced DalyDough 3.0 JavaScript loaded!');
