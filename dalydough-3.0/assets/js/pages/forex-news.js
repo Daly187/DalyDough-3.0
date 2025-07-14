@@ -2,9 +2,12 @@
 
 function createForexNewsPage() {
     if (!appState.forexNews.length) {
-        appState.forexNews = generateForexNews();
+        appState.forexNews = [];
     }
-
+ // Add empty state in news table
+    if (appState.forexNews.length === 0) {
+        // Show "No news data available" message
+    }
     return `
         <div class="card">
             <div class="card-header">

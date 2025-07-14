@@ -1,74 +1,30 @@
-// Enhanced Market Components - Replace assets/js/shared/market-components.js
+// Clean Market Components - assets/js/shared/market-components.js
 
-// Generate realistic spot price data for market analysis
-function generateMarketSpotPrice(pair) {
-    const basePrices = {
-        'EUR/USD': 1.0850, 'GBP/USD': 1.2720, 'USD/JPY': 149.85, 'USD/CHF': 0.8745,
-        'AUD/USD': 0.6685, 'USD/CAD': 1.3580, 'NZD/USD': 0.6125, 'XAU/USD': 2035.50,
-        'EUR/GBP': 0.8520, 'EUR/JPY': 162.45, 'GBP/JPY': 190.72, 'AUD/CAD': 0.9080,
-        'NZD/CAD': 0.8315, 'EUR/CHF': 0.9485, 'GBP/CHF': 1.1130, 'AUD/CHF': 0.5845,
-        'CAD/JPY': 110.35, 'CHF/JPY': 171.25, 'NZD/JPY': 91.78, 'EUR/AUD': 1.6225,
-        'GBP/AUD': 1.9035, 'USD/ZAR': 18.45, 'USD/TRY': 27.85, 'EUR/TRY': 30.21,
-        'AUD/JPY': 100.15, 'AUD/NZD': 1.0915, 'EUR/CAD': 1.4735, 'EUR/NZD': 1.7705,
-        'GBP/CAD': 1.7275, 'NZD/CHF': 0.5355
-    };
-    
-    const basePrice = basePrices[pair] || (Math.random() * 2 + 0.5);
-    const variation = (Math.random() - 0.5) * 0.02; // ±1% variation
-    const current = basePrice + (basePrice * variation);
-    const change = (Math.random() - 0.5) * 0.01;
-    const changePercent = (change / current) * 100;
-    
-    return {
-        current,
-        change,
-        changePercent,
-        bid: current - 0.00015,
-        ask: current + 0.00015,
-        high: current + Math.random() * 0.01,
-        low: current - Math.random() * 0.01
-    };
-}
-
-// Generate key levels for market analysis
-function generateMarketKeyLevels(pair) {
-    const spotPrice = generateMarketSpotPrice(pair);
-    const levels = [];
-    
-    // Generate both support and resistance levels
-    for (let i = 1; i <= 5; i++) {
-        // Support levels (below current price)
-        const supportLevel = spotPrice.current - (i * 0.001 * Math.random() * 3);
-        levels.push({
-            level: i,
-            price: supportLevel,
-            type: 'Support',
-            strength: ['Strong', 'Medium', 'Weak'][Math.floor(Math.random() * 3)],
-            distance: Math.abs(spotPrice.current - supportLevel),
-            timeframe: ['H4', 'D1', 'W1'][Math.floor(Math.random() * 3)]
-        });
-        
-        // Resistance levels (above current price)
-        const resistanceLevel = spotPrice.current + (i * 0.001 * Math.random() * 3);
-        levels.push({
-            level: i + 5,
-            price: resistanceLevel,
-            type: 'Resistance',
-            strength: ['Strong', 'Medium', 'Weak'][Math.floor(Math.random() * 3)],
-            distance: Math.abs(resistanceLevel - spotPrice.current),
-            timeframe: ['H4', 'D1', 'W1'][Math.floor(Math.random() * 3)]
-        });
-    }
-    
-    return levels.sort((a, b) => a.distance - b.distance);
-}
-
-// Create Market Trends Table
+// Create Market Trends Table - shows real data or empty state
 function createMarketTrendsTable(data) {
     const sortIcon = (column) => {
         if (appState.marketDataSort.column !== column) return '';
         return appState.marketDataSort.direction === 'asc' ? '▲' : '▼';
     };
+
+    // If no data, show empty state
+    if (!data || data.length === 0) {
+        return `
+            <div style="text-align: center; padding: 3rem; color: var(--text-secondary);">
+                <svg width="64" height="64" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1" style="margin-bottom: 1rem; opacity: 0.5;">
+                    <circle cx="12" cy="12" r="10"></circle>
+                    <path d="M8 14s1.5 2 4 2 4-2 4-2"></path>
+                    <path d="M9 9h.01"></path>
+                    <path d="M15 9h.01"></path>
+                </svg>
+                <h3>No Market Data Available</h3>
+                <p style="margin: 0.5rem 0 1.5rem 0;">Waiting for live API data connection</p>
+                <button class="btn btn-primary" onclick="refreshMarketData()">
+                    Retry Connection
+                </button>
+            </div>
+        `;
+    }
 
     const sortedData = [...data].sort((a, b) => {
         const { column, direction } = appState.marketDataSort;
@@ -104,44 +60,46 @@ function createMarketTrendsTable(data) {
                 <tbody>
                     ${sortedData.map(d => {
                         const isExpanded = appState.expandedTrendPair === d.pair;
-                        const entryStatusClass = getEntryStatusClass(d.entryStatus);
+                        const entryStatusClass = getEntryStatusClass(d.entryStatus || 'Block');
                         
                         return `
                             <tr class="is-expandable ${isExpanded ? 'active' : ''}" data-pair='${JSON.stringify(d).replace(/'/g, "&#39;")}'>
                                 <td>${d.pair}</td>
                                 <td>
                                     <div class="price-cell">
-                                        <span class="current-price">${d.currentPrice.toFixed(5)}</span>
-                                        <div class="price-change ${d.dailyChange >= 0 ? 'positive' : 'negative'}">
-                                            ${d.dailyChange >= 0 ? '↗' : '↘'} ${Math.abs(d.dailyChange).toFixed(4)} 
-                                            (${d.dailyChangePercent >= 0 ? '+' : ''}${d.dailyChangePercent.toFixed(2)}%)
-                                        </div>
+                                        <span class="current-price">${d.currentPrice ? d.currentPrice.toFixed(5) : 'N/A'}</span>
+                                        ${d.dailyChange !== undefined ? `
+                                            <div class="price-change ${d.dailyChange >= 0 ? 'positive' : 'negative'}">
+                                                ${d.dailyChange >= 0 ? '↗' : '↘'} ${Math.abs(d.dailyChange).toFixed(4)} 
+                                                (${d.dailyChangePercent >= 0 ? '+' : ''}${d.dailyChangePercent.toFixed(2)}%)
+                                            </div>
+                                        ` : '<div class="price-change">No data</div>'}
                                     </div>
                                 </td>
                                 <td class="trend-cell">
                                     <div class="trend-indicator">
                                         <div class="trend-timeframe">W1</div>
-                                        ${getTrendIcon(d.trendW1)}
+                                        ${getTrendIcon(d.trendW1 || 'Neutral')}
                                     </div>
                                     <div class="trend-indicator">
                                         <div class="trend-timeframe">D1</div>
-                                        ${getTrendIcon(d.trendD1)}
+                                        ${getTrendIcon(d.trendD1 || 'Neutral')}
                                     </div>
                                     <div class="trend-indicator">
                                         <div class="trend-timeframe">H4</div>
-                                        ${getTrendIcon(d.trendH4)}
+                                        ${getTrendIcon(d.trendH4 || 'Neutral')}
                                     </div>
                                 </td>
-                                <td><span class="setup-quality-pill quality-${d.setupQuality}">${d.setupQuality}</span></td>
+                                <td><span class="setup-quality-pill quality-${d.setupQuality || 'C'}">${d.setupQuality || 'C'}</span></td>
                                 <td class="conditions-cell">
-                                    <span class="condition-icon ${d.conditions.cot ? 'active' : ''}" title="COT Bias">${icons.brain}</span>
-                                    <span class="condition-icon ${d.conditions.adx ? 'active' : ''}" title="ADX Strength">${icons.bolt}</span>
-                                    <span class="condition-icon ${d.conditions.spread ? 'active' : ''}" title="Spread Check">${icons.resizeHorizontal}</span>
+                                    <span class="condition-icon ${d.conditions?.cot ? 'active' : ''}" title="COT Bias">${icons.brain}</span>
+                                    <span class="condition-icon ${d.conditions?.adx ? 'active' : ''}" title="ADX Strength">${icons.bolt}</span>
+                                    <span class="condition-icon ${d.conditions?.spread ? 'active' : ''}" title="Spread Check">${icons.resizeHorizontal}</span>
                                 </td>
-                                <td><span class="recommendation-score score-${Number(d.dsize) >= 8 ? 'high' : Number(d.dsize) >= 6 ? 'medium' : 'low'}">${d.dsize}</span></td>
+                                <td><span class="recommendation-score score-${Number(d.dsize) >= 8 ? 'high' : Number(d.dsize) >= 6 ? 'medium' : 'low'}">${d.dsize || '0.0'}</span></td>
                                 <td>
                                     <div class="entry-status ${entryStatusClass}">
-                                        ${getEntryStatusIcon(d.entryStatus)} ${d.entryStatus}
+                                        ${getEntryStatusIcon(d.entryStatus || 'Block')} ${d.entryStatus || 'Block'}
                                     </div>
                                 </td>
                             </tr>
@@ -154,16 +112,14 @@ function createMarketTrendsTable(data) {
     `;
 }
 
-// Enhanced Detailed Market Analysis Card with spot price and dual tables
+// Detailed Market Analysis Card - shows real data or placeholder
 function createDetailedMarketAnalysisCard(trend) {
-    const totalScore = parseFloat(trend.dsize);
+    const totalScore = parseFloat(trend.dsize) || 0;
     const canEnter = totalScore >= 7;
-    const spotPrice = generateMarketSpotPrice(trend.pair);
-    const keyLevels = generateMarketKeyLevels(trend.pair);
     
     return `
         <div class="detailed-scoring-card">
-            <!-- Pair Header with Spot Price -->
+            <!-- Pair Header -->
             <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.5rem; padding: 1rem; background: var(--bg-surface-2); border-radius: 8px; border-left: 4px solid var(--accent-blue);">
                 <div>
                     <h4 style="color: var(--text-primary); font-size: 1.5rem; font-weight: 700; margin-bottom: 0.25rem;">${trend.pair}</h4>
@@ -172,30 +128,36 @@ function createDetailedMarketAnalysisCard(trend) {
                 <div style="text-align: right;">
                     <div style="color: var(--text-secondary); font-size: 0.8rem; margin-bottom: 0.25rem;">Live Spot Price</div>
                     <div style="font-family: 'Monaco', 'Menlo', monospace; font-size: 1.4rem; font-weight: 700; color: var(--text-primary);">
-                        ${spotPrice.current.toFixed(5)}
+                        ${trend.currentPrice ? trend.currentPrice.toFixed(5) : 'N/A'}
                     </div>
-                    <div style="font-size: 0.85rem; color: ${spotPrice.change >= 0 ? 'var(--positive-green)' : 'var(--negative-red)'};;">
-                        ${spotPrice.change >= 0 ? '↗' : '↘'} ${Math.abs(spotPrice.change).toFixed(4)} (${spotPrice.changePercent >= 0 ? '+' : ''}${spotPrice.changePercent.toFixed(2)}%)
-                    </div>
-                    <div style="display: flex; gap: 1rem; margin-top: 0.5rem; font-size: 0.75rem; color: var(--text-tertiary);">
-                        <span>Bid: ${spotPrice.bid.toFixed(5)}</span>
-                        <span>Ask: ${spotPrice.ask.toFixed(5)}</span>
-                    </div>
+                    ${trend.dailyChange !== undefined ? `
+                        <div style="font-size: 0.85rem; color: ${trend.dailyChange >= 0 ? 'var(--positive-green)' : 'var(--negative-red)'};">
+                            ${trend.dailyChange >= 0 ? '↗' : '↘'} ${Math.abs(trend.dailyChange).toFixed(4)} (${trend.dailyChangePercent >= 0 ? '+' : ''}${trend.dailyChangePercent.toFixed(2)}%)
+                        </div>
+                    ` : '<div style="font-size: 0.85rem; color: var(--text-secondary);">No price data</div>'}
                 </div>
             </div>
 
-            <!-- Dual Tables Layout -->
-            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 2rem; margin-bottom: 1.5rem;">
+            <!-- D-Size Breakdown Table -->
+            <div style="margin-bottom: 1.5rem;">
+                <h4 style="margin-bottom: 0.75rem; color: var(--text-primary); display: flex; align-items: center; gap: 0.5rem;">
+                    🎯 D-Size Breakdown
+                    <span style="background: ${totalScore >= 8 ? 'var(--positive-green)' : totalScore >= 6 ? 'var(--warning-yellow)' : 'var(--negative-red)'}; color: white; padding: 0.25rem 0.5rem; border-radius: 12px; font-size: 0.7rem; font-weight: 600;">
+                        ${totalScore.toFixed(1)}/10
+                    </span>
+                </h4>
                 
-                <!-- Left Table: D-Size Breakdown -->
-                <div>
-                    <h4 style="margin-bottom: 0.75rem; color: var(--text-primary); display: flex; align-items: center; gap: 0.5rem;">
-                        🎯 D-Size Breakdown
-                        <span style="background: ${totalScore >= 8 ? 'var(--positive-green)' : totalScore >= 6 ? 'var(--warning-yellow)' : 'var(--negative-red)'}; color: white; padding: 0.25rem 0.5rem; border-radius: 12px; font-size: 0.7rem; font-weight: 600;">
-                            ${totalScore.toFixed(1)}/10
-                        </span>
-                    </h4>
-                    <div class="table-container" style="max-height: 350px; border: 1px solid var(--border-color); border-radius: 8px;">
+                ${!trend.breakdown || Object.keys(trend.breakdown).length === 0 ? `
+                    <div style="text-align: center; padding: 2rem; color: var(--text-secondary); background: var(--bg-surface); border: 1px solid var(--border-color); border-radius: 8px;">
+                        <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1" style="margin-bottom: 1rem; opacity: 0.5;">
+                            <circle cx="12" cy="12" r="10"></circle>
+                            <path d="M12 6v6l4 2"></path>
+                        </svg>
+                        <p>No breakdown data available</p>
+                        <p style="font-size: 0.85rem;">Waiting for API connection</p>
+                    </div>
+                ` : `
+                    <div class="table-container" style="border: 1px solid var(--border-color); border-radius: 8px;">
                         <table style="min-width: auto; background: var(--bg-surface);">
                             <thead>
                                 <tr style="background: var(--bg-surface-2);">
@@ -212,10 +174,10 @@ function createDetailedMarketAnalysisCard(trend) {
                                             ${key.replace(/([A-Z])/g, ' $1').replace(/^./, str => str.toUpperCase())}
                                         </td>
                                         <td style="padding: 0.75rem 0.5rem; color: var(--text-secondary); font-family: 'Monaco', 'Menlo', monospace; font-size: 0.875rem;">
-                                            ${component.value}
+                                            ${component.value || 'N/A'}
                                         </td>
                                         <td style="padding: 0.75rem 0.5rem; font-weight: 600; text-align: center; color: ${component.score > 0 ? 'var(--positive-green)' : 'var(--text-tertiary)'};">
-                                            +${component.score}
+                                            +${component.score || 0}
                                         </td>
                                         <td style="padding: 0.75rem 0.5rem; color: var(--text-secondary); text-align: center;">
                                             /${key === 'cotBias' || key === 'supportRetest' ? '2' : key === 'trendConfirmation' ? '3' : '1'}
@@ -231,69 +193,7 @@ function createDetailedMarketAnalysisCard(trend) {
                             </tbody>
                         </table>
                     </div>
-                </div>
-
-                <!-- Right Table: Key Market Levels -->
-                <div>
-                    <h4 style="margin-bottom: 0.75rem; color: var(--text-primary); display: flex; align-items: center; gap: 0.5rem;">
-                        📊 Key Market Levels
-                        <span style="background: var(--accent-blue); color: white; padding: 0.25rem 0.5rem; border-radius: 12px; font-size: 0.7rem; font-weight: 600;">
-                            Live
-                        </span>
-                    </h4>
-                    <div class="table-container" style="max-height: 350px; border: 1px solid var(--border-color); border-radius: 8px;">
-                        <table style="min-width: auto; background: var(--bg-surface);">
-                            <thead>
-                                <tr style="background: var(--bg-surface-2);">
-                                    <th style="padding: 0.75rem 0.5rem; font-size: 0.8rem;">Type</th>
-                                    <th style="padding: 0.75rem 0.5rem; font-size: 0.8rem;">Price</th>
-                                    <th style="padding: 0.75rem 0.5rem; font-size: 0.8rem;">Distance</th>
-                                    <th style="padding: 0.75rem 0.5rem; font-size: 0.8rem;">Strength</th>
-                                    <th style="padding: 0.75rem 0.5rem; font-size: 0.8rem;">TF</th>
-                                </tr>
-                            </thead>
-                            <tbody>
-                                ${keyLevels.slice(0, 8).map(level => `
-                                    <tr style="border-bottom: 1px solid var(--border-color);">
-                                        <td style="padding: 0.75rem 0.5rem;">
-                                            <span style="
-                                                padding: 0.25rem 0.5rem;
-                                                border-radius: 4px;
-                                                font-size: 0.7rem;
-                                                font-weight: 700;
-                                                background: ${level.type === 'Support' ? 'rgba(34, 197, 94, 0.2)' : 'rgba(239, 68, 68, 0.2)'};
-                                                color: ${level.type === 'Support' ? 'var(--positive-green)' : 'var(--negative-red)'};
-                                            ">
-                                                ${level.type.substring(0, 3).toUpperCase()}
-                                            </span>
-                                        </td>
-                                        <td style="padding: 0.75rem 0.5rem; font-family: monospace; font-weight: 600; color: var(--text-primary);">
-                                            ${level.price.toFixed(5)}
-                                        </td>
-                                        <td style="padding: 0.75rem 0.5rem; font-size: 0.85rem; color: var(--text-secondary);">
-                                            ${(level.distance * 10000).toFixed(1)} pips
-                                        </td>
-                                        <td style="padding: 0.75rem 0.5rem;">
-                                            <span style="
-                                                padding: 0.25rem 0.5rem;
-                                                border-radius: 4px;
-                                                font-size: 0.75rem;
-                                                font-weight: 600;
-                                                background: ${level.strength === 'Strong' ? 'rgba(34, 197, 94, 0.2)' : level.strength === 'Medium' ? 'rgba(245, 158, 11, 0.2)' : 'rgba(107, 114, 128, 0.2)'};
-                                                color: ${level.strength === 'Strong' ? 'var(--positive-green)' : level.strength === 'Medium' ? 'var(--warning-yellow)' : 'var(--text-tertiary)'};
-                                            ">
-                                                ${level.strength}
-                                            </span>
-                                        </td>
-                                        <td style="padding: 0.75rem 0.5rem; font-size: 0.8rem; color: var(--text-secondary); font-weight: 600;">
-                                            ${level.timeframe}
-                                        </td>
-                                    </tr>
-                                `).join('')}
-                            </tbody>
-                        </table>
-                    </div>
-                </div>
+                `}
             </div>
 
             <!-- Entry Decision Summary -->
@@ -303,7 +203,7 @@ function createDetailedMarketAnalysisCard(trend) {
                         <strong>Entry Decision:</strong> Score ≥ 7.0 required for new positions
                     </div>
                     <div style="font-size: 1.1rem; font-weight: 700; color: ${canEnter ? 'var(--positive-green)' : 'var(--negative-red)'};">
-                        ${trend.entryStatus}
+                        ${trend.entryStatus || 'Block'}
                     </div>
                 </div>
                 ${!canEnter ? `
@@ -313,24 +213,21 @@ function createDetailedMarketAnalysisCard(trend) {
                 ` : `
                     <div style="margin-top: 0.5rem; font-size: 0.875rem; color: var(--text-secondary);">
                         Trend Analysis: ${trend.trendAnalysis?.direction || 'neutral'} (${trend.trendAnalysis?.trendConfirmationScore || 0}/3 timeframes aligned)
-                        <br>Nearest ${keyLevels[0].type}: ${keyLevels[0].price.toFixed(5)} (${(keyLevels[0].distance * 10000).toFixed(1)} pips away)
                     </div>
                 `}
             </div>
 
             <!-- Technical Summary -->
             <div style="margin-top: 1rem; font-size: 0.75rem; color: var(--text-tertiary); text-align: center;">
-                Last updated: ${new Date(trend.lastUpdated).toLocaleString()} | 
-                Spread: ${((spotPrice.ask - spotPrice.bid) * 10000).toFixed(1)} pips | 
-                24h Range: ${spotPrice.low.toFixed(5)} - ${spotPrice.high.toFixed(5)}
+                Last updated: ${trend.lastUpdated ? new Date(trend.lastUpdated).toLocaleString() : 'Never'} | 
+                Source: ${trend.source || 'Unknown'}
             </div>
         </div>
     `;
 }
 
-// Market Event Listeners
+// Market Event Listeners (keep unchanged)
 function attachMarketEventListeners() {
-    // Table row expansion
     document.querySelectorAll('tr.is-expandable').forEach(row => {
         row.addEventListener('click', (e) => {
             if (e.target.tagName === 'INPUT' || e.target.tagName === 'BUTTON') return;
@@ -344,12 +241,10 @@ function attachMarketEventListeners() {
                 appState.expandedTrendPair = pair;
             }
             
-            // Refresh the current page to show/hide expansion
             refreshCurrentPageContent();
         });
     });
 
-    // Sortable headers
     document.querySelectorAll('.sortable-header').forEach(header => {
         header.addEventListener('click', (e) => {
             const column = e.target.dataset.sort;
@@ -360,7 +255,6 @@ function attachMarketEventListeners() {
                 appState.marketDataSort.direction = 'desc';
             }
             
-            // Refresh the current page to show new sort
             refreshCurrentPageContent();
         });
     });
@@ -371,39 +265,8 @@ function refreshCurrentPageContent() {
         document.getElementById('main-panel').innerHTML = createDashboardPage();
         attachEventListeners();
     } else if (appState.activePage === 'Meat Market') {
-        document.getElementById('main-panel').innerHTML = `
-            <div class="card">
-                <div class="card-header">
-                    <h2 class="card-title">Meat Market - Full Analysis</h2>
-                    <div style="display: flex; align-items: center; gap: 1rem;">
-                        <div class="last-update">
-                            Last Update: ${new Date().toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' })}
-                        </div>
-                        <button class="btn btn-secondary refresh-button" onclick="refreshMarketData()">
-                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                                <path d="M23 4v6h-6"></path>
-                                <path d="M20.49 15a9 9 0 1 1-2.12-9.36L23 10"></path>
-                            </svg>
-                            Refresh
-                        </button>
-                    </div>
-                </div>
-                
-                <div style="margin-bottom: 1.5rem; padding: 1rem; background: var(--bg-main); border-radius: 8px; border-left: 4px solid var(--accent-blue);">
-                    <strong>🎯 D-Size Scoring Guide:</strong><br>
-                    <span style="color: var(--text-secondary); font-size: 0.875rem;">
-                        • <span style="color: var(--positive-green);">8.0-10.0</span> = Grade A setups (highest probability)<br>
-                        • <span style="color: var(--accent-blue);">6.0-7.9</span> = Grade B setups (good probability)<br>
-                        • <span style="color: var(--text-tertiary);">0.0-5.9</span> = Grade C setups (avoid trading)<br>
-                        • <strong>Entry Threshold:</strong> 7.0+ required for new positions
-                    </span>
-                </div>
-                
-                ${createMarketTrendsTable(appState.marketTrendsData)}
-            </div>
-        `;
-        attachMarketEventListeners();
+        switchPage('Meat Market');
     }
 }
 
-console.log('✅ Enhanced Market components loaded with spot prices and dual table analysis');
+console.log('✅ Clean market components loaded (no mock data)');

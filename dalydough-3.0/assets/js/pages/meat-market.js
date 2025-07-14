@@ -1,6 +1,6 @@
 function createMeatMarketPage() {
     if (!appState.marketTrendsData) {
-        appState.marketTrendsData = generateMarketDataWithScoring();
+        appState.marketTrendsData = [];
     }
 
     return `

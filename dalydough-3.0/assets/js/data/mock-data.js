@@ -1,4 +1,6 @@
-// Mock Data Constants
+// Clean Mock Data Constants - assets/js/data/mock-data.js
+
+// Keep only essential constants for application logic
 const CURRENCY_PAIRS = [
     'AUD/CAD', 'AUD/CHF', 'AUD/JPY', 'AUD/NZD', 'AUD/USD',
     'CAD/JPY', 'CHF/JPY', 'EUR/CAD', 'EUR/CHF', 'EUR/GBP', 
@@ -12,17 +14,9 @@ const TREND_VALUES = ['Up', 'Down', 'Neutral'];
 
 const BOT_TYPES = ['Dynamic DCA', 'Static Grid', 'AI Trend'];
 
-const NEWS_EVENTS = [
-    { event: 'Non-Farm Payrolls', currency: 'USD', impact: 'High' },
-    { event: 'CPI Flash Estimate', currency: 'EUR', impact: 'High' },
-    { event: 'BOE Interest Rate Decision', currency: 'GBP', impact: 'High' },
-    { event: 'Unemployment Rate', currency: 'AUD', impact: 'Medium' },
-    { event: 'Trade Balance', currency: 'CAD', impact: 'Medium' },
-    { event: 'Manufacturing PMI', currency: 'JPY', impact: 'Low' },
-    { event: 'Retail Sales', currency: 'USD', impact: 'Medium' },
-    { event: 'GDP Growth Rate', currency: 'EUR', impact: 'High' }
-];
+// Keep these for structure but no mock events
+const NEWS_EVENTS = [];
 
 const COT_CURRENCIES = ['USD', 'EUR', 'GBP', 'JPY', 'AUD', 'CAD'];
 
-console.log('✅ Mock data constants loaded');
+console.log('✅ Clean constants loaded');

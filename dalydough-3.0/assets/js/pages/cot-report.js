@@ -1,8 +1,22 @@
 function createCOTReportPage() {
     if (!appState.cotData.length) {
-        appState.cotData = generateCOTData();
+        appState.cotData = [];
     }
-
+  // Add empty state handling
+    if (appState.cotData.length === 0) {
+        return `
+            <div class="card">
+                <div class="card-header">
+                    <h2 class="card-title">📊 COT Report</h2>
+                </div>
+                <div style="text-align: center; padding: 3rem;">
+                    <h3>No COT Data Available</h3>
+                    <p>Waiting for API data connection</p>
+                    <button class="btn btn-primary" onclick="refreshMarketData()">Retry Connection</button>
+                </div>
+            </div>
+        `;
+    }
     return `
         <div class="card">
             <div class="card-header">

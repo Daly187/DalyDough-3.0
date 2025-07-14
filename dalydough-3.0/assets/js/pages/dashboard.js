@@ -1,8 +1,8 @@
-// Enhanced Dashboard Page - Replace assets/js/pages/dashboard.js
+// Updated Dashboard Page - assets/js/pages/dashboard.js
 
 function createDashboardPage() {
     if (!appState.marketTrendsData) {
-        appState.marketTrendsData = generateMarketDataWithScoring();
+        appState.marketTrendsData = [];
     }
 
     const topTrends = appState.marketTrendsData.slice(0, 8);
@@ -50,15 +50,15 @@ function createDashboardPage() {
                 </div>
                 <div style="background: rgba(34, 197, 94, 0.1); padding: 1rem; border-radius: 8px; border-left: 4px solid var(--positive-green);">
                     <div style="font-weight: 600; margin-bottom: 0.5rem;">🎯 Trend Analysis</div>
-                    <div style="color: var(--text-secondary); font-size: 0.875rem;">CORRECTED Logic</div>
+                    <div style="color: var(--text-secondary); font-size: 0.875rem;">Logic Active</div>
                 </div>
-                <div style="background: rgba(34, 197, 94, 0.1); padding: 1rem; border-radius: 8px; border-left: 4px solid var(--positive-green);">
+                <div style="background: ${appState.marketTrendsData && appState.marketTrendsData.length > 0 ? 'rgba(34, 197, 94, 0.1)' : 'rgba(245, 158, 11, 0.1)'}; padding: 1rem; border-radius: 8px; border-left: 4px solid ${appState.marketTrendsData && appState.marketTrendsData.length > 0 ? 'var(--positive-green)' : 'var(--warning-yellow)'};">
                     <div style="font-weight: 600; margin-bottom: 0.5rem;">📊 Market Data</div>
-                    <div style="color: var(--text-secondary); font-size: 0.875rem;">${appState.marketTrendsData?.length || 0} Pairs Active</div>
+                    <div style="color: var(--text-secondary); font-size: 0.875rem;">${appState.marketTrendsData?.length || 0} Pairs ${appState.marketTrendsData?.length > 0 ? 'Active' : 'Waiting'}</div>
                 </div>
                 <div style="background: rgba(54, 124, 255, 0.1); padding: 1rem; border-radius: 8px; border-left: 4px solid var(--accent-blue);">
                     <div style="font-weight: 600; margin-bottom: 0.5rem;">🤖 Ready to Trade</div>
-                    <div style="color: var(--text-secondary); font-size: 0.875rem;">Launch New Bots</div>
+                    <div style="color: var(--text-secondary); font-size: 0.875rem;">System Online</div>
                 </div>
             </div>
         </div>
@@ -81,13 +81,13 @@ function createActiveBotsSection() {
         `;
     }
 
-    const totalPnL = appState.activeBots.reduce((sum, bot) => sum + bot.totalPL, 0);
-    const isRiskBreach = totalPnL <= -500; // Example threshold
+    const totalPnL = appState.activeBots.reduce((sum, bot) => sum + (bot.totalPL || 0), 0);
+    const isRiskBreach = totalPnL <= -500;
     
     return `
         ${createGlobalRiskManager(totalPnL, isRiskBreach)}
         
-        <!-- Enhanced Quick Bot Controls for Dashboard -->
+        <!-- Quick Bot Controls for Dashboard -->
         <div style="margin-bottom: 1rem;">
             <h4 style="margin-bottom: 0.75rem;">🎛️ Quick Bot Controls</h4>
             <div class="table-container">
@@ -112,7 +112,7 @@ function createActiveBotsSection() {
                                 </td>
                                 <td>
                                     <span class="trade-pnl ${bot.totalPL >= 0 ? 'positive' : 'negative'}">
-                                        ${formatCurrency(bot.totalPL)}
+                                        ${formatCurrency(bot.totalPL || 0)}
                                     </span>
                                 </td>
                                 <td>
@@ -140,14 +140,14 @@ function createActiveBotsSection() {
                                 <td>
                                     <div style="display: flex; gap: 1rem; align-items: center;">
                                         <div style="text-align: center;">
-                                            <div class="recommendation-score ${bot.currentDScore >= 7 ? 'score-high' : bot.currentDScore >= 5 ? 'score-medium' : 'score-low'}" style="margin-bottom: 0.25rem; font-size: 0.8rem; padding: 0.25rem 0.5rem;">
-                                                ${bot.currentDScore.toFixed(1)}
+                                            <div class="recommendation-score ${(bot.currentDScore || 0) >= 7 ? 'score-high' : (bot.currentDScore || 0) >= 5 ? 'score-medium' : 'score-low'}" style="margin-bottom: 0.25rem; font-size: 0.8rem; padding: 0.25rem 0.5rem;">
+                                                ${(bot.currentDScore || 0).toFixed(1)}
                                             </div>
                                             <div style="font-size: 0.7rem; color: var(--text-secondary);">Current</div>
                                         </div>
                                         <div style="text-align: center;">
-                                            <div class="recommendation-score ${bot.entryDScore >= 7 ? 'score-high' : bot.entryDScore >= 5 ? 'score-medium' : 'score-low'}" style="margin-bottom: 0.25rem; font-size: 0.8rem; padding: 0.25rem 0.5rem;">
-                                                ${bot.entryDScore.toFixed(1)}
+                                            <div class="recommendation-score ${(bot.entryDScore || 0) >= 7 ? 'score-high' : (bot.entryDScore || 0) >= 5 ? 'score-medium' : 'score-low'}" style="margin-bottom: 0.25rem; font-size: 0.8rem; padding: 0.25rem 0.5rem;">
+                                                ${(bot.entryDScore || 0).toFixed(1)}
                                             </div>
                                             <div style="font-size: 0.7rem; color: var(--text-secondary);">Entry</div>
                                         </div>
@@ -195,24 +195,19 @@ function createActiveBotsSection() {
 function refreshMarketData() {
     console.log('🔄 Manually refreshing market data...');
     
-    // Add spinning animation
     const refreshButtons = document.querySelectorAll('.refresh-button');
     refreshButtons.forEach(btn => btn.classList.add('refreshing'));
     
-    // Simulate API call delay
+    // Call the actual refresh function
+    window.refreshMarketData();
+    
+    // Remove spinning animation after a delay
     setTimeout(() => {
-        appState.marketTrendsData = generateMarketDataWithScoring();
-        
-        if (appState.activePage === 'Dashboard' || appState.activePage === 'Meat Market') {
-            switchPage(appState.activePage);
-        }
-        
-        // Remove spinning animation
         refreshButtons.forEach(btn => btn.classList.remove('refreshing'));
-    }, 800);
+    }, 1000);
 }
 
 // Make refresh function globally available
 window.refreshMarketData = refreshMarketData;
 
-console.log('✅ Enhanced Dashboard page loaded with dual table bot analysis');
+console.log('✅ Clean dashboard page loaded (no mock data)');
