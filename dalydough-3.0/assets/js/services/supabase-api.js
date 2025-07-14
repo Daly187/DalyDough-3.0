@@ -178,3 +178,43 @@ window.supabaseApi.testConnection().then(result => {
 });
 
 console.log('✅ Enhanced Supabase API Service loaded with caching and improved fallbacks');
+// In assets/js/services/supabase-api.js - add this method
+async getMarketDataWithScoring() {
+    try {
+        console.log('📡 Calling Supabase function: get-market-data-with-scoring');
+        
+        const response = await fetch(`${this.functionsUrl}/get-market-data-with-scoring`, {
+            method: 'GET',
+            headers: {
+                'Content-Type': 'application/json',
+                'Authorization': `Bearer ${this.supabaseAnonKey}`,
+                'apikey': this.supabaseAnonKey
+            }
+        });
+
+        if (!response.ok) {
+            const errorText = await response.text();
+            console.error(`❌ Function call failed: ${response.status} ${response.statusText}`);
+            console.error('Error details:', errorText);
+            throw new Error(`HTTP error! status: ${response.status}`);
+        }
+
+        const result = await response.json();
+        
+        // Validate data structure
+        if (Array.isArray(result) && result.length > 0) {
+            const liveDataCount = result.filter(d => d.source === 'live').length;
+            console.log(`📊 Received ${result.length} market trends (${liveDataCount} live)`);
+            return result;
+        } else {
+            throw new Error('Invalid data structure received');
+        }
+        
+    } catch (error) {
+        console.warn('⚠️ Failed to get live market data, falling back to enhanced mock data');
+        console.error('Error details:', error);
+        
+        // Return enhanced fallback data
+        return this.generateEnhancedFallbackData();
+    }
+}
