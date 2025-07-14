@@ -14,9 +14,10 @@ function generateMarketSpotPrice(pair) {
     };
     
     const basePrice = basePrices[pair] || (Math.random() * 2 + 0.5);
-    const change = (Math.random() - 0.5) * 0.02;
-    const current = basePrice + change;
-    const changePercent = (change / basePrice) * 100;
+    const variation = (Math.random() - 0.5) * 0.02; // ±1% variation
+    const current = basePrice + (basePrice * variation);
+    const change = (Math.random() - 0.5) * 0.01;
+    const changePercent = (change / current) * 100;
     
     return {
         current,
@@ -311,7 +312,7 @@ function createDetailedMarketAnalysisCard(trend) {
                     </div>
                 ` : `
                     <div style="margin-top: 0.5rem; font-size: 0.875rem; color: var(--text-secondary);">
-                        Trend Analysis: ${trend.trendAnalysis.direction} (${trend.trendAnalysis.trendConfirmationScore}/3 timeframes aligned)
+                        Trend Analysis: ${trend.trendAnalysis?.direction || 'neutral'} (${trend.trendAnalysis?.trendConfirmationScore || 0}/3 timeframes aligned)
                         <br>Nearest ${keyLevels[0].type}: ${keyLevels[0].price.toFixed(5)} (${(keyLevels[0].distance * 10000).toFixed(1)} pips away)
                     </div>
                 `}
