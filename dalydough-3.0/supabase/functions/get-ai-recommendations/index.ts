@@ -1,75 +1,69 @@
-// supabase/functions/get-ai-recommendations/index.ts
-import { serve } from "https://deno.land/std@0.168.0/http/server.ts"
+/// <reference types="https://esm.sh/@supabase/functions-js/src/edge-runtime.d.ts" />
 
-const corsHeaders = {
-  'Access-Control-Allow-Origin': '*',
-  'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
-  'Access-Control-Allow-Methods': 'GET, POST, PUT, DELETE, OPTIONS'
+import { serve } from 'https://deno.land/std@0.168.0/http/server.ts';
+import { corsHeaders } from '../_shared/cors.ts';
+
+console.log('🚀 get-ai-recommendations function for Gemini initializing...');
+
+function createErrorResponse(message: string, status: number) {
+  console.error(`❌ Error in get-ai-recommendations: ${message}`);
+  return new Response(JSON.stringify({ error: message }), {
+    headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+    status: status,
+  });
 }
 
-interface AiRecommendation {
-  pair: string;
-  reason: string;
-  score: number;
-  score_level: string;
-}
-
-function generateRecommendations(): AiRecommendation[] {
-  const pairs = ['EUR/USD', 'GBP/USD', 'USD/JPY', 'AUD/USD', 'XAU/USD'];
-  const reasons = [
-    "Strong trend alignment across multiple timeframes",
-    "COT data shows institutional bullish bias",
-    "Technical breakout with high volume confirmation",
-    "Economic data supports continued momentum",
-    "Key support/resistance levels provide clear entry"
-  ];
-
-  return pairs.map(pair => {
-    const score = Math.random() * 4 + 6; // 6-10 range
-    return {
-      pair,
-      reason: reasons[Math.floor(Math.random() * reasons.length)],
-      score: parseFloat(score.toFixed(1)),
-      score_level: score >= 8.5 ? 'high' : score >= 7.5 ? 'medium' : 'low'
-    };
-  }).sort((a, b) => b.score - a.score);
-}
-
-serve(async (req) => {
-  console.log(`📥 Received ${req.method} request to get-ai-recommendations`)
-  
+serve(async (req: Request) => {
   if (req.method === 'OPTIONS') {
-    return new Response('ok', { headers: corsHeaders })
+    return new Response('ok', { headers: corsHeaders });
   }
 
   try {
-    console.log('🤖 Generating AI recommendations...');
-    
-    const recommendations = generateRecommendations();
-    
-    return new Response(
-      JSON.stringify({ recommendations }),
-      { 
-        headers: { 
-          ...corsHeaders, 
-          'Content-Type': 'application/json' 
+    const googleApiKey = Deno.env.get('GOOGLE_API_KEY');
+    if (!googleApiKey) {
+      return createErrorResponse('GOOGLE_API_KEY is not set in environment variables.', 500);
+    }
+
+    const url = new URL(req.url);
+    const pair = url.searchParams.get('pair');
+    if (!pair) {
+      return createErrorResponse('"pair" query parameter is required.', 400);
+    }
+
+    console.log(`🧠 Generating Gemini recommendation for ${pair}...`);
+
+    const prompt = `You are a forex trading analyst. Based on current market conditions, should I buy, sell, or hold ${pair}? Respond with only one word: BUY, SELL, or HOLD.`;
+    const apiUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-pro-latest:generateContent?key=${googleApiKey}`;
+
+    const response = await fetch(apiUrl, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({
+        contents: [{ parts: [{ text: prompt }] }],
+        generationConfig: {
+          temperature: 0.1,
+          maxOutputTokens: 5,
         },
-        status: 200
-      }
-    );
-    
-  } catch (error) {
-    console.error('❌ Error in get-ai-recommendations:', error);
-    
-    return new Response(
-      JSON.stringify({ 
-        error: error.message,
-        function: 'get-ai-recommendations'
       }),
-      { 
-        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-        status: 500
-      }
-    );
+    });
+
+    if (!response.ok) {
+      const errorText = await response.text();
+      return createErrorResponse(`Google API request failed: ${errorText}`, response.status);
+    }
+
+    const data = await response.json();
+    const recommendation = data.candidates[0].content.parts[0].text.trim().toUpperCase();
+
+    console.log(`✅ Gemini Recommendation for ${pair}: ${recommendation}`);
+
+    return new Response(JSON.stringify({ pair, recommendation }), {
+      headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+      status: 200,
+    });
+  } catch (err) {
+    return createErrorResponse(err.message, 500);
   }
-})
+});
