@@ -1,12 +1,14 @@
-// supabase/functions/get-real-market-data/index.ts
-import { serve } from "https://deno.land/std@0.168.0/http/server.ts"
+import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
+import { createClient } from 'https://esm.sh/@supabase/supabase-js@2';
 
+// Standard CORS headers to allow browser access
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
   'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
   'Access-Control-Allow-Methods': 'GET, POST, PUT, DELETE, OPTIONS'
-}
+};
 
+// Interface for the structured forex data we expect from APIs
 interface ForexQuote {
   pair: string;
   price: number;
@@ -19,33 +21,13 @@ interface ForexQuote {
   source: string;
 }
 
-interface MarketTrend {
-  pair: string;
-  trendH4: 'Up' | 'Down' | 'Neutral';
-  trendD1: 'Up' | 'Down' | 'Neutral';
-  trendW1: 'Up' | 'Down' | 'Neutral';
-  setupQuality: 'A' | 'B' | 'C';
-  conditions: {
-    cot: boolean;
-    adx: boolean;
-    spread: boolean;
-  };
-  dsize: string;
-  currentPrice: number;
-  dailyChange: number;
-  dailyChangePercent: number;
-  entryStatus: string;
-  breakdown: any;
-  lastUpdated: string;
-  source: string;
-}
-
 class RealMarketDataService {
   private apiKeys: Record<string, string>;
   private cache = new Map<string, { data: any; timestamp: number }>();
-  private cacheTimeout = 30000; // 30 seconds cache
+  private cacheTimeout = 30000; // Cache data for 30 seconds
 
   constructor() {
+    // Load API keys from environment variables
     this.apiKeys = {
       fmp: Deno.env.get('FMP_API_KEY') || '',
       alphavantage: Deno.env.get('ALPHAVANTAGE_API_KEY') || '',
@@ -57,49 +39,45 @@ class RealMarketDataService {
     this.logAPIKeyStatus();
   }
 
+  // Logs the status of the API keys to help with debugging
   private logAPIKeyStatus() {
     const keyStatus = Object.entries(this.apiKeys).map(([name, key]) => ({
       provider: name,
-      hasKey: !!(key && key.length > 10),
-      keyLength: key ? key.length : 0
+      hasKey: !!(key && key.length > 10), // Basic check for a valid-looking key
     }));
     
     console.log('🔑 API Key Status:', keyStatus);
-    
     const validKeys = keyStatus.filter(k => k.hasKey).length;
+    
     if (validKeys === 0) {
-      console.error('❌ NO VALID API KEYS FOUND!');
-      console.log('📝 Please set these environment variables:');
-      console.log('- FMP_API_KEY (FinancialModelingPrep)');
-      console.log('- ALPHAVANTAGE_API_KEY (Alpha Vantage)');
-      console.log('- EXCHANGERATE_API_KEY (ExchangeRate-API)');
-      console.log('- FIXER_API_KEY (Fixer.io)');
+      console.error('❌ NO VALID API KEYS FOUND! Please set them as environment variables.');
     } else {
       console.log(`✅ Found ${validKeys} valid API key(s)`);
     }
   }
 
+  // Gets data from cache if it's recent
   private getCache(key: string): any {
     const cached = this.cache.get(key);
     if (cached && (Date.now() - cached.timestamp) < this.cacheTimeout) {
+      console.log(`📦 Using cached data for key: ${key}`);
       return cached.data;
     }
     return null;
   }
 
+  // Saves data to the cache
   private setCache(key: string, data: any) {
     this.cache.set(key, { data, timestamp: Date.now() });
   }
 
+  // Fetches real forex quotes from a list of providers
   async getRealForexQuotes(): Promise<ForexQuote[]> {
-    const cacheKey = 'forex_quotes';
+    const cacheKey = 'real_forex_quotes';
     const cached = this.getCache(cacheKey);
-    if (cached) {
-      console.log('📦 Using cached forex data');
-      return cached;
-    }
+    if (cached) return cached;
 
-    // Try providers in order of preference
+    // List of data providers to try in order of preference
     const providers = [
       { name: 'fmp', method: this.getFMPQuotes.bind(this) },
       { name: 'alphavantage', method: this.getAlphaVantageQuotes.bind(this) },
@@ -114,11 +92,11 @@ class RealMarketDataService {
       }
 
       try {
-        console.log(`🔄 Trying ${provider.name}...`);
+        console.log(`🔄 Trying data provider: ${provider.name}...`);
         const quotes = await provider.method();
         
         if (quotes && quotes.length > 0) {
-          console.log(`✅ Got ${quotes.length} quotes from ${provider.name}`);
+          console.log(`✅ Successfully fetched ${quotes.length} quotes from ${provider.name}`);
           this.setCache(cacheKey, quotes);
           return quotes;
         }
@@ -127,440 +105,193 @@ class RealMarketDataService {
       }
     }
 
-    throw new Error('All forex data providers failed - no real data available');
+    // If all providers fail, throw an error
+    throw new Error('All forex data providers failed. No real data is available.');
   }
-
+  
+  // Fetches quotes from FinancialModelingPrep
   private async getFMPQuotes(): Promise<ForexQuote[]> {
     const pairs = ['EURUSD', 'GBPUSD', 'USDJPY', 'AUDUSD', 'USDCAD', 'NZDUSD', 'USDCHF', 'XAUUSD'];
     const response = await fetch(
-      `https://financialmodelingprep.com/api/v3/quote/${pairs.join(',')}?apikey=${this.apiKeys.fmp}`,
-      {
-        headers: {
-          'Accept': 'application/json',
-          'User-Agent': 'DalyDough/3.0'
-        }
-      }
+      `https://financialmodelingprep.com/api/v3/quote/${pairs.join(',')}?apikey=${this.apiKeys.fmp}`
     );
 
-    if (!response.ok) {
-      throw new Error(`FMP API error: ${response.status} - ${response.statusText}`);
-    }
-
+    if (!response.ok) throw new Error(`FMP API error: ${response.statusText}`);
     const data = await response.json();
-    
-    if (!Array.isArray(data) || data.length === 0) {
-      throw new Error('FMP returned no data');
-    }
+    if (!Array.isArray(data) || data.length === 0) throw new Error('FMP returned no data');
 
-    return data.map(quote => ({
-      pair: this.formatPair(quote.symbol),
-      price: parseFloat(quote.price) || 0,
-      change: parseFloat(quote.change) || 0,
-      changePercent: parseFloat(quote.changesPercentage) || 0,
-      volume: parseFloat(quote.volume) || 0,
-      high: parseFloat(quote.dayHigh) || parseFloat(quote.price) || 0,
-      low: parseFloat(quote.dayLow) || parseFloat(quote.price) || 0,
-      timestamp: new Date().toISOString(),
+    return data.map((q: any) => ({
+      pair: this.formatPair(q.symbol),
+      price: parseFloat(q.price) || 0,
+      change: parseFloat(q.change) || 0,
+      changePercent: parseFloat(q.changesPercentage) || 0,
+      volume: parseFloat(q.volume) || 0,
+      high: parseFloat(q.dayHigh) || 0,
+      low: parseFloat(q.dayLow) || 0,
+      timestamp: new Date(q.timestamp * 1000).toISOString(),
       source: 'FMP'
-    })).filter(quote => quote.price > 0);
+    })).filter(q => q.price > 0);
   }
 
+  // Fetches quotes from Alpha Vantage
   private async getAlphaVantageQuotes(): Promise<ForexQuote[]> {
-    const pairs = [
-      { from: 'EUR', to: 'USD' },
-      { from: 'GBP', to: 'USD' },
-      { from: 'AUD', to: 'USD' }
-    ];
-
+    const pairs = [{ from: 'EUR', to: 'USD' }, { from: 'GBP', to: 'USD' }, { from: 'USD', to: 'JPY' }];
     const quotes: ForexQuote[] = [];
 
     for (const { from, to } of pairs) {
-      try {
-        const response = await fetch(
-          `https://www.alphavantage.co/query?function=CURRENCY_EXCHANGE_RATE&from_currency=${from}&to_currency=${to}&apikey=${this.apiKeys.alphavantage}`
-        );
+      const response = await fetch(
+        `https://www.alphavantage.co/query?function=CURRENCY_EXCHANGE_RATE&from_currency=${from}&to_currency=${to}&apikey=${this.apiKeys.alphavantage}`
+      );
+      if (!response.ok) continue;
 
-        if (!response.ok) {
-          throw new Error(`AlphaVantage API error: ${response.status}`);
-        }
-
-        const data = await response.json();
-        const rate = data['Realtime Currency Exchange Rate'];
-
-        if (rate) {
-          quotes.push({
-            pair: `${from}/${to}`,
-            price: parseFloat(rate['5. Exchange Rate']),
-            change: 0,
-            changePercent: 0,
-            high: parseFloat(rate['5. Exchange Rate']),
-            low: parseFloat(rate['5. Exchange Rate']),
-            timestamp: rate['6. Last Refreshed'],
-            source: 'AlphaVantage'
-          });
-        }
-
-        // Rate limit: 5 calls per minute
-        await new Promise(resolve => setTimeout(resolve, 12000));
-      } catch (error) {
-        console.warn(`AlphaVantage ${from}/${to} failed:`, error.message);
-      }
-    }
-
-    if (quotes.length === 0) {
-      throw new Error('AlphaVantage returned no valid quotes');
-    }
-
-    return quotes;
-  }
-
-  private async getExchangeRateQuotes(): Promise<ForexQuote[]> {
-    const response = await fetch(`https://v6.exchangerate-api.com/v6/${this.apiKeys.exchangerate}/latest/USD`);
-    
-    if (!response.ok) {
-      throw new Error(`ExchangeRate API error: ${response.status}`);
-    }
-
-    const data = await response.json();
-    
-    if (data.result !== 'success') {
-      throw new Error(`ExchangeRate API error: ${data['error-type']}`);
-    }
-
-    const rates = data.conversion_rates;
-    const quotes: ForexQuote[] = [];
-
-    const pairMappings = [
-      { pair: 'EUR/USD', rate: 1 / rates.EUR },
-      { pair: 'GBP/USD', rate: 1 / rates.GBP },
-      { pair: 'USD/JPY', rate: rates.JPY },
-      { pair: 'AUD/USD', rate: 1 / rates.AUD },
-      { pair: 'USD/CAD', rate: rates.CAD },
-      { pair: 'NZD/USD', rate: 1 / rates.NZD },
-      { pair: 'USD/CHF', rate: rates.CHF }
-    ];
-
-    for (const { pair, rate } of pairMappings) {
-      if (rate && rate > 0) {
+      const data = await response.json();
+      const rate = data['Realtime Currency Exchange Rate'];
+      if (rate) {
         quotes.push({
-          pair,
-          price: rate,
-          change: 0,
-          changePercent: 0,
-          high: rate,
-          low: rate,
-          timestamp: new Date().toISOString(),
-          source: 'ExchangeRate'
-        });
-      }
-    }
-
-    return quotes;
-  }
-
-  private async getFixerQuotes(): Promise<ForexQuote[]> {
-    const response = await fetch(
-      `https://api.fixer.io/v1/latest?access_key=${this.apiKeys.fixer}&base=USD&symbols=EUR,GBP,JPY,AUD,CAD,CHF,NZD`
-    );
-    
-    if (!response.ok) {
-      throw new Error(`Fixer API error: ${response.status}`);
-    }
-
-    const data = await response.json();
-    
-    if (!data.success) {
-      throw new Error(`Fixer API error: ${data.error?.info || 'Unknown error'}`);
-    }
-
-    const rates = data.rates;
-    const quotes: ForexQuote[] = [];
-
-    const pairMappings = [
-      { pair: 'EUR/USD', rate: 1 / rates.EUR },
-      { pair: 'GBP/USD', rate: 1 / rates.GBP },
-      { pair: 'USD/JPY', rate: rates.JPY },
-      { pair: 'AUD/USD', rate: 1 / rates.AUD },
-      { pair: 'USD/CAD', rate: rates.CAD },
-      { pair: 'NZD/USD', rate: 1 / rates.NZD },
-      { pair: 'USD/CHF', rate: rates.CHF }
-    ];
-
-    for (const { pair, rate } of pairMappings) {
-      if (rate && rate > 0) {
-        quotes.push({
-          pair,
-          price: rate,
-          change: 0,
-          changePercent: 0,
-          high: rate,
-          low: rate,
-          timestamp: data.date,
-          source: 'Fixer'
-        });
-      }
-    }
-
-    return quotes;
-  }
-
-  private formatPair(symbol: string): string {
-    if (symbol.length === 6) {
-      return `${symbol.slice(0, 3)}/${symbol.slice(3)}`;
-    }
-    return symbol.includes('/') ? symbol : symbol;
-  }
-
-  private generateDSizeScoring(pair: string, quote: ForexQuote): any {
-    const volatility = Math.abs(quote.changePercent);
-    
-    // COT Bias (0-2 points) - simulated but realistic
-    const cotScore = Math.random() > 0.6 ? 2 : Math.random() > 0.3 ? 1 : 0;
-    
-    // Trend Confirmation (0-3 points) - based on price momentum
-    const trendScore = volatility > 1.5 ? 3 : volatility > 0.8 ? 2 : volatility > 0.3 ? 1 : 0;
-    
-    // ADX Strength (0-1 point) - calculated from volatility
-    const adxValue = Math.min(100, volatility * 15 + 20);
-    const adxScore = adxValue >= 25 ? 1 : 0;
-    
-    // Support/Resistance (0-2 points) - price level analysis
-    const priceLevel = quote.price % 1;
-    const supportScore = (priceLevel > 0.4 && priceLevel < 0.6) ? 2 : 
-                        (priceLevel > 0.2 && priceLevel < 0.8) ? 1 : 0;
-    
-    // Price Structure (0-1 point)
-    const structureScore = volatility > 0.1 ? 1 : 0;
-    
-    // Spread Check (0-1 point)
-    const spreadScore = this.getSpreadScore(pair);
-
-    return {
-      cotBias: {
-        score: cotScore,
-        value: cotScore === 2 ? 'Strong Bias' : cotScore === 1 ? 'Weak Bias' : 'No Bias',
-        description: 'Institutional positioning analysis'
-      },
-      trendConfirmation: {
-        score: trendScore,
-        value: `${trendScore}/3 timeframes aligned`,
-        description: 'Multi-timeframe trend analysis'
-      },
-      adxStrength: {
-        score: adxScore,
-        value: adxValue.toFixed(1),
-        description: `ADX: ${adxValue >= 25 ? 'Strong' : 'Weak'} trend`
-      },
-      supportRetest: {
-        score: supportScore,
-        value: supportScore === 2 ? 'At Key Level' : supportScore === 1 ? 'Near Level' : 'No Level',
-        description: 'Support/resistance analysis'
-      },
-      priceStructure: {
-        score: structureScore,
-        value: structureScore ? 'Clean' : 'Choppy',
-        description: 'Price action structure'
-      },
-      spreadCheck: {
-        score: spreadScore,
-        value: `${this.getEstimatedSpread(pair).toFixed(1)} pips`,
-        description: 'Transaction cost analysis'
-      }
-    };
-  }
-
-  private getSpreadScore(pair: string): number {
-    const spread = this.getEstimatedSpread(pair);
-    return spread <= 2.0 ? 1 : 0;
-  }
-
-  private getEstimatedSpread(pair: string): number {
-    const majorPairs = ['EUR/USD', 'GBP/USD', 'USD/JPY', 'USD/CHF', 'AUD/USD', 'USD/CAD', 'NZD/USD'];
-    if (pair === 'XAU/USD') return 0.5;
-    if (majorPairs.includes(pair)) return 0.8;
-    return 1.5;
-  }
-
-  private calculateDSize(breakdown: any): number {
-    return breakdown.cotBias.score + 
-           breakdown.trendConfirmation.score + 
-           breakdown.adxStrength.score + 
-           breakdown.supportRetest.score + 
-           breakdown.priceStructure.score + 
-           breakdown.spreadCheck.score;
-  }
-
-  private generateTrendFromPrice(changePercent: number): 'Up' | 'Down' | 'Neutral' {
-    if (changePercent > 0.3) return 'Up';
-    if (changePercent < -0.3) return 'Down';
-    return 'Neutral';
-  }
-
-  async generateMarketTrends(): Promise<MarketTrend[]> {
-    const quotes = await this.getRealForexQuotes();
-    
-    // Add more pairs from fallback for complete list
-    const allPairs = [
-      'EUR/USD', 'GBP/USD', 'USD/JPY', 'AUD/USD', 'USD/CAD', 'NZD/USD', 'USD/CHF',
-      'EUR/GBP', 'EUR/JPY', 'GBP/JPY', 'AUD/CAD', 'AUD/JPY', 'CAD/JPY', 'CHF/JPY',
-      'EUR/CAD', 'EUR/CHF', 'EUR/NZD', 'GBP/AUD', 'GBP/CAD', 'GBP/CHF', 'NZD/CAD',
-      'NZD/CHF', 'NZD/JPY', 'XAU/USD', 'AUD/CHF', 'AUD/NZD'
-    ];
-
-    const trends: MarketTrend[] = [];
-
-    for (const pair of allPairs) {
-      const quote = quotes.find(q => q.pair === pair);
-      
-      if (quote) {
-        // Use real quote data
-        const breakdown = this.generateDSizeScoring(pair, quote);
-        const dsize = this.calculateDSize(breakdown);
-        const canEnter = dsize >= 7;
-        
-        let entryStatus = 'Block';
-        if (canEnter) {
-          entryStatus = quote.changePercent > 0 ? 'Allow Buy' : 'Allow Sell';
-        }
-
-        trends.push({
-          pair,
-          trendH4: this.generateTrendFromPrice(quote.changePercent),
-          trendD1: this.generateTrendFromPrice(quote.changePercent * 0.8),
-          trendW1: this.generateTrendFromPrice(quote.changePercent * 0.6),
-          setupQuality: dsize >= 8 ? 'A' : dsize >= 6 ? 'B' : 'C',
-          conditions: {
-            cot: breakdown.cotBias.score > 0,
-            adx: breakdown.adxStrength.score > 0,
-            spread: breakdown.spreadCheck.score > 0
-          },
-          dsize: dsize.toFixed(1),
-          currentPrice: quote.price,
-          dailyChange: quote.change,
-          dailyChangePercent: quote.changePercent,
-          entryStatus,
-          breakdown,
-          lastUpdated: new Date().toISOString(),
-          source: quote.source
-        });
-      } else {
-        // Generate placeholder with warning - but real structure
-        const breakdown = this.generateDSizeScoring(pair, {
-          pair,
-          price: this.getBasePriceForPair(pair),
-          change: 0,
+          pair: this.formatPair(`${from}${to}`),
+          price: parseFloat(rate['5. Exchange Rate']),
+          change: 0, // Note: This API does not provide change data
           changePercent: 0,
           high: 0,
           low: 0,
-          timestamp: new Date().toISOString(),
-          source: 'fallback'
-        });
-        
-        const dsize = this.calculateDSize(breakdown);
-
-        trends.push({
-          pair,
-          trendH4: 'Neutral',
-          trendD1: 'Neutral',
-          trendW1: 'Neutral',
-          setupQuality: dsize >= 8 ? 'A' : dsize >= 6 ? 'B' : 'C',
-          conditions: {
-            cot: breakdown.cotBias.score > 0,
-            adx: breakdown.adxStrength.score > 0,
-            spread: breakdown.spreadCheck.score > 0
-          },
-          dsize: dsize.toFixed(1),
-          currentPrice: this.getBasePriceForPair(pair),
-          dailyChange: 0,
-          dailyChangePercent: 0,
-          entryStatus: 'Block',
-          breakdown,
-          lastUpdated: new Date().toISOString(),
-          source: 'placeholder'
+          timestamp: new Date(rate['6. Last Refreshed']).toISOString(),
+          source: 'AlphaVantage'
         });
       }
+       // Alpha Vantage has a strict rate limit
+      await new Promise(resolve => setTimeout(resolve, 13000));
     }
+    
+    if (quotes.length === 0) throw new Error('AlphaVantage returned no valid quotes');
+    return quotes;
+  }
+  
+  // Fetches quotes from ExchangeRate-API
+  private async getExchangeRateQuotes(): Promise<ForexQuote[]> {
+    const response = await fetch(`https://v6.exchangerate-api.com/v6/${this.apiKeys.exchangerate}/latest/USD`);
+    if (!response.ok) throw new Error(`ExchangeRate-API error: ${response.statusText}`);
+    
+    const data = await response.json();
+    if (data.result !== 'success') throw new Error(`ExchangeRate-API error: ${data['error-type']}`);
+    
+    const rates = data.conversion_rates;
+    const timestamp = new Date(data.time_last_update_unix * 1000).toISOString();
+    const quotes: ForexQuote[] = [];
+    const relevantPairs = ['EUR', 'GBP', 'JPY', 'AUD', 'CAD', 'CHF', 'NZD'];
+    
+    for (const pair of relevantPairs) {
+        if (rates[pair]) {
+            quotes.push({
+                pair: `USD/${pair}`,
+                price: rates[pair],
+                change: 0, // Note: This API does not provide change data
+                changePercent: 0,
+                high: 0,
+                low: 0,
+                timestamp: timestamp,
+                source: 'ExchangeRate-API'
+            });
+        }
+    }
+    return quotes;
+  }
+  
+  // Fetches quotes from Fixer.io
+  private async getFixerQuotes(): Promise<ForexQuote[]> {
+      const response = await fetch(
+        `http://data.fixer.io/api/latest?access_key=${this.apiKeys.fixer}&base=USD&symbols=EUR,GBP,JPY,AUD,CAD,CHF,NZD`
+      );
+      if (!response.ok) throw new Error(`Fixer API error: ${response.statusText}`);
+      
+      const data = await response.json();
+      if (!data.success) throw new Error(`Fixer API error: ${data.error?.info}`);
 
-    return trends.sort((a, b) => parseFloat(b.dsize) - parseFloat(a.dsize));
+      const rates = data.rates;
+      const timestamp = new Date(data.timestamp * 1000).toISOString();
+      const quotes: ForexQuote[] = [];
+
+      for(const pair in rates){
+          quotes.push({
+                pair: `USD/${pair}`,
+                price: rates[pair],
+                change: 0, // Note: This API does not provide change data
+                changePercent: 0,
+                high: 0,
+                low: 0,
+                timestamp: timestamp,
+                source: 'Fixer.io'
+          });
+      }
+      return quotes;
   }
 
-  private getBasePriceForPair(pair: string): number {
-    const basePrices: Record<string, number> = {
-      'EUR/USD': 1.0850, 'GBP/USD': 1.2720, 'USD/JPY': 149.85, 'USD/CHF': 0.8745,
-      'AUD/USD': 0.6685, 'USD/CAD': 1.3580, 'NZD/USD': 0.6125, 'XAU/USD': 2035.50,
-      'EUR/GBP': 0.8520, 'EUR/JPY': 162.45, 'GBP/JPY': 190.72, 'AUD/CAD': 0.9080
-    };
-    
-    return basePrices[pair] || 1.0000;
+  // Helper to format currency pair symbols consistently
+  private formatPair(symbol: string): string {
+    if (symbol.length === 6 && !symbol.includes('/')) {
+      return `${symbol.slice(0, 3)}/${symbol.slice(3)}`;
+    }
+    return symbol;
   }
 }
 
+// Main server function that handles incoming requests
 serve(async (req) => {
-  console.log(`📥 Received ${req.method} request to get-real-market-data`)
-  
+  console.log(`📥 Received ${req.method} request to get-real-market-data`);
+
   if (req.method === 'OPTIONS') {
-    return new Response('ok', { headers: corsHeaders })
+    return new Response('ok', { headers: corsHeaders });
   }
 
   try {
-    console.log('🎯 Fetching REAL market data (no fallback to mock)...');
-    
+    // Initialize the Supabase client to check for an authenticated user
+    const supabase = createClient(
+      Deno.env.get('SUPABASE_URL') ?? '',
+      Deno.env.get('SUPABASE_ANON_KEY') ?? '',
+      { global: { headers: { Authorization: req.headers.get('Authorization')! } } }
+    );
+
+    const { data: { user } } = await supabase.auth.getUser();
+    if (!user) throw new Error("User not authenticated.");
+
+    // Fetch the real market data
     const marketService = new RealMarketDataService();
-    const marketTrends = await marketService.generateMarketTrends();
-    
-    const realDataCount = marketTrends.filter(t => t.source !== 'placeholder').length;
-    const totalCount = marketTrends.length;
-    
-    console.log(`✅ Generated ${totalCount} market trends (${realDataCount} with real data, ${totalCount - realDataCount} placeholder)`);
-    
-    if (realDataCount === 0) {
-      return new Response(
-        JSON.stringify({ 
-          error: 'No real market data available',
-          message: 'All API providers failed. Please check API keys.',
-          trends: [],
-          timestamp: new Date().toISOString()
-        }),
-        { 
-          headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-          status: 503
-        }
-      );
+    const realQuotes = await marketService.getRealForexQuotes();
+
+    if (realQuotes.length === 0) {
+      throw new Error("No real market data could be fetched from any provider.");
     }
     
+    console.log(`✅ Returning ${realQuotes.length} real quotes.`);
+    
+    // Return the successful response
     return new Response(
       JSON.stringify({
-        trends: marketTrends,
+        quotes: realQuotes,
         metadata: {
-          realDataCount,
-          totalCount,
+          quoteCount: realQuotes.length,
           timestamp: new Date().toISOString(),
-          cacheDuration: '30s'
+          source: realQuotes[0]?.source // Show the source of the first quote
         }
       }),
       { 
-        headers: { 
-          ...corsHeaders, 
-          'Content-Type': 'application/json' 
-        },
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
         status: 200
       }
     );
     
   } catch (error) {
-    console.error('❌ Error in get-real-market-data:', error);
+    console.error('❌ Final error in get-real-market-data:', error);
     
+    // Return an error response
     return new Response(
       JSON.stringify({ 
         error: 'Real market data unavailable',
         message: error.message,
-        timestamp: new Date().toISOString(),
-        function: 'get-real-market-data'
       }),
       { 
         headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-        status: 500
+        status: 500 // Use 500 for a general server error
       }
     );
   }
-})
+});
