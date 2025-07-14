@@ -1,4 +1,4 @@
-// Enhanced Application Core - Replace assets/js/core/app.js
+// Enhanced Application Core with Live Data Integration - Replace assets/js/core/app.js
 
 // KPI Widget Functions
 function updateKPIWidgets() {
@@ -38,6 +38,72 @@ function updateKPIWidgets() {
     }
 }
 
+// Enhanced data refresh function with live API integration
+async function refreshMarketData() {
+    console.log('🔄 Refreshing market data with live API integration...');
+    
+    // Add spinning animation
+    const refreshButtons = document.querySelectorAll('.refresh-button');
+    refreshButtons.forEach(btn => {
+        btn.classList.add('refreshing');
+        const originalContent = btn.innerHTML;
+        btn.innerHTML = `
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="animation: spin 1s linear infinite;">
+                <path d="M23 4v6h-6"></path>
+                <path d="M20.49 15a9 9 0 1 1-2.12-9.36L23 10"></path>
+            </svg>
+            Loading...
+        `;
+    });
+    
+    try {
+        // Fetch fresh market data from live API
+        const newMarketData = await generateMarketDataWithScoring();
+        appState.marketTrendsData = newMarketData;
+        
+        // Also refresh COT data if we're on that page
+        if (appState.activePage === 'COT Report') {
+            appState.cotData = await generateCOTData();
+        }
+        
+        // Show success notification
+        if (typeof showNotification === 'function') {
+            const liveDataCount = newMarketData.filter(d => d.breakdown && d.breakdown.adxStrength.description !== 'Fallback data').length;
+            const message = liveDataCount > 0 ? 
+                `📊 Refreshed with ${liveDataCount} live data points from FMP` :
+                '🔄 Market data refreshed (using enhanced fallback data)';
+            showNotification(message, 'success');
+        }
+        
+        console.log(`✅ Market data refreshed successfully. Live data points: ${newMarketData.filter(d => d.breakdown && d.breakdown.adxStrength.description !== 'Fallback data').length}/${newMarketData.length}`);
+        
+    } catch (error) {
+        console.error('❌ Error refreshing market data:', error);
+        if (typeof showNotification === 'function') {
+            showNotification('⚠️ Data refresh failed, using cached data', 'error');
+        }
+    } finally {
+        // Restore refresh buttons
+        setTimeout(() => {
+            refreshButtons.forEach(btn => {
+                btn.classList.remove('refreshing');
+                btn.innerHTML = `
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <path d="M23 4v6h-6"></path>
+                        <path d="M20.49 15a9 9 0 1 1-2.12-9.36L23 10"></path>
+                    </svg>
+                    Refresh
+                `;
+            });
+            
+            // Refresh the current page to show new data
+            if (appState.activePage === 'Dashboard' || appState.activePage === 'Meat Market') {
+                switchPage(appState.activePage);
+            }
+        }, 1000);
+    }
+}
+
 // Launch manual bot function
 function launchManualBot() {
     console.log('🚀 Opening manual bot launcher...');
@@ -72,9 +138,9 @@ function launchManualBot() {
     }
 }
 
-// Enhanced Application Initialization
-function initApp() {
-    console.log('🚀 Initializing Enhanced DalyDough 3.0...');
+// Enhanced Application Initialization with API integration
+async function initApp() {
+    console.log('🚀 Initializing Enhanced DalyDough 3.0 with Live API Integration...');
     
     // Initialize MT5 accounts state if not exists
     if (!appState.mt5Accounts) {
@@ -102,31 +168,72 @@ function initApp() {
         });
     });
 
-    // Initialize data
-    appState.marketTrendsData = generateMarketDataWithScoring();
-    appState.activeBots = generateActiveBots();
-    appState.cotData = generateCOTData();
-    appState.forexNews = generateForexNews();
+    // Show initialization status
+    if (typeof showNotification === 'function') {
+        showNotification('🚀 Initializing live data connections...', 'info');
+    }
+
+    try {
+        // Initialize data with live API integration
+        console.log('📊 Loading initial market data...');
+        appState.marketTrendsData = await generateMarketDataWithScoring();
+        
+        console.log('🤖 Loading active bots...');
+        appState.activeBots = generateActiveBots();
+        
+        console.log('📈 Loading COT data...');
+        appState.cotData = await generateCOTData();
+        
+        console.log('📰 Loading forex news...');
+        appState.forexNews = generateForexNews();
+        
+        // Check if we successfully got live data
+        const liveDataCount = appState.marketTrendsData.filter(d => 
+            d.breakdown && d.breakdown.adxStrength.description !== 'Fallback data'
+        ).length;
+        
+        if (liveDataCount > 0) {
+            console.log(`✅ Successfully loaded ${liveDataCount} live data points from FMP API`);
+            if (typeof showNotification === 'function') {
+                showNotification(`✅ Live data active: ${liveDataCount} pairs with real FMP data`, 'success');
+            }
+        } else {
+            console.log('⚠️ Using enhanced fallback data (FMP API not available)');
+            if (typeof showNotification === 'function') {
+                showNotification('⚠️ Using enhanced fallback data (check Supabase config)', 'warning');
+            }
+        }
+        
+    } catch (error) {
+        console.error('❌ Error during data initialization:', error);
+        if (typeof showNotification === 'function') {
+            showNotification('❌ Data initialization failed, using fallback data', 'error');
+        }
+        
+        // Fallback to basic data
+        appState.marketTrendsData = await generateMarketDataWithScoring();
+        appState.activeBots = generateActiveBots();
+        appState.cotData = await generateCOTData();
+        appState.forexNews = generateForexNews();
+    }
     
-    // Set up launch new bot button - CONFIGURED FOR MANUAL LAUNCHER
+    // Set up launch new bot button
     const launchBtn = document.getElementById('launch-new-bot-btn');
     if (launchBtn) {
         launchBtn.addEventListener('click', (e) => {
             e.preventDefault();
             launchManualBot();
         });
-        console.log('✅ Launch button configured for manual bot launcher with MT5 account checking');
+        console.log('✅ Launch button configured for manual bot launcher');
     }
     
     // Set up any other launch bot buttons that might appear dynamically
     document.addEventListener('click', (e) => {
-        // Check if the clicked element or its text contains launch bot references
         if (e.target.textContent && (
             e.target.textContent.includes('Launch New Bot') || 
             e.target.textContent.includes('Launch Your First Bot') ||
             e.target.textContent.includes('Launch Bot')
         )) {
-            // Only prevent default if it's not the main navigation
             if (e.target.id === 'launch-new-bot-btn' || 
                 e.target.classList.contains('btn-primary')) {
                 e.preventDefault();
@@ -154,6 +261,23 @@ function initApp() {
     // Set up auto-refresh intervals
     setInterval(updateKPIWidgets, 30000); // Refresh KPIs every 30 seconds
     
+    // Auto-refresh market data every 5 minutes
+    setInterval(async () => {
+        if (appState.activePage === 'Dashboard' || appState.activePage === 'Meat Market') {
+            console.log('🔄 Auto-refreshing market data...');
+            try {
+                appState.marketTrendsData = await generateMarketDataWithScoring();
+                
+                // Silently update the current page if we're viewing market data
+                if (appState.activePage === 'Dashboard' || appState.activePage === 'Meat Market') {
+                    switchPage(appState.activePage);
+                }
+            } catch (error) {
+                console.warn('Auto-refresh failed:', error);
+            }
+        }
+    }, 300000); // 5 minutes
+    
     // Auto Bot countdown timer (if auto bot functionality exists)
     setInterval(() => {
         if (appState.autoBot && appState.autoBot.enabled && appState.autoBot.nextScan) {
@@ -166,10 +290,9 @@ function initApp() {
     // MT5 Account Status Monitor
     setInterval(() => {
         if (appState.mt5Accounts && appState.mt5Accounts.length > 0) {
-            // Check for disconnected accounts and show warnings
             const disconnectedAccounts = appState.mt5Accounts.filter(acc => acc.status === 'disconnected');
             
-            if (disconnectedAccounts.length > 0 && Math.random() > 0.95) { // 5% chance per check
+            if (disconnectedAccounts.length > 0 && Math.random() > 0.95) {
                 const accountNames = disconnectedAccounts.map(acc => acc.nickname).join(', ');
                 console.warn(`⚠️ MT5 Account(s) disconnected: ${accountNames}`);
                 
@@ -178,13 +301,15 @@ function initApp() {
                 }
             }
         }
-    }, 10000); // Check every 10 seconds
+    }, 10000);
     
-    console.log('✅ Enhanced DalyDough 3.0 initialized successfully!');
+    console.log('✅ Enhanced DalyDough 3.0 initialized successfully with live API integration!');
     console.log('🎯 Key Features:');
+    console.log('   ✅ Live FMP Market Data Integration');
+    console.log('   ✅ Enhanced Technical Analysis');
+    console.log('   ✅ Real-time Price Updates'); 
     console.log('   ✅ MT5 Account Management');
     console.log('   ✅ Demo Account Safety');
-    console.log('   ✅ Real-time Account Monitoring');
     console.log('   ✅ Corrected Trend Scoring Logic');
     console.log('   ✅ 29 Currency Pairs + XAU/USD');
     console.log('   ✅ Real D-Size Algorithm');
@@ -196,20 +321,16 @@ function initApp() {
     console.log('   ✅ Enhanced Risk Management');
     console.log('   ✅ Responsive Design');
     
-    // Log MT5 account status
+    // Log data status
     const connectedCount = appState.mt5Accounts ? appState.mt5Accounts.filter(acc => acc.status === 'connected').length : 0;
-    console.log(`📊 MT5 Accounts: ${connectedCount} connected, ${appState.mt5Accounts ? appState.mt5Accounts.length - connectedCount : 0} disconnected`);
+    const liveDataCount = appState.marketTrendsData ? appState.marketTrendsData.filter(d => 
+        d.breakdown && d.breakdown.adxStrength.description !== 'Fallback data'
+    ).length : 0;
+    
+    console.log(`📊 MT5 Accounts: ${connectedCount} connected`);
+    console.log(`📈 Market Data: ${appState.marketTrendsData?.length || 0} pairs (${liveDataCount} with live FMP data)`);
+    console.log(`🤖 Active Bots: ${appState.activeBots?.length || 0}`);
 }
-
-// Global click handler for debugging
-document.addEventListener('click', (e) => {
-    if (e.target.classList.contains('btn-primary')) {
-        console.log('🚀 Primary button clicked:', e.target.textContent);
-    }
-    if (e.target.classList.contains('btn-danger')) {
-        console.log('⚠️ Danger button clicked:', e.target.textContent);
-    }
-});
 
 // Enhanced emergency stop with MT5 account awareness
 function emergencyStopAll(autoTriggered = false) {
@@ -260,10 +381,21 @@ function emergencyStopAll(autoTriggered = false) {
     }, 500);
 }
 
+// Global click handler for debugging
+document.addEventListener('click', (e) => {
+    if (e.target.classList.contains('btn-primary')) {
+        console.log('🚀 Primary button clicked:', e.target.textContent);
+    }
+    if (e.target.classList.contains('btn-danger')) {
+        console.log('⚠️ Danger button clicked:', e.target.textContent);
+    }
+});
+
 // Make functions globally available
 window.launchManualBot = launchManualBot;
 window.emergencyStopAll = emergencyStopAll;
 window.updateKPIWidgets = updateKPIWidgets;
+window.refreshMarketData = refreshMarketData;
 
 // Start the application when DOM is ready
 if (document.readyState === 'loading') {
@@ -272,4 +404,4 @@ if (document.readyState === 'loading') {
     initApp();
 }
 
-console.log('🎯 Enhanced DalyDough 3.0 JavaScript loaded with MT5 account management!');
+console.log('🎯 Enhanced DalyDough 3.0 JavaScript loaded with live FMP API integration!');
