@@ -1,4 +1,4 @@
-// Enhanced Application Core with Live Data Integration - Replace assets/js/core/app.js
+// Enhanced Application Core with Live Data Integration - assets/js/core/app.js
 
 // KPI Widget Functions
 function updateKPIWidgets() {
@@ -58,12 +58,14 @@ async function refreshMarketData() {
     
     try {
         // Fetch fresh market data from live API
-        const newMarketData = await generateMarketDataWithScoring();
+        // *** UPDATED LINE ***
+        const newMarketData = await window.supabaseApi.getMarketDataWithScoring();
         appState.marketTrendsData = newMarketData;
         
         // Also refresh COT data if we're on that page
         if (appState.activePage === 'COT Report') {
-            appState.cotData = await generateCOTData();
+            // *** UPDATED LINE ***
+            appState.cotData = await window.supabaseApi.getCOTReportHistory();
         }
         
         // Show success notification
@@ -176,13 +178,15 @@ async function initApp() {
     try {
         // Initialize data with live API integration
         console.log('📊 Loading initial market data...');
-        appState.marketTrendsData = await generateMarketDataWithScoring();
+        // *** UPDATED LINE ***
+        appState.marketTrendsData = await window.supabaseApi.getMarketDataWithScoring();
         
         console.log('🤖 Loading active bots...');
         appState.activeBots = generateActiveBots();
         
         console.log('📈 Loading COT data...');
-        appState.cotData = await generateCOTData();
+        // *** UPDATED LINE ***
+        appState.cotData = await window.supabaseApi.getCOTReportHistory();
         
         console.log('📰 Loading forex news...');
         appState.forexNews = generateForexNews();
@@ -211,9 +215,11 @@ async function initApp() {
         }
         
         // Fallback to basic data
-        appState.marketTrendsData = await generateMarketDataWithScoring();
+        // *** UPDATED LINE (for fallback) ***
+        appState.marketTrendsData = await window.supabaseApi.getMarketDataWithScoring();
         appState.activeBots = generateActiveBots();
-        appState.cotData = await generateCOTData();
+        // *** UPDATED LINE (for fallback) ***
+        appState.cotData = await window.supabaseApi.getCOTReportHistory();
         appState.forexNews = generateForexNews();
     }
     
@@ -266,7 +272,8 @@ async function initApp() {
         if (appState.activePage === 'Dashboard' || appState.activePage === 'Meat Market') {
             console.log('🔄 Auto-refreshing market data...');
             try {
-                appState.marketTrendsData = await generateMarketDataWithScoring();
+                // *** UPDATED LINE ***
+                appState.marketTrendsData = await window.supabaseApi.getMarketDataWithScoring();
                 
                 // Silently update the current page if we're viewing market data
                 if (appState.activePage === 'Dashboard' || appState.activePage === 'Meat Market') {
