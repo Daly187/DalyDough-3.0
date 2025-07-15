@@ -8,7 +8,6 @@
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
     
-    <!-- CSS Files -->
     <link rel="stylesheet" href="./assets/css/variables.css">
     <link rel="stylesheet" href="./assets/css/layout.css">
     <link rel="stylesheet" href="./assets/css/components.css">
@@ -17,7 +16,6 @@
 <body>
     <div id="root">
         <div class="app-container" id="app-container">
-            <!-- Sidebar -->
             <aside class="sidebar">
                 <div class="sidebar-header">
                     <div class="sidebar-logo" onclick="toggleSidebar()">
@@ -131,65 +129,30 @@
                 </div>
             </aside>
 
-            <!-- Header -->
             <header class="header">
                 <div class="header-left">
                     <div class="current-account-display">
                         <span class="kpi-label">Account</span>
                         <span class="account-name-header">Primary Alpha</span>
-                        <div class="header">
-    <div class="header-left">
-        <div class="account-display">
-            <div class="account-icon"></div>
-            <div class="account-details">
-                <span class="account-name">Primary Alpha</span>
-                <span class="account-id">PA-50.72</span>
-            </div>
-        </div>
-        <div id="supabase-status-indicator">
-            <span class="status-light"></span>
-            <span class="status-text"></span>
-        </div>
-    </div>
-    <div id="kpi-widgets" class="kpi-container">
-        </div>
-    </div>
+                    </div>
+                    <div id="supabase-status-indicator">
+                        <span class="status-light"></span>
+                        <span class="status-text">Connecting...</span>
                     </div>
                     <div class="kpi-widgets" id="kpi-widgets">
-                        <!-- KPI widgets will be populated by JavaScript -->
-                    </div>
+                        </div>
                 </div>
                 <div class="header-actions">
                     <button class="btn btn-primary" id="launch-new-bot-btn">Launch New Bot</button>
                 </div>
             </header>
 
-            <!-- Main Content -->
             <main class="main-panel" id="main-panel">
-                <!-- Content will be dynamically loaded here -->
-            </main>
+                </main>
         </div>
     </div>
 
-    <!-- JavaScript Files -->
-<script src="./assets/js/core/utils.js"></script>
-    <script src="./assets/js/core/state.js"></script>
-    <script src="./assets/js/data/mock-data.js"></script>
-    <script src="./assets/js/services/supabase-api.js"></script>
-    <script src="./assets/js/data/generators.js"></script>
-    <script src="./assets/js/shared/market-components.js"></script>
-    <script src="./assets/js/shared/bot-management.js"></script>
-    <script src="./assets/js/shared/risk-manager.js"></script>
-    <script src="./assets/js/pages/dashboard.js"></script>
-    <script src="./assets/js/pages/meat-market.js"></script>
-    <script src="./assets/js/pages/auto-bot.js"></script>
-    <script src="./assets/js/pages/active-bots.js"></script>
-    <script src="./assets/js/pages/cot-report.js"></script>
-    <script src="./assets/js/pages/forex-news.js"></script>
-    <script src="./assets/js/pages/settings.js"></script>
-    <script src="./assets/js/pages/accounts.js"></script>
-    <script src="./assets/js/core/event-listeners.js"></script>"
-    <script src="./assets/js/core/navigation.js"></script>
-    <script src="./assets/js/core/app.js"></script>
+    <script type="module" src="/main.js"></script>
+
 </body>
 </html>

@@ -1,85 +1,71 @@
-// dalydough-3.0/assets/js/services/supabase-api.js
+// daly187/dalydough-3.0/DalyDough-3.0-main/dalydough-3.0/assets/js/services/supabase-api.js
 
-class SupabaseApiService {
-  constructor(supabaseUrl, supabaseKey) {
-    this.supabaseUrl = supabaseUrl;
-    this.supabaseKey = supabaseKey;
-    this.supabase = supabase.createClient(supabaseUrl, supabaseKey);
+// Export the class so it can be imported
+export class SupabaseApiService {
+  // The constructor now receives the already-created client from main.js
+  constructor(supabaseClient) {
+    this.supabase = supabaseClient;
+    if (!this.supabase) {
+        console.error("SupabaseApiService did not receive a valid client.");
+        return;
+    }
     this.initialize();
   }
 
   async initialize() {
     try {
+      console.log('Initializing Supabase session...');
       const { data, error } = await this.supabase.auth.getSession();
-      if (error) {
-        throw new Error(`Error getting session: ${error.message}`);
-      }
+      if (error) throw new Error(`Error getting session: ${error.message}`);
+      
       if (!data.session) {
+        console.log('No active session, signing in anonymously.');
         await this.signInAnonymously();
+      } else {
+        console.log('✅ Session successfully retrieved.');
       }
     } catch (error) {
-      console.error('Error during initialization, redirecting to login:', error);
-      // Optional: Redirect to a login page if anonymous sign-in fails or is not desired
-      // window.location.href = '/login.html';
+      console.error('Error during Supabase initialization:', error);
     }
   }
 
   async signInAnonymously() {
+    if (!this.supabase) return;
     try {
       const { error } = await this.supabase.auth.signInAnonymously();
-      if (error) {
-        throw new Error(`Anonymous sign-in failed: ${error.message}`);
-      }
+      if (error) throw new Error(`Anonymous sign-in failed: ${error.message}`);
+      console.log('✅ Signed in anonymously.');
     } catch (error) {
       console.error(error.message);
-      // Handle anonymous sign-in failure (e.g., show an error message)
     }
   }
 
   async callFunction(functionName, options = {}) {
+    if (!this.supabase) throw new Error("Supabase client not initialized.");
+    
     const { data, error } = await this.supabase.functions.invoke(functionName, options);
-    if (error) {
-      throw new Error(`Function call to '${functionName}' failed: ${error.message}`);
-    }
+    if (error) throw new Error(`Function call to '${functionName}' failed: ${error.message}`);
+    
     return data;
   }
 
   async getMarketDataWithScoring() {
     try {
-      // Ensure this is calling the function that provides live data.
-      const data = await this.callFunction('get-real-market-data');
-      if (data && data.trends && Array.isArray(data.trends) && data.trends.length > 0) {
-        return data.trends;
-      } else {
-        // This provides a fallback to the static data if live data fails or is empty.
-        console.warn('Live market data is empty or invalid, attempting to fall back to static data.');
-        return this.getStaticMarketData();
-      }
+      const data = await this.callFunction('get-market-data-with-scoring');
+      return data || [];
     } catch (error) {
-      console.error('❌ Market data source failed, falling back to static data:', error);
-      return this.getStaticMarketData(); // Fallback to static data on error
+      console.error('❌ Market data source failed:', error);
+      throw error;
     }
   }
-
-  async getStaticMarketData() {
+  
+  async getCOTReportHistory() {
     try {
-      const data = await this.callFunction('get-market-data'); // This function now gets data from a static file.
-      if (data.marketData && Array.isArray(data.marketData) && data.marketData.length > 0) {
-        return data.marketData;
-      } else {
-        throw new Error('Static market data is empty or invalid.');
-      }
+        const data = await this.callFunction('get-cot-report-history');
+        return data || [];
     } catch (error) {
-      console.error('❌ Static market data fallback failed:', error);
-      throw new Error(`STATIC DATA UNAVAILABLE: ${error.message}. Please try again later.`);
+        console.error('Failed to get COT report history', error);
+        return [];
     }
   }
 }
-
-// Example of how to initialize and use the service
-// const supabaseApiService = new SupabaseApiService('YOUR_SUPABASE_URL', 'YOUR_SUPABASE_KEY');
-// supabaseApiService.getMarketDataWithScoring().then(marketData => {
-//   console.log('Market Data:', marketData);
-// }).catch(error => {
-//   console.error(error.message);
-// });
