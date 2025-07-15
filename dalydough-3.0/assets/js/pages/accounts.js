@@ -1,5 +1,52 @@
 // Enhanced Accounts Page - assets/js/pages/accounts.js
 
+// Initialize MT5 Accounts if not already done
+if (!window.appState) {
+    window.appState = {
+        mt5Accounts: []
+    };
+}
+
+// MT5 Account Management Functions
+function getMT5Accounts() {
+    if (!appState.mt5Accounts) {
+        // Initialize with sample data for demo
+        appState.mt5Accounts = [
+            {
+                id: 'demo-1',
+                nickname: 'Primary Demo',
+                broker: 'IC Markets',
+                login: '1234567890',
+                server: 'ICMarkets-Demo01',
+                status: 'connected',
+                balance: 10000.00,
+                equity: 10247.35,
+                margin: 156.80,
+                freeMargin: 10090.55,
+                marginLevel: 6534.2,
+                connectedAt: new Date('2024-01-15').toISOString(),
+                lastSync: new Date().toISOString()
+            },
+            {
+                id: 'demo-2',
+                nickname: 'Testing Account',
+                broker: 'Pepperstone',
+                login: '9876543210',
+                server: 'Pepperstone-Demo',
+                status: 'disconnected',
+                balance: 5000.00,
+                equity: 4892.15,
+                margin: 0,
+                freeMargin: 4892.15,
+                marginLevel: 0,
+                connectedAt: new Date('2024-01-10').toISOString(),
+                lastSync: new Date(Date.now() - 3600000).toISOString()
+            }
+        ];
+    }
+    return appState.mt5Accounts;
+}
+
 function createAccountsPage() {
     return `
         <div class="card">
@@ -240,46 +287,6 @@ function createAccountCard(account) {
             </div>
         </div>
     `;
-}
-
-// MT5 Account Management Functions
-function getMT5Accounts() {
-    if (!appState.mt5Accounts) {
-        // Initialize with sample data for demo
-        appState.mt5Accounts = [
-            {
-                id: 'demo-1',
-                nickname: 'Primary Demo',
-                broker: 'IC Markets',
-                login: '1234567890',
-                server: 'ICMarkets-Demo01',
-                status: 'connected',
-                balance: 10000.00,
-                equity: 10247.35,
-                margin: 156.80,
-                freeMargin: 10090.55,
-                marginLevel: 6534.2,
-                connectedAt: new Date('2024-01-15').toISOString(),
-                lastSync: new Date().toISOString()
-            },
-            {
-                id: 'demo-2',
-                nickname: 'Testing Account',
-                broker: 'Pepperstone',
-                login: '9876543210',
-                server: 'Pepperstone-Demo',
-                status: 'disconnected',
-                balance: 5000.00,
-                equity: 4892.15,
-                margin: 0,
-                freeMargin: 4892.15,
-                marginLevel: 0,
-                connectedAt: new Date('2024-01-10').toISOString(),
-                lastSync: new Date(Date.now() - 3600000).toISOString()
-            }
-        ];
-    }
-    return appState.mt5Accounts;
 }
 
 function getConnectedAccountsCount() {
@@ -541,6 +548,7 @@ function startAccountsAutoRefresh() {
 }
 
 // Make functions globally available
+window.getMT5Accounts = getMT5Accounts;
 window.openAddAccountModal = openAddAccountModal;
 window.closeAddAccountModal = closeAddAccountModal;
 window.openEditAccountModal = openEditAccountModal;
