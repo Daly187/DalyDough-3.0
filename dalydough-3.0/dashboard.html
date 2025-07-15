@@ -1,482 +1,142 @@
-// Enhanced Real Market Data Service - Replace assets/js/services/real-data-api.js
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>DalyDough 3.0 - AI Trading Dashboard</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="./assets/css/variables.css">
+    <link rel="stylesheet" href="./assets/css/layout.css">
+    <link rel="stylesheet" href="./assets/css/components.css">
+    <link rel="stylesheet" href="./assets/css/main.css">
+</head>
+<body>
+    <div id="root">
+        <div class="app-container" id="app-container">
+            <aside class="sidebar">
+                <div class="sidebar-header">
+                    <div class="sidebar-logo" onclick="toggleSidebar()">
+                        <svg viewBox="0 0 24 24" fill="currentColor">
+                            <path d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5-10-5-10 5zM12 14.47l-8-4v3.06l8 4 8-4v-3.06l-8 4z"></path>
+                        </svg>
+                        <span class="sidebar-logo-text">DalyDough</span>
+                    </div>
+                </div>
+                <nav class="sidebar-nav">
+                    <ul class="sidebar-nav-list">
+                        <li class="sidebar-nav-item"><a href="#" data-page="Dashboard" class="active">
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                <path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"></path>
+                                <polyline points="9 22 9 12 15 12 15 22"></polyline>
+                            </svg>
+                            <span class="sidebar-nav-text">Dashboard</span></a></li>
+                        <li class="sidebar-nav-item"><a href="#" data-page="Accounts">
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path>
+                                <circle cx="12" cy="7" r="4"></circle>
+                                <path d="M12 14l2-2m0 0l2-2m-2 2l-2-2m2 2l2 2"></path>
+                            </svg>
+                            <span class="sidebar-nav-text">Accounts</span></a></li>
+                        <li class="sidebar-nav-item"><a href="#" data-page="Meat Market">
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                <path d="M2.5 2v6h6m13 14v-6h-6"></path>
+                                <path d="M21.5 2l-8.2 8.2a2 2 0 0 0 0 2.8L16 15.7a2 2 0 0 1 0 2.8l-2.8 2.8a2 2 0 0 1-2.8 0L2.5 12.5a2 2 0 0 0-2.8 0L2 14.2"></path>
+                            </svg>
+                            <span class="sidebar-nav-text">Meat Market</span></a></li>
+                        <li class="sidebar-nav-item"><a href="#" data-page="Auto Bot">
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                <circle cx="12" cy="12" r="3"></circle>
+                                <path d="M12 1v6m0 6v6m11-7h-6m-6 0H1"></path>
+                            </svg>
+                            <span class="sidebar-nav-text">Auto Bot</span></a></li>
+                        <li class="sidebar-nav-item"><a href="#" data-page="Active Bots">
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                <rect x="3" y="11" width="18" height="11" rx="2" ry="2"></rect>
+                                <path d="M7 11V7a5 5 0 0 1 10 0v4"></path>
+                                <path d="M12 16a2 2 0 1 0 0-4 2 2 0 0 0 0 4z"></path>
+                            </svg>
+                            <span class="sidebar-nav-text">Active Bots</span></a></li>
+                        <li class="sidebar-nav-item"><a href="#" data-page="COT Report">
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                <path d="M16 4h2a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h2"></path>
+                                <rect x="8" y="2" width="8" height="4" rx="1" ry="1"></rect>
+                            </svg>
+                            <span class="sidebar-nav-text">COT Report</span></a></li>
+                        <li class="sidebar-nav-item"><a href="#" data-page="Forex News">
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                <path d="M4 22h16a2 2 0 0 0 2-2V4a2 2 0 0 0-2-2H8a2 2 0 0 0-2 2v16a2 2 0 0 1-2 2Zm0 0a2 2 0 0 1-2-2v-9c0-1.1.9-2 2-2h2"></path>
+                                <path d="M18 14h-8"></path>
+                                <path d="M15 18h-5"></path>
+                                <path d="M10 6h8v4h-8V6Z"></path>
+                            </svg>
+                            <span class="sidebar-nav-text">Forex News</span></a></li>
+                        <li class="sidebar-nav-item"><a href="#" data-page="Statistics">
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                <path d="M12 20V10"></path>
+                                <path d="M18 20V4"></path>
+                                <path d="M6 20V16"></path>
+                            </svg>
+                            <span class="sidebar-nav-text">Statistics</span></a></li>
+                        <li class="sidebar-nav-item"><a href="#" data-page="Settings">
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                <circle cx="12" cy="12" r="3"></circle>
+                                <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82-.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06-.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"></path>
+                            </svg>
+                            <span class="sidebar-nav-text">Settings</span></a></li>
+                    </ul>
+                </nav>
+                <div class="sidebar-footer">
+                    <div class="account-info">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path>
+                            <circle cx="12" cy="7" r="4"></circle>
+                        </svg>
+                        <div class="account-details">
+                            <span class="account-name">Primary Alpha</span>
+                            <span class="account-user">trader@dalydough.ai</span>
+                        </div>
+                    </div>
+                </div>
+            </aside>
 
-class RealDataAPIService {
-    constructor() {
-        // Multiple API endpoints for redundancy
-        this.apis = {
-            fmp: {
-                key: this.getAPIKey('FMP_API_KEY'),
-                baseUrl: 'https://financialmodelingprep.com/api/v3',
-                rateLimit: 300, // requests per minute
-                priority: 1
-            },
-            alphavantage: {
-                key: this.getAPIKey('ALPHAVANTAGE_API_KEY'),
-                baseUrl: 'https://www.alphavantage.co/query',
-                rateLimit: 5, // requests per minute
-                priority: 2
-            },
-            exchangerate: {
-                key: this.getAPIKey('EXCHANGERATE_API_KEY'),
-                baseUrl: 'https://v6.exchangerate-api.com/v6',
-                rateLimit: 1500, // requests per month
-                priority: 3
-            },
-            polygon: {
-                key: this.getAPIKey('POLYGON_API_KEY'),
-                baseUrl: 'https://api.polygon.io/v1',
-                rateLimit: 1000, // requests per minute
-                priority: 4
-            }
-        };
+            <header class="header">
+                <div class="header-left">
+                    <div class="current-account-display">
+                        <span class="kpi-label">Account</span>
+                        <span class="account-name-header">Primary Alpha</span>
+                    </div>
+                    <div id="supabase-status-indicator">
+                        <span class="status-light"></span>
+                        <span class="status-text">Connecting...</span>
+                    </div>
+                    <div class="kpi-widgets" id="kpi-widgets"></div>
+                </div>
+                <div class="header-actions">
+                    <button class="btn btn-primary" id="launch-new-bot-btn">Launch New Bot</button>
+                </div>
+            </header>
 
-        // Cache for reducing API calls
-        this.cache = new Map();
-        this.cacheTimeout = 60000; // 1 minute cache
-        
-        // Rate limiting
-        this.requestCounts = new Map();
-        this.lastResetTime = Date.now();
-        
-        console.log('🚀 Real Data API Service initialized');
-        this.validateAPIKeys();
-    }
+            <main class="main-panel" id="main-panel">
+                <!-- Dynamic content will load here -->
+            </main>
+        </div>
+    </div>
 
-    getAPIKey(keyName) {
-        // Try multiple sources for API keys
-        const sources = [
-            () => import.meta.env?.[`VITE_${keyName}`],
-            () => window.ENV?.[keyName],
-            () => localStorage.getItem(keyName),
-        ];
+    <!-- Load your JS service file -->
+    <script src="./assets/js/services/real-data-api.js"></script>
+    <!-- Main entry point (module, Vite/React support) -->
+    <script type="module" src="/main.js"></script>
 
-        for (const source of sources) {
-            try {
-                const key = source();
-                if (key && key.length > 10) {
-                    console.log(`✅ Found API key for ${keyName}`);
-                    return key;
-                }
-            } catch (error) {
-                // Continue to next source
-            }
+    <!-- Optional: Demo/test script to log real forex data on load -->
+    <script>
+        // Only run if service loaded (can comment this block out if not needed)
+        if (window.realDataAPI) {
+            window.realDataAPI.getRealForexData()
+                .then(data => console.log('Sample market data:', data))
+                .catch(err => console.warn('Market data error:', err.message));
         }
-        
-        console.warn(`⚠️ No API key found for ${keyName}`);
-        return null;
-    }
-
-    validateAPIKeys() {
-        const validAPIs = Object.entries(this.apis)
-            .filter(([name, config]) => config.key && config.key.length > 10)
-            .sort((a, b) => a[1].priority - b[1].priority);
-
-        if (validAPIs.length === 0) {
-            console.error('❌ NO VALID API KEYS FOUND!');
-            console.log('📝 Get API keys from:');
-            console.log('- FMP: https://financialmodelingprep.com/');
-            console.log('- AlphaVantage: https://www.alphavantage.co/');
-            console.log('- ExchangeRate: https://exchangerate-api.com/');
-            console.log('- Polygon: https://polygon.io/');
-            return false;
-        }
-
-        console.log(`✅ Found ${validAPIs.length} valid API providers:`, validAPIs.map(([name]) => name));
-        return true;
-    }
-
-    async getRealForexData() {
-        const cacheKey = 'forex_data';
-        const cached = this.getCache(cacheKey);
-        if (cached) {
-            console.log('📦 Using cached forex data');
-            return cached;
-        }
-
-        // Try APIs in priority order
-        const validAPIs = Object.entries(this.apis)
-            .filter(([name, config]) => config.key && config.key.length > 10)
-            .sort((a, b) => a[1].priority - b[1].priority);
-
-        for (const [providerName, config] of validAPIs) {
-            try {
-                console.log(`🔄 Trying ${providerName} API...`);
-                
-                if (!this.checkRateLimit(providerName)) {
-                    console.warn(`⏰ Rate limit reached for ${providerName}, trying next provider`);
-                    continue;
-                }
-
-                let data;
-                switch (providerName) {
-                    case 'fmp':
-                        data = await this.getFMPForexData(config);
-                        break;
-                    case 'alphavantage':
-                        data = await this.getAlphaVantageForexData(config);
-                        break;
-                    case 'exchangerate':
-                        data = await this.getExchangeRateForexData(config);
-                        break;
-                    case 'polygon':
-                        data = await this.getPolygonForexData(config);
-                        break;
-                }
-
-                if (data && data.length > 0) {
-                    console.log(`✅ Successfully got ${data.length} forex pairs from ${providerName}`);
-                    
-                    // Add D-Size scoring to real data
-                    const scoredData = data.map(item => this.addDSizeScoring(item));
-                    
-                    this.setCache(cacheKey, scoredData);
-                    this.incrementRequestCount(providerName);
-                    return scoredData;
-                }
-            } catch (error) {
-                console.warn(`❌ ${providerName} API failed:`, error.message);
-                continue;
-            }
-        }
-
-        throw new Error('All forex data providers failed');
-    }
-
-    async getFMPForexData(config) {
-        const majorPairs = ['EURUSD', 'GBPUSD', 'USDJPY', 'AUDUSD', 'USDCAD', 'NZDUSD', 'USDCHF', 'GBPJPY', 'EURJPY', 'AUDJPY', 'XAUUSD'];
-        const symbolsQuery = majorPairs.join(',');
-        
-        const response = await fetch(
-            `${config.baseUrl}/quote/${symbolsQuery}?apikey=${config.key}`,
-            {
-                headers: {
-                    'Accept': 'application/json',
-                    'User-Agent': 'DalyDough/3.0'
-                }
-            }
-        );
-
-        if (!response.ok) {
-            throw new Error(`FMP API error: ${response.status} ${response.statusText}`);
-        }
-
-        const data = await response.json();
-        
-        return data.map(quote => ({
-            pair: this.formatPairWithSlash(quote.symbol),
-            currentPrice: parseFloat(quote.price) || 1.0850,
-            dailyChange: parseFloat(quote.change) || 0,
-            dailyChangePercent: parseFloat(quote.changesPercentage) || 0,
-            volume: parseFloat(quote.volume) || 0,
-            high: parseFloat(quote.dayHigh) || parseFloat(quote.price) || 1.0850,
-            low: parseFloat(quote.dayLow) || parseFloat(quote.price) || 1.0850,
-            timestamp: new Date().toISOString(),
-            source: 'FMP'
-        }));
-    }
-
-    async getPolygonForexData(config) {
-        const pairs = ['C:EURUSD', 'C:GBPUSD', 'C:USDJPY', 'C:AUDUSD', 'C:USDCAD'];
-        const results = [];
-
-        for (const ticker of pairs) {
-            try {
-                const response = await fetch(
-                    `${config.baseUrl}/last/forex/${ticker}?apikey=${config.key}`
-                );
-
-                if (!response.ok) continue;
-
-                const data = await response.json();
-                if (data.results) {
-                    const result = data.results;
-                    results.push({
-                        pair: this.formatPolygonPair(ticker),
-                        currentPrice: result.bid || result.ask || 1.0850,
-                        dailyChange: 0, // Polygon doesn't provide daily change in this endpoint
-                        dailyChangePercent: 0,
-                        volume: 0,
-                        high: result.bid || 1.0850,
-                        low: result.ask || 1.0850,
-                        timestamp: new Date(result.timestamp).toISOString(),
-                        source: 'Polygon'
-                    });
-                }
-
-                // Rate limiting
-                await new Promise(resolve => setTimeout(resolve, 100));
-            } catch (error) {
-                console.warn(`Failed to get ${ticker} from Polygon:`, error.message);
-            }
-        }
-
-        return results;
-    }
-
-    async getExchangeRateForexData(config) {
-        const response = await fetch(`${config.baseUrl}/${config.key}/latest/USD`);
-        
-        if (!response.ok) {
-            throw new Error(`ExchangeRate API error: ${response.status}`);
-        }
-
-        const data = await response.json();
-        
-        if (data.result !== 'success') {
-            throw new Error('ExchangeRate API returned error');
-        }
-
-        const rates = data.conversion_rates;
-        const results = [];
-
-        // Convert to our format
-        const pairs = [
-            { pair: 'EUR/USD', rate: 1 / rates.EUR },
-            { pair: 'GBP/USD', rate: 1 / rates.GBP },
-            { pair: 'USD/JPY', rate: rates.JPY },
-            { pair: 'AUD/USD', rate: 1 / rates.AUD },
-            { pair: 'USD/CAD', rate: rates.CAD },
-            { pair: 'NZD/USD', rate: 1 / rates.NZD },
-            { pair: 'USD/CHF', rate: rates.CHF }
-        ];
-
-        for (const { pair, rate } of pairs) {
-            results.push({
-                pair,
-                currentPrice: rate,
-                dailyChange: 0, // This API doesn't provide change data
-                dailyChangePercent: 0,
-                volume: 0,
-                high: rate,
-                low: rate,
-                timestamp: new Date().toISOString(),
-                source: 'ExchangeRate'
-            });
-        }
-
-        return results;
-    }
-
-    addDSizeScoring(marketData) {
-        // Generate realistic D-Size scoring based on market data
-        const breakdown = this.generateScoringBreakdown(marketData);
-        const dsize = this.calculateDSize(breakdown);
-        
-        const canEnter = dsize >= 7;
-        let entryStatus = 'Block';
-        
-        if (canEnter) {
-            entryStatus = marketData.dailyChangePercent > 0 ? 'Allow Buy' : 'Allow Sell';
-        }
-
-        return {
-            ...marketData,
-            trendH4: this.generateTrendFromPrice(marketData.dailyChangePercent, 'H4'),
-            trendD1: this.generateTrendFromPrice(marketData.dailyChangePercent, 'D1'),
-            trendW1: this.generateTrendFromPrice(marketData.dailyChangePercent, 'W1'),
-            setupQuality: dsize >= 8 ? 'A' : dsize >= 6 ? 'B' : 'C',
-            conditions: {
-                cot: breakdown.cotBias.score > 0,
-                adx: breakdown.adxStrength.score > 0,
-                spread: breakdown.spreadCheck.score > 0
-            },
-            dsize: dsize.toFixed(1),
-            entryStatus,
-            breakdown,
-            lastUpdated: new Date().toISOString()
-        };
-    }
-
-    generateScoringBreakdown(marketData) {
-        // COT score based on momentum
-        const momentum = Math.abs(marketData.dailyChangePercent);
-        const cotScore = momentum > 1.0 ? 2 : momentum > 0.5 ? 1 : 0;
-        
-        // Trend score based on price movement consistency
-        const trendScore = momentum > 1.5 ? 3 : momentum > 0.8 ? 2 : momentum > 0.3 ? 1 : 0;
-        
-        // ADX simulation based on volatility
-        const volatility = Math.abs(marketData.dailyChangePercent);
-        const adxValue = Math.min(100, volatility * 15 + 20);
-        const adxScore = adxValue >= 25 ? 1 : 0;
-        
-        // Support/resistance based on price level
-        const priceLevel = marketData.currentPrice % 1;
-        const supportScore = (priceLevel > 0.4 && priceLevel < 0.6) ? 2 : 
-                            (priceLevel > 0.2 && priceLevel < 0.8) ? 1 : 0;
-        
-        // Structure based on price action
-        const structureScore = Math.abs(marketData.dailyChangePercent) > 0.1 ? 1 : 0;
-        
-        // Spread estimation
-        const estimatedSpread = this.getEstimatedSpread(marketData.pair);
-        const spreadScore = estimatedSpread < 2.0 ? 1 : 0;
-
-        return {
-            cotBias: {
-                score: cotScore,
-                value: cotScore === 2 ? 'Strong Institutional Bias' : cotScore === 1 ? 'Weak Institutional Bias' : 'No Clear Bias',
-                description: 'Real-time institutional bias analysis'
-            },
-            trendConfirmation: {
-                score: trendScore,
-                value: `${trendScore}/3 timeframes aligned`,
-                description: 'Multi-timeframe momentum analysis'
-            },
-            adxStrength: {
-                score: adxScore,
-                value: adxValue.toFixed(1),
-                description: `Live ADX calculation: ${adxValue >= 25 ? 'Strong trend' : 'Weak trend'}`
-            },
-            supportRetest: {
-                score: supportScore,
-                value: supportScore === 2 ? 'At Key Level' : supportScore === 1 ? 'Near Level' : 'No Key Level',
-                description: 'Real-time price level analysis'
-            },
-            priceStructure: {
-                score: structureScore,
-                value: structureScore ? 'Clean Structure' : 'Choppy Structure',
-                description: 'Live price action structure'
-            },
-            spreadCheck: {
-                score: spreadScore,
-                value: `${estimatedSpread.toFixed(1)} pips`,
-                description: 'Real-time transaction cost analysis'
-            }
-        };
-    }
-
-    calculateDSize(breakdown) {
-        return breakdown.cotBias.score + 
-               breakdown.trendConfirmation.score + 
-               breakdown.adxStrength.score + 
-               breakdown.supportRetest.score + 
-               breakdown.priceStructure.score + 
-               breakdown.spreadCheck.score;
-    }
-
-    generateTrendFromPrice(changePercent, timeframe) {
-        // Add some randomness for different timeframes
-        const multiplier = timeframe === 'H4' ? 0.8 : timeframe === 'D1' ? 1.0 : 1.2;
-        const adjustedChange = changePercent * multiplier;
-        
-        if (adjustedChange > 0.3) return 'Up';
-        if (adjustedChange < -0.3) return 'Down';
-        return 'Neutral';
-    }
-
-    getEstimatedSpread(pair) {
-        const majorPairs = ['EUR/USD', 'GBP/USD', 'USD/JPY', 'USD/CHF', 'AUD/USD', 'USD/CAD', 'NZD/USD'];
-        if (pair === 'XAU/USD') return 0.5;
-        if (majorPairs.includes(pair)) return Math.random() * 0.8 + 0.5;
-        return Math.random() * 2 + 1.0;
-    }
-
-    formatPairWithSlash(symbol) {
-        if (symbol.length === 6) {
-            return `${symbol.slice(0, 3)}/${symbol.slice(3)}`;
-        }
-        return symbol.includes('/') ? symbol : `${symbol.slice(0, 3)}/${symbol.slice(3)}`;
-    }
-
-    formatPolygonPair(ticker) {
-        // Convert C:EURUSD to EUR/USD
-        const symbol = ticker.replace('C:', '');
-        return this.formatPairWithSlash(symbol);
-    }
-
-    checkRateLimit(provider) {
-        const now = Date.now();
-        const resetInterval = 60000; // 1 minute
-
-        if (now - this.lastResetTime > resetInterval) {
-            this.requestCounts.clear();
-            this.lastResetTime = now;
-        }
-
-        const currentCount = this.requestCounts.get(provider) || 0;
-        const limit = this.apis[provider].rateLimit;
-
-        return currentCount < limit;
-    }
-
-    incrementRequestCount(provider) {
-        const currentCount = this.requestCounts.get(provider) || 0;
-        this.requestCounts.set(provider, currentCount + 1);
-    }
-
-    getCache(key) {
-        const cached = this.cache.get(key);
-        if (cached && (Date.now() - cached.timestamp) < this.cacheTimeout) {
-            return cached.data;
-        }
-        return null;
-    }
-
-    setCache(key, data) {
-        this.cache.set(key, {
-            data,
-            timestamp: Date.now()
-        });
-    }
-
-    // Health check method
-    async healthCheck() {
-        const results = {
-            timestamp: new Date().toISOString(),
-            apis: {},
-            overall: 'unknown'
-        };
-
-        for (const [name, config] of Object.entries(this.apis)) {
-            if (!config.key || config.key.length < 10) {
-                results.apis[name] = { status: 'no_key', error: 'API key not provided' };
-                continue;
-            }
-
-            try {
-                // Simple test call for each API
-                let testResponse;
-                switch (name) {
-                    case 'fmp':
-                        testResponse = await fetch(`${config.baseUrl}/quote/EURUSD?apikey=${config.key}`);
-                        break;
-                    case 'alphavantage':
-                        testResponse = await fetch(`${config.baseUrl}?function=CURRENCY_EXCHANGE_RATE&from_currency=EUR&to_currency=USD&apikey=${config.key}`);
-                        break;
-                    case 'exchangerate':
-                        testResponse = await fetch(`${config.baseUrl}/${config.key}/latest/USD`);
-                        break;
-                    case 'polygon':
-                        testResponse = await fetch(`${config.baseUrl}/last/forex/C:EURUSD?apikey=${config.key}`);
-                        break;
-                }
-
-                results.apis[name] = {
-                    status: testResponse.ok ? 'healthy' : 'error',
-                    statusCode: testResponse.status,
-                    priority: config.priority
-                };
-            } catch (error) {
-                results.apis[name] = {
-                    status: 'error',
-                    error: error.message,
-                    priority: config.priority
-                };
-            }
-        }
-
-        // Determine overall health
-        const healthyAPIs = Object.values(results.apis).filter(api => api.status === 'healthy');
-        results.overall = healthyAPIs.length > 0 ? 'healthy' : 'degraded';
-        results.healthyProviders = healthyAPIs.length;
-        results.totalProviders = Object.keys(results.apis).length;
-
-        return results;
-    }
-}
-
-// Global instance
-window.realDataAPI = new RealDataAPIService();
-
-console.log('✅ Enhanced Real Data API Service loaded');
+    </script>
+</body>
+</html>

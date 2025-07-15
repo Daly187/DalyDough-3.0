@@ -243,15 +243,7 @@ serve(async (req) => {
   }
 
   try {
-    // Initialize the Supabase client to check for an authenticated user
-    const supabase = createClient(
-      Deno.env.get('SUPABASE_URL') ?? '',
-      Deno.env.get('SUPABASE_ANON_KEY') ?? '',
-      { global: { headers: { Authorization: req.headers.get('Authorization')! } } }
-    );
-
-    const { data: { user } } = await supabase.auth.getUser();
-    if (!user) throw new Error("User not authenticated.");
+    // No authentication/user check for dev public access!
 
     // Fetch the real market data
     const marketService = new RealMarketDataService();

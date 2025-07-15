@@ -1,4 +1,4 @@
-// Enhanced Real Data API Service - Replace assets/js/services/real-data-api.js
+// Enhanced Real Market Data Service - assets/js/services/real-data-api.js
 
 class RealDataAPIService {
     constructor() {
@@ -43,15 +43,11 @@ class RealDataAPIService {
     }
 
     getAPIKey(keyName) {
-        // Try multiple sources for API keys in correct order
+        // Try multiple sources for API keys
         const sources = [
-            // Environment variables (Vite format)
-            () => import.meta.env?.[`VITE_${keyName}`],
-            // Browser environment variables
-            () => window.ENV?.[keyName],
-            // Local storage fallback
-            () => localStorage.getItem(keyName),
-            // Manual configuration (you'll set these)
+            () => (typeof import.meta !== 'undefined' && import.meta.env && import.meta.env[`VITE_${keyName}`]) || undefined,
+            () => (typeof window !== 'undefined' && window.ENV && window.ENV[keyName]) || undefined,
+            () => (typeof localStorage !== 'undefined' && localStorage.getItem(keyName)) || undefined,
             () => this.getManualConfig(keyName)
         ];
 
@@ -59,27 +55,30 @@ class RealDataAPIService {
             try {
                 const key = source();
                 if (key && typeof key === 'string' && key.length > 10 && !key.includes('YOUR_') && !key.includes('PLACEHOLDER')) {
-                    console.log(`✅ Found valid API key for ${keyName}`);
+                    // Hide most of the API key in logs for safety
+                    const safeKey = key.length > 8 ? key.slice(0, 4) + '...' + key.slice(-4) : '[hidden]';
+                    console.log(`✅ Found valid API key for ${keyName}: ${safeKey}`);
                     return key;
                 }
-            } catch (error) {
-                // Continue to next source
-            }
+            } catch (error) { }
         }
-        
-        console.warn(`⚠️ No valid API key found for ${keyName}`);
+        // Only warn once per missing key
+        if (!this._warnedKeys) this._warnedKeys = {};
+        if (!this._warnedKeys[keyName]) {
+            console.warn(`⚠️ No valid API key found for ${keyName}`);
+            this._warnedKeys[keyName] = true;
+        }
         return null;
     }
 
     getManualConfig(keyName) {
-        // REPLACE THESE WITH YOUR ACTUAL API KEYS
+        // Fill in here as a last resort (NEVER commit real keys to public repo!)
         const manualKeys = {
-            'FMP_API_KEY': null, // Get from https://financialmodelingprep.com/
-            'ALPHAVANTAGE_API_KEY': null, // Get from https://www.alphavantage.co/
-            'EXCHANGERATE_API_KEY': null, // Get from https://exchangerate-api.com/
-            'POLYGON_API_KEY': null // Get from https://polygon.io/
+            'FMP_API_KEY': null,
+            'ALPHAVANTAGE_API_KEY': null,
+            'EXCHANGERATE_API_KEY': null,
+            'POLYGON_API_KEY': null
         };
-        
         return manualKeys[keyName];
     }
 
@@ -98,7 +97,8 @@ class RealDataAPIService {
             console.log('');
             console.log('Add your API keys to:');
             console.log('- .env.local file as VITE_FMP_API_KEY=your_key_here');
-            console.log('- Or modify getManualConfig() in this file');
+            console.log('- Or set in browser ENV or localStorage');
+            console.log('- Or add to getManualConfig() in this JS');
             return false;
         }
 
@@ -107,10 +107,10 @@ class RealDataAPIService {
     }
 
     isValidKey(key) {
-        return key && 
-               typeof key === 'string' && 
-               key.length > 10 && 
-               !key.includes('YOUR_') && 
+        return key &&
+               typeof key === 'string' &&
+               key.length > 10 &&
+               !key.includes('YOUR_') &&
                !key.includes('PLACEHOLDER') &&
                !key.includes('your_key');
     }
@@ -159,10 +159,8 @@ class RealDataAPIService {
 
                 if (data && data.length > 0) {
                     console.log(`✅ Successfully got ${data.length} forex pairs from ${providerName}`);
-                    
                     // Add D-Size scoring to real data
                     const scoredData = data.map(item => this.addDSizeScoring(item));
-                    
                     this.setCache(cacheKey, scoredData);
                     this.incrementRequestCount(providerName);
                     return scoredData;
@@ -179,28 +177,22 @@ class RealDataAPIService {
     async getFMPForexData(config) {
         const majorPairs = ['EURUSD', 'GBPUSD', 'USDJPY', 'AUDUSD', 'USDCAD', 'NZDUSD', 'USDCHF', 'GBPJPY', 'EURJPY', 'AUDJPY', 'XAUUSD'];
         const symbolsQuery = majorPairs.join(',');
-        
         const url = `${config.baseUrl}/quote/${symbolsQuery}?apikey=${config.key}`;
         console.log(`📡 FMP API URL: ${url.replace(config.key, '[HIDDEN]')}`);
-        
         const response = await fetch(url, {
             headers: {
                 'Accept': 'application/json',
                 'User-Agent': 'DalyDough/3.0'
             }
         });
-
         if (!response.ok) {
             const errorText = await response.text();
             throw new Error(`FMP API error: ${response.status} ${response.statusText} - ${errorText}`);
         }
-
         const data = await response.json();
-        
         if (!Array.isArray(data) || data.length === 0) {
             throw new Error('FMP API returned no data or invalid format');
         }
-        
         return data.map(quote => ({
             pair: this.formatPairWithSlash(quote.symbol),
             currentPrice: parseFloat(quote.price) || 1.0850,
@@ -214,26 +206,83 @@ class RealDataAPIService {
         }));
     }
 
+    async getAlphaVantageForexData(config) {
+        // AlphaVantage is limited and rate-limited. Example fetch for EUR/USD only.
+        const pairs = [
+            { from: 'EUR', to: 'USD' },
+            { from: 'GBP', to: 'USD' }
+        ];
+        const results = [];
+        for (const { from, to } of pairs) {
+            const url = `${config.baseUrl}?function=CURRENCY_EXCHANGE_RATE&from_currency=${from}&to_currency=${to}&apikey=${config.key}`;
+            const response = await fetch(url);
+            if (!response.ok) continue;
+            const data = await response.json();
+            const rate = data['Realtime Currency Exchange Rate'];
+            if (rate && rate['5. Exchange Rate']) {
+                results.push({
+                    pair: `${from}/${to}`,
+                    currentPrice: parseFloat(rate['5. Exchange Rate']),
+                    dailyChange: 0,
+                    dailyChangePercent: 0,
+                    volume: 0,
+                    high: parseFloat(rate['5. Exchange Rate']),
+                    low: parseFloat(rate['5. Exchange Rate']),
+                    timestamp: new Date().toISOString(),
+                    source: 'AlphaVantage'
+                });
+            }
+            // Alpha Vantage has a strict rate limit, add delay!
+            await new Promise(resolve => setTimeout(resolve, 13000));
+        }
+        return results;
+    }
+
+    async getPolygonForexData(config) {
+        const pairs = ['C:EURUSD', 'C:GBPUSD', 'C:USDJPY', 'C:AUDUSD', 'C:USDCAD'];
+        const results = [];
+        for (const ticker of pairs) {
+            try {
+                const response = await fetch(
+                    `${config.baseUrl}/last/forex/${ticker}?apikey=${config.key}`
+                );
+                if (!response.ok) continue;
+                const data = await response.json();
+                if (data.results) {
+                    const result = data.results;
+                    results.push({
+                        pair: this.formatPolygonPair(ticker),
+                        currentPrice: result.bid || result.ask || 1.0850,
+                        dailyChange: 0, // Polygon doesn't provide daily change in this endpoint
+                        dailyChangePercent: 0,
+                        volume: 0,
+                        high: result.bid || 1.0850,
+                        low: result.ask || 1.0850,
+                        timestamp: new Date(result.timestamp).toISOString(),
+                        source: 'Polygon'
+                    });
+                }
+                await new Promise(resolve => setTimeout(resolve, 100));
+            } catch (error) {
+                console.warn(`Failed to get ${ticker} from Polygon:`, error.message);
+            }
+        }
+        return results;
+    }
+
     async getExchangeRateForexData(config) {
         const url = `${config.baseUrl}/${config.key}/latest/USD`;
         console.log(`📡 ExchangeRate API URL: ${url.replace(config.key, '[HIDDEN]')}`);
-        
         const response = await fetch(url);
-        
         if (!response.ok) {
             throw new Error(`ExchangeRate API error: ${response.status} ${response.statusText}`);
         }
-
         const data = await response.json();
-        
         if (data.result !== 'success') {
             throw new Error(`ExchangeRate API error: ${data['error-type'] || 'Unknown error'}`);
         }
-
         const rates = data.conversion_rates;
         const results = [];
-
-        // Convert to our format
         const pairs = [
             { pair: 'EUR/USD', rate: 1 / rates.EUR },
             { pair: 'GBP/USD', rate: 1 / rates.GBP },
@@ -243,13 +292,12 @@ class RealDataAPIService {
             { pair: 'NZD/USD', rate: 1 / rates.NZD },
             { pair: 'USD/CHF', rate: rates.CHF }
         ];
-
         for (const { pair, rate } of pairs) {
             if (rate && !isNaN(rate)) {
                 results.push({
                     pair,
                     currentPrice: rate,
-                    dailyChange: 0, // This API doesn't provide change data
+                    dailyChange: 0,
                     dailyChangePercent: 0,
                     volume: 0,
                     high: rate,
@@ -259,7 +307,6 @@ class RealDataAPIService {
                 });
             }
         }
-
         return results;
     }
 
@@ -365,7 +412,6 @@ class RealDataAPIService {
         // Add some randomness for different timeframes
         const multiplier = timeframe === 'H4' ? 0.8 : timeframe === 'D1' ? 1.0 : 1.2;
         const adjustedChange = changePercent * multiplier;
-        
         if (adjustedChange > 0.3) return 'Up';
         if (adjustedChange < -0.3) return 'Down';
         return 'Neutral';
@@ -385,18 +431,21 @@ class RealDataAPIService {
         return symbol.includes('/') ? symbol : `${symbol.slice(0, 3)}/${symbol.slice(3)}`;
     }
 
+    formatPolygonPair(ticker) {
+        // Convert C:EURUSD to EUR/USD
+        const symbol = ticker.replace('C:', '');
+        return this.formatPairWithSlash(symbol);
+    }
+
     checkRateLimit(provider) {
         const now = Date.now();
         const resetInterval = 60000; // 1 minute
-
         if (now - this.lastResetTime > resetInterval) {
             this.requestCounts.clear();
             this.lastResetTime = now;
         }
-
         const currentCount = this.requestCounts.get(provider) || 0;
         const limit = this.apis[provider].rateLimit;
-
         return currentCount < limit;
     }
 
@@ -427,13 +476,11 @@ class RealDataAPIService {
             apis: {},
             overall: 'unknown'
         };
-
         for (const [name, config] of Object.entries(this.apis)) {
             if (!this.isValidKey(config.key)) {
                 results.apis[name] = { status: 'no_key', error: 'API key not configured' };
                 continue;
             }
-
             try {
                 // Simple test call for each API
                 let testResponse;
@@ -441,11 +488,16 @@ class RealDataAPIService {
                     case 'fmp':
                         testResponse = await fetch(`${config.baseUrl}/quote/EURUSD?apikey=${config.key}`);
                         break;
+                    case 'alphavantage':
+                        testResponse = await fetch(`${config.baseUrl}?function=CURRENCY_EXCHANGE_RATE&from_currency=EUR&to_currency=USD&apikey=${config.key}`);
+                        break;
                     case 'exchangerate':
                         testResponse = await fetch(`${config.baseUrl}/${config.key}/latest/USD`);
                         break;
+                    case 'polygon':
+                        testResponse = await fetch(`${config.baseUrl}/last/forex/C:EURUSD?apikey=${config.key}`);
+                        break;
                 }
-
                 results.apis[name] = {
                     status: testResponse.ok ? 'healthy' : 'error',
                     statusCode: testResponse.status,
@@ -459,18 +511,15 @@ class RealDataAPIService {
                 };
             }
         }
-
         // Determine overall health
         const healthyAPIs = Object.values(results.apis).filter(api => api.status === 'healthy');
         results.overall = healthyAPIs.length > 0 ? 'healthy' : 'degraded';
         results.healthyProviders = healthyAPIs.length;
         results.totalProviders = Object.keys(results.apis).length;
-
         return results;
     }
 }
 
 // Global instance
 window.realDataAPI = new RealDataAPIService();
-
 console.log('✅ Enhanced Real Data API Service loaded');
