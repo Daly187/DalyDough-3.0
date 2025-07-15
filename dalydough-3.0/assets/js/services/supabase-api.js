@@ -4,7 +4,7 @@ export class SupabaseApiService {
     constructor(supabaseClient) {
         this.supabase = supabaseClient;
         if (!this.supabase) {
-            console.error("SupabaseApiService did not receive a valid client.");
+            console.error("❌ SupabaseApiService did not receive a valid client.");
             return;
         }
         this.initialize();
@@ -12,18 +12,18 @@ export class SupabaseApiService {
 
     async initialize() {
         try {
-            console.log('Initializing Supabase session...');
+            console.log('🔄 Initializing Supabase session...');
             const { data, error } = await this.supabase.auth.getSession();
             if (error) throw new Error(`Error getting session: ${error.message}`);
             
             if (!data.session) {
-                console.log('No active session, signing in anonymously.');
+                console.log('🔓 No active session, signing in anonymously.');
                 await this.signInAnonymously();
             } else {
                 console.log('✅ Session successfully retrieved.');
             }
         } catch (error) {
-            console.error('Error during Supabase initialization:', error);
+            console.error('❌ Error during Supabase initialization:', error);
         }
     }
 
@@ -34,41 +34,56 @@ export class SupabaseApiService {
             if (error) throw new Error(`Anonymous sign-in failed: ${error.message}`);
             console.log('✅ Signed in anonymously.');
         } catch (error) {
-            console.error(error.message);
+            console.error('❌ Anonymous sign-in error:', error.message);
         }
     }
 
     async getMarketDataWithScoring() {
         try {
-            console.log('📊 Getting real market data...');
+            console.log('📊 Getting market data (prioritizing real data)...');
             
-            // First try to use the real data API service
+            // First, try to use the real data API service if available
             if (window.realDataAPI) {
                 try {
+                    console.log('🔄 Attempting to get live data from Real Data API...');
                     const realData = await window.realDataAPI.getRealForexData();
+                    
                     if (realData && realData.length > 0) {
-                        console.log(`✅ Got ${realData.length} real market data points`);
+                        console.log(`✅ Got ${realData.length} live market data points from Real Data API`);
                         return realData;
                     }
                 } catch (error) {
-                    console.warn('Real data API failed, falling back to Supabase function:', error);
+                    console.warn('⚠️ Real data API failed, trying Supabase function:', error.message);
                 }
+            } else {
+                console.warn('⚠️ Real Data API service not available');
             }
 
             // Fallback to Supabase function
+            console.log('🔄 Trying Supabase function as fallback...');
             const { data, error } = await this.supabase.functions.invoke('get-market-data-with-scoring');
             
             if (error) {
-                console.error('Supabase function error:', error);
-                throw error;
+                console.error('❌ Supabase function error:', error);
+                throw new Error(`Supabase function failed: ${error.message}`);
             }
             
-            return data || [];
+            if (data && Array.isArray(data) && data.length > 0) {
+                console.log(`✅ Got ${data.length} market data points from Supabase function`);
+                return data;
+            }
+
+            throw new Error('No market data returned from Supabase function');
+            
         } catch (error) {
             console.error('❌ All market data sources failed:', error);
             
-            // As absolute last resort, return empty array
-            // Your frontend should handle this gracefully
+            // Show user-friendly error message
+            if (typeof window.showNotification === 'function') {
+                window.showNotification('❌ Unable to fetch live market data. Please check your API keys.', 'error');
+            }
+            
+            // Return empty array to prevent application crash
             return [];
         }
     }
@@ -86,7 +101,7 @@ export class SupabaseApiService {
                         return realCOTData;
                     }
                 } catch (error) {
-                    console.warn('Real COT data failed, falling back to Supabase function:', error);
+                    console.warn('⚠️ Real COT data failed, falling back to Supabase function:', error);
                 }
             }
 
@@ -94,13 +109,13 @@ export class SupabaseApiService {
             const { data, error } = await this.supabase.functions.invoke('get-cot-report-history');
             
             if (error) {
-                console.error('COT function error:', error);
+                console.error('❌ COT function error:', error);
                 throw error;
             }
             
             return data?.cotReportHistory || [];
         } catch (error) {
-            console.error('Failed to get COT report history', error);
+            console.error('❌ Failed to get COT report history', error);
             return [];
         }
     }
@@ -112,13 +127,13 @@ export class SupabaseApiService {
             const { data, error } = await this.supabase.functions.invoke('get-economic-calendar');
             
             if (error) {
-                console.error('Economic calendar function error:', error);
+                console.error('❌ Economic calendar function error:', error);
                 throw error;
             }
             
             return data?.events || [];
         } catch (error) {
-            console.error('Failed to get economic calendar', error);
+            console.error('❌ Failed to get economic calendar', error);
             return [];
         }
     }
@@ -130,14 +145,14 @@ export class SupabaseApiService {
             const { data, error } = await this.supabase.functions.invoke('hello');
             
             if (error) {
-                console.error('Connection test failed:', error);
+                console.error('❌ Connection test failed:', error);
                 return { success: false, error: error.message };
             }
             
             console.log('✅ Supabase connection test successful:', data);
             return { success: true, data };
         } catch (error) {
-            console.error('Connection test error:', error);
+            console.error('❌ Connection test error:', error);
             return { success: false, error: error.message };
         }
     }
